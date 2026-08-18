@@ -1,0 +1,70 @@
+/* Shared presentation glue for the API-integrated pages. Uses existing tokens. */
+
+.invoice-form-card > h2 {
+  margin-bottom: 18px;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.invoice-form-card > label,
+.invoice-form-card > div > label {
+  display: inline-flex;
+  min-width: 180px;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0 14px 14px 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.invoice-form-card > label input,
+.invoice-form-card > label select,
+.invoice-form-card > div > label input,
+.invoice-form-card > div > label select {
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--surface-color);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.invoice-form-card > label input:focus,
+.invoice-form-card > label select:focus,
+.invoice-form-card > div > label input:focus,
+.invoice-form-card > div > label select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(20, 108, 148, 0.12);
+}
+
+.invoice-form-card > .page-primary-button,
+.invoice-form-card > .invoice-secondary-button,
+.invoice-form-card > div > .page-primary-button,
+.invoice-form-card > div > .invoice-secondary-button {
+  margin: 0 10px 14px 0;
+  vertical-align: bottom;
+}
+
+.chart-accounts-table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.invoice-form-alert {
+  overflow-wrap: anywhere;
+}
+
+@media screen and (max-width: 680px) {
+  .invoice-form-card > label,
+  .invoice-form-card > div > label {
+    width: 100%;
+    min-width: 0;
+    margin-right: 0;
+  }
+
+  .chart-accounts-table {
+    min-width: 680px;
+  }
+}

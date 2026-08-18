@@ -1,0 +1,21 @@
+/* Financial analysis layout and period filters */
+.financial-analysis-page { display: grid; gap: 22px; padding-bottom: 36px; }
+.financial-analysis-actions, .financial-analysis-section > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.financial-analysis-filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; padding: 18px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--surface-color); box-shadow: var(--shadow-sm); }
+.financial-analysis-filters label { display: grid; gap: 7px; color: var(--text-secondary); font-size: 12px; font-weight: 700; }
+.financial-analysis-filters input, .financial-analysis-section select { min-height: 42px; padding: 0 11px; border: 1px solid var(--border-color); border-radius: 9px; background: var(--surface-color); color: var(--text-primary); }
+.financial-analysis-overview, .financial-analysis-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+/* Ratio cards and calculation details */
+.financial-analysis-section { display: grid; gap: 18px; padding: 22px; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--surface-color); box-shadow: var(--shadow-sm); }
+.financial-analysis-section h2, .financial-analysis-section p, .financial-analysis-method h2, .financial-analysis-method p { margin: 0; }
+.financial-analysis-section header p { margin-top: 4px; color: var(--text-secondary); font-size: 13px; }
+.ratio-card { min-width: 0; padding: 18px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--surface-color); }
+.ratio-card > header { display: flex; justify-content: space-between; gap: 10px; }.ratio-card h3 { margin: 0; font-size: 14px; }.ratio-card > strong { display: block; margin-top: 14px; font-size: 25px; font-variant-numeric: tabular-nums; }.ratio-card > small { display: block; margin-top: 5px; color: var(--text-secondary); }.ratio-card > p { min-height: 38px; margin: 12px 0; color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.ratio-card header span { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; }.ratio-card header .is-up { color: #166534; }.ratio-card header .is-down { color: #b42318; }.ratio-card.is-unavailable { background: #f8fafc; }.ratio-card.is-unavailable > strong { font-size: 17px; color: var(--text-secondary); }
+.ratio-card details { border-top: 1px solid var(--border-color); padding-top: 11px; }.ratio-card summary { display: flex; align-items: center; justify-content: space-between; color: var(--primary-color); cursor: pointer; font-size: 12px; font-weight: 700; }.ratio-card details div { display: grid; gap: 7px; padding-top: 10px; font-size: 12px; }.ratio-card details span, .ratio-card details em { color: var(--text-secondary); }
+/* Trend chart and supporting balances */
+.ratio-chart { min-width: 0; overflow: hidden; }.supporting-metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }.supporting-metric-grid article { display: grid; gap: 7px; padding: 16px; border: 1px solid var(--border-color); border-radius: 11px; }.supporting-metric-grid span { color: var(--text-secondary); font-size: 12px; }.supporting-metric-grid strong { font-size: 18px; }.supporting-metric-grid a { font-size: 12px; font-weight: 700; }
+.financial-analysis-method { display: flex; gap: 14px; padding: 20px; border: 1px solid #bfdbfe; border-radius: 12px; background: #eff6ff; }.financial-analysis-method svg { flex: none; color: var(--primary-color); }.financial-analysis-method p { margin-top: 5px; color: #475569; line-height: 1.6; }
+/* Responsive report layout */
+@media (max-width: 980px) { .financial-analysis-filters, .financial-analysis-overview, .financial-analysis-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.supporting-metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .financial-analysis-actions, .financial-analysis-section > header { align-items: stretch; flex-direction: column; }.financial-analysis-filters, .financial-analysis-overview, .financial-analysis-grid, .supporting-metric-grid { grid-template-columns: 1fr; } }

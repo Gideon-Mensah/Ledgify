@@ -1,0 +1,522 @@
+.asset-depreciation-history-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.asset-depreciation-history-header {
+  padding: 19px 20px;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.asset-depreciation-history-header h2 {
+  margin: 0 0 4px;
+  color: #101828;
+  font-size: 17px;
+}
+
+.asset-depreciation-history-header p {
+  max-width: 640px;
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.asset-depreciation-history-summary {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.asset-depreciation-history-summary div {
+  min-width: 110px;
+  padding: 10px 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #fcfcfd;
+}
+
+.asset-depreciation-history-summary span {
+  display: block;
+  margin-bottom: 4px;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.asset-depreciation-history-summary strong {
+  color: #101828;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.asset-depreciation-history-message {
+  margin: 16px 20px 0;
+  padding: 11px 13px;
+  border-radius: 9px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.asset-depreciation-history-message svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.asset-depreciation-history-message.is-success {
+  border: 1px solid #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.asset-depreciation-history-message.is-error {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.asset-depreciation-history-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.asset-depreciation-history-table {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.asset-depreciation-history-table th,
+.asset-depreciation-history-table td {
+  padding: 14px 15px;
+  border-bottom: 1px solid #eaecf0;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.asset-depreciation-history-table th {
+  background: #fcfcfd;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.asset-depreciation-history-table tbody td {
+  background: #ffffff;
+  color: #344054;
+  font-size: 13px;
+}
+
+.asset-depreciation-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.asset-depreciation-history-table tbody tr:hover td {
+  background: #fcfcfd;
+}
+
+.asset-depreciation-history-period {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.asset-depreciation-history-period svg {
+  margin-top: 2px;
+  color: #7f56d9;
+  flex: 0 0 auto;
+}
+
+.asset-depreciation-history-period strong,
+.asset-depreciation-history-period span {
+  display: block;
+}
+
+.asset-depreciation-history-period strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.asset-depreciation-history-period span {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 11px;
+}
+
+.asset-depreciation-history-journal {
+  color: #6941c6;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.asset-depreciation-history-journal:hover {
+  text-decoration: underline;
+}
+
+.asset-depreciation-history-status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.asset-depreciation-history-status.posted {
+  background: #dcfae6;
+  color: #067647;
+}
+
+.asset-depreciation-history-status.reversed {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.asset-depreciation-history-amount {
+  text-align: right !important;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.asset-depreciation-history-reversal-details {
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.asset-depreciation-history-reversal-details strong {
+  color: #344054;
+  font-size: 11px;
+}
+
+.asset-depreciation-history-reversal-details span {
+  overflow: hidden;
+  color: #667085;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asset-depreciation-history-reversal-details a {
+  color: #6941c6;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.asset-depreciation-history-reversal-details a:hover {
+  text-decoration: underline;
+}
+
+.asset-depreciation-history-not-reversed {
+  color: #98a2b3;
+  font-size: 11px;
+}
+
+.asset-depreciation-history-reverse-button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid #fda29b;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #b42318;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.asset-depreciation-history-reverse-button:hover {
+  background: #fef3f2;
+}
+
+.asset-depreciation-history-complete {
+  color: #667085;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.asset-depreciation-history-empty {
+  padding: 48px 20px !important;
+  color: #667085 !important;
+  text-align: center !important;
+}
+
+.asset-depreciation-history-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(16, 24, 40, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asset-depreciation-history-modal {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 24px 48px rgba(16, 24, 40, 0.22),
+    0 8px 20px rgba(16, 24, 40, 0.12);
+}
+
+.asset-depreciation-history-modal-header {
+  padding: 20px 22px;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.asset-depreciation-history-modal-header span {
+  display: block;
+  margin-bottom: 4px;
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.asset-depreciation-history-modal-header h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 21px;
+}
+
+.asset-depreciation-history-modal-header button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #667085;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.asset-depreciation-history-modal-body {
+  padding: 22px;
+  display: grid;
+  gap: 17px;
+}
+
+.asset-depreciation-history-warning {
+  padding: 14px;
+  border: 1px solid #fecdca;
+  border-radius: 10px;
+  background: #fef3f2;
+  color: #b42318;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.asset-depreciation-history-warning svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.asset-depreciation-history-warning p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.asset-depreciation-history-selected-posting {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.asset-depreciation-history-selected-posting div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #fcfcfd;
+}
+
+.asset-depreciation-history-selected-posting span {
+  display: block;
+  margin-bottom: 4px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.asset-depreciation-history-selected-posting strong {
+  display: block;
+  overflow: hidden;
+  color: #101828;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asset-depreciation-history-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.asset-depreciation-history-field input,
+.asset-depreciation-history-field textarea {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: 0;
+  background: #ffffff;
+  color: #101828;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.asset-depreciation-history-field input {
+  min-height: 42px;
+  padding: 0 11px;
+}
+
+.asset-depreciation-history-field textarea {
+  min-height: 100px;
+  padding: 11px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.asset-depreciation-history-field input:focus,
+.asset-depreciation-history-field textarea:focus {
+  border-color: #7f56d9;
+  box-shadow:
+    0 0 0 3px
+    rgba(127, 86, 217, 0.12);
+}
+
+.asset-depreciation-history-modal-footer {
+  padding: 16px 22px;
+  border-top: 1px solid #eaecf0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.asset-depreciation-history-cancel-button,
+.asset-depreciation-history-confirm-button {
+  min-height: 41px;
+  padding: 0 14px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.asset-depreciation-history-cancel-button {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.asset-depreciation-history-confirm-button {
+  border: 1px solid #d92d20;
+  background: #d92d20;
+  color: #ffffff;
+}
+
+.asset-depreciation-history-confirm-button:hover:not(:disabled) {
+  background: #b42318;
+}
+
+.asset-depreciation-history-cancel-button:disabled,
+.asset-depreciation-history-confirm-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .asset-depreciation-history-header {
+    flex-direction: column;
+  }
+
+  .asset-depreciation-history-summary {
+    width: 100%;
+  }
+
+  .asset-depreciation-history-summary div {
+    min-width: 0;
+    flex: 1;
+  }
+}
+
+@media (max-width: 600px) {
+  .asset-depreciation-history-summary,
+  .asset-depreciation-history-selected-posting {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .asset-depreciation-history-modal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .asset-depreciation-history-modal {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .asset-depreciation-history-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .asset-depreciation-history-cancel-button,
+  .asset-depreciation-history-confirm-button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,526 @@
+.period-locks-page {
+  width: 100%;
+  max-width: 1600px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 4px 0 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: #101828;
+}
+
+.period-locks-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.period-locks-header > div:first-child {
+  min-width: 0;
+}
+
+.period-locks-eyebrow {
+  display: inline-block;
+  margin-bottom: 5px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.period-locks-header h1 {
+  margin: 0 0 7px;
+  color: #101828;
+  font-size: clamp(27px, 3vw, 35px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.period-locks-header p {
+  max-width: 720px;
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.period-locks-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.period-locks-primary-button,
+.period-locks-secondary-button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.period-locks-primary-button {
+  border: 1px solid #7f56d9;
+  background: #7f56d9;
+  color: #ffffff;
+}
+
+.period-locks-primary-button:hover {
+  background: #6941c6;
+}
+
+.period-locks-secondary-button {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.period-locks-secondary-button:hover {
+  background: #f9fafb;
+}
+
+.period-locks-summary-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.period-locks-summary-card {
+  min-width: 0;
+  min-height: 116px;
+  padding: 20px;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.period-locks-summary-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: #f4f3ff;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.period-locks-summary-card > div:last-child {
+  min-width: 0;
+}
+
+.period-locks-summary-card span {
+  display: block;
+  margin-bottom: 7px;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.period-locks-summary-card strong {
+  display: block;
+  color: #101828;
+  font-size: 20px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.period-locks-summary-card small {
+  display: block;
+  margin-top: 6px;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.period-locks-guidance {
+  padding: 18px 20px;
+  border: 1px solid #d6bbfb;
+  border-radius: 14px;
+  background: #f9f5ff;
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.period-locks-guidance-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #e9d7fe;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.period-locks-guidance h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.period-locks-guidance p {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.period-locks-message {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.period-locks-message.is-success {
+  border: 1px solid #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.period-locks-message.is-error {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.period-locks-panel {
+  overflow: hidden;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.period-locks-panel-header {
+  padding: 19px 20px;
+  border-bottom: 1px solid #eaecf0;
+}
+
+.period-locks-panel-header h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.period-locks-panel-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.period-locks-global-form {
+  padding: 20px;
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 1fr)
+    minmax(300px, 1fr);
+  gap: 22px;
+}
+
+.period-locks-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.period-locks-field input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: 0;
+  background: #ffffff;
+  color: #344054;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.period-locks-field input:focus,
+.period-locks-notes textarea:focus {
+  border-color: #7f56d9;
+  box-shadow:
+    0 0 0 3px
+    rgba(127, 86, 217, 0.12);
+}
+
+.period-locks-field small {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.period-locks-checkbox {
+  padding: 15px;
+  border: 1px solid #eaecf0;
+  border-radius: 11px;
+  background: #fcfcfd;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  cursor: pointer;
+}
+
+.period-locks-checkbox input {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+  accent-color: #7f56d9;
+}
+
+.period-locks-checkbox strong,
+.period-locks-checkbox small {
+  display: block;
+}
+
+.period-locks-checkbox strong {
+  margin-bottom: 4px;
+  color: #344054;
+  font-size: 13px;
+}
+
+.period-locks-checkbox small {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.period-locks-area-grid {
+  padding: 20px;
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.period-locks-area-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #eaecf0;
+  border-radius: 12px;
+  background: #fcfcfd;
+}
+
+.period-locks-area-heading {
+  margin-bottom: 17px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.period-locks-area-icon {
+  width: 39px;
+  height: 39px;
+  border-radius: 10px;
+  background: #f4f3ff;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.period-locks-area-heading h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.period-locks-area-heading p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.period-locks-effective-date {
+  margin-top: 14px;
+  padding-top: 13px;
+  border-top: 1px solid #eaecf0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.period-locks-effective-date span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.period-locks-effective-date strong {
+  color: #344054;
+  font-size: 13px;
+}
+
+.period-locks-notes {
+  padding: 20px;
+}
+
+.period-locks-notes textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: 0;
+  resize: vertical;
+  color: #101828;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.period-locks-history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.period-locks-history-item {
+  padding: 18px 20px;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.period-locks-history-item:last-child {
+  border-bottom: 0;
+}
+
+.period-locks-history-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #f2f4f7;
+  color: #475467;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.period-locks-history-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.period-locks-history-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.period-locks-history-heading strong {
+  color: #101828;
+  font-size: 13px;
+}
+
+.period-locks-history-heading span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.period-locks-history-changes {
+  margin-top: 11px;
+  display: grid;
+  gap: 7px;
+}
+
+.period-locks-history-changes div {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 220px)
+    minmax(0, 1fr);
+  gap: 12px;
+}
+
+.period-locks-history-changes span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.period-locks-history-changes strong {
+  color: #344054;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.period-locks-history-content p {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.period-locks-empty {
+  padding: 42px 20px;
+  color: #667085;
+  text-align: center;
+  font-size: 13px;
+}
+
+@media (max-width: 1100px) {
+  .period-locks-summary-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .period-locks-page {
+    gap: 18px;
+  }
+
+  .period-locks-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .period-locks-header-actions {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+
+  .period-locks-primary-button,
+  .period-locks-secondary-button {
+    width: 100%;
+  }
+
+  .period-locks-summary-grid,
+  .period-locks-global-form,
+  .period-locks-area-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .period-locks-history-heading {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .period-locks-history-changes div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+}

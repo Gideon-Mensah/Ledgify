@@ -1,0 +1,1427 @@
+.year-end-page {
+  width: 100%;
+  max-width: 1600px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 4px 0 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: #101828;
+}
+
+.year-end-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.year-end-header>div:first-child {
+  min-width: 0;
+}
+
+.year-end-eyebrow {
+  display: inline-block;
+  margin-bottom: 5px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.year-end-header h1 {
+  margin: 0 0 7px;
+  color: #101828;
+  font-size: clamp(27px, 3vw, 35px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.year-end-header p {
+  max-width: 720px;
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.year-end-header-actions {
+  flex-shrink: 0;
+}
+
+.year-end-primary-button,
+.year-end-secondary-button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.year-end-primary-button {
+  border: 1px solid #7f56d9;
+  background: #7f56d9;
+  color: #ffffff;
+}
+
+.year-end-primary-button:hover:not(:disabled) {
+  background: #6941c6;
+}
+
+.year-end-primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.year-end-secondary-button {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.year-end-secondary-button:hover {
+  background: #f9fafb;
+}
+
+.year-end-summary-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.year-end-summary-card {
+  min-width: 0;
+  min-height: 112px;
+  padding: 20px;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 1px 3px rgba(16, 24, 40, 0.03);
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.year-end-summary-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: #f2f4f7;
+  color: #475467;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.year-end-summary-card>div:last-child {
+  min-width: 0;
+}
+
+.year-end-summary-card span {
+  display: block;
+  margin-bottom: 7px;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.year-end-summary-card strong {
+  display: block;
+  color: #101828;
+  font-size: clamp(20px, 2vw, 24px);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.year-end-summary-card small {
+  display: block;
+  margin-top: 6px;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.year-end-summary-card.is-profit,
+.year-end-summary-card.is-closed {
+  border-color: #abefc6;
+  background: #f6fef9;
+}
+
+.year-end-summary-card.is-profit .year-end-summary-icon,
+.year-end-summary-card.is-closed .year-end-summary-icon {
+  background: #dcfae6;
+  color: #067647;
+}
+
+.year-end-summary-card.is-loss {
+  border-color: #fecdca;
+  background: #fffbfa;
+}
+
+.year-end-summary-card.is-loss .year-end-summary-icon {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.year-end-summary-card.is-open {
+  border-color: #d6bbfb;
+  background: #f9f5ff;
+}
+
+.year-end-summary-card.is-open .year-end-summary-icon {
+  background: #e9d7fe;
+  color: #6941c6;
+}
+
+.year-end-checklist {
+  padding: 20px;
+  border: 1px solid #d6bbfb;
+  border-radius: 14px;
+  background: linear-gradient(135deg,
+      #f9f5ff,
+      #ffffff);
+}
+
+.year-end-checklist-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.year-end-checklist-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #e9d7fe;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.year-end-checklist-heading h2 {
+  margin: 0 0 4px;
+  color: #101828;
+  font-size: 17px;
+}
+
+.year-end-checklist-heading p {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.year-end-checklist-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+}
+
+.year-end-checklist-grid article {
+  color: #475467;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.year-end-checklist-grid svg {
+  margin-top: 1px;
+  color: #067647;
+  flex: 0 0 auto;
+}
+
+.year-end-panel,
+.year-end-history-panel {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.04),
+    0 1px 3px rgba(16, 24, 40, 0.03);
+}
+
+.year-end-toolbar {
+  padding: 18px 20px;
+  border-bottom: 1px solid #eaecf0;
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+}
+
+.year-end-search {
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  color: #667085;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.year-end-search:focus-within {
+  border-color: #7f56d9;
+  box-shadow:
+    0 0 0 3px rgba(127, 86, 217, 0.12);
+}
+
+.year-end-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #101828;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.year-end-year-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.year-end-year-field select {
+  min-width: 145px;
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: 0;
+  background: #ffffff;
+  color: #344054;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.year-end-year-field select:focus {
+  border-color: #7f56d9;
+  box-shadow:
+    0 0 0 3px rgba(127, 86, 217, 0.12);
+}
+
+.year-end-message {
+  padding: 11px 20px;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.year-end-message.is-success {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.year-end-message.is-error {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.year-end-message.is-warning {
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.year-end-close-details {
+  padding: 11px 20px;
+  border-bottom: 1px solid #eaecf0;
+  background: #f9fafb;
+  color: #475467;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.year-end-table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.year-end-table {
+  width: 100%;
+  min-width: 930px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.year-end-table th,
+.year-end-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eaecf0;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.year-end-table th {
+  background: #fcfcfd;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.year-end-table th:first-child,
+.year-end-table td:first-child {
+  width: 80px;
+}
+
+.year-end-table th:nth-child(2),
+.year-end-table td:nth-child(2) {
+  width: 250px;
+}
+
+.year-end-table th:nth-child(3),
+.year-end-table td:nth-child(3) {
+  width: 115px;
+}
+
+.year-end-table th:nth-child(4),
+.year-end-table td:nth-child(4),
+.year-end-table th:nth-child(5),
+.year-end-table td:nth-child(5),
+.year-end-table th:nth-child(6),
+.year-end-table td:nth-child(6) {
+  width: 155px;
+}
+
+.year-end-table tbody td {
+  background: #ffffff;
+  color: #344054;
+  font-size: 14px;
+}
+
+.year-end-table tbody tr:hover td {
+  background: #fcfcfd;
+}
+
+.year-end-code {
+  min-width: 48px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: #f2f4f7;
+  display: inline-flex;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.year-end-account {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.year-end-account strong,
+.year-end-account span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.year-end-account strong {
+  color: #101828;
+}
+
+.year-end-account span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.year-end-type {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f2f4f7;
+  color: #475467;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.year-end-amount {
+  text-align: right !important;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.year-end-table tfoot td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 0;
+  background: #f2f4f7;
+  color: #101828;
+  font-weight: 850;
+}
+
+.year-end-empty {
+  padding: 48px 20px !important;
+  color: #667085 !important;
+  text-align: center !important;
+}
+
+.year-end-history-header {
+  padding: 19px 20px;
+  border-bottom: 1px solid #eaecf0;
+}
+
+.year-end-history-header h2 {
+  margin: 0 0 4px;
+  color: #101828;
+  font-size: 17px;
+}
+
+.year-end-history-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.year-end-history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.year-end-history-item {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eaecf0;
+  display: grid;
+  grid-template-columns:
+    130px minmax(160px, 1fr) minmax(140px, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.year-end-history-item:last-child {
+  border-bottom: 0;
+}
+
+.year-end-history-year {
+  color: #344054;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.year-end-history-year svg {
+  color: #6941c6;
+}
+
+.year-end-history-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.year-end-history-details span {
+  color: #667085;
+  font-size: 11px;
+}
+
+.year-end-history-details strong {
+  overflow: hidden;
+  color: #101828;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.year-end-history-status {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.year-end-history-status.is-closed {
+  background: #dcfae6;
+  color: #067647;
+}
+
+.year-end-history-status.is-open {
+  background: #fef0c7;
+  color: #b54708;
+}
+
+.year-end-history-empty {
+  padding: 38px 20px;
+  color: #667085;
+  text-align: center;
+  font-size: 13px;
+}
+
+@media (max-width: 1150px) {
+  .year-end-summary-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .year-end-checklist-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .year-end-history-item {
+    grid-template-columns:
+      110px 1fr auto;
+  }
+
+  .year-end-history-details:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .year-end-page {
+    gap: 18px;
+  }
+
+  .year-end-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .year-end-primary-button,
+  .year-end-secondary-button {
+    width: 100%;
+  }
+
+  .year-end-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .year-end-toolbar {
+    padding: 16px;
+    grid-template-columns: 1fr;
+  }
+
+  .year-end-year-field select {
+    width: 100%;
+  }
+
+  .year-end-close-details {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .year-end-history-item {
+    grid-template-columns:
+      1fr auto;
+  }
+
+  .year-end-history-details {
+    display: none;
+  }
+}
+
+.year-end-financial-period-card {
+  padding: 18px 20px;
+  border: 1px solid #d6bbfb;
+  border-radius: 14px;
+  background: #f9f5ff;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.year-end-financial-period-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 11px;
+  background: #ebe9fe;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.year-end-financial-period-main {
+  min-width: 0;
+  margin-right: auto;
+}
+
+.year-end-financial-period-main>span,
+.year-end-financial-period-meta>span {
+  display: block;
+  margin-bottom: 3px;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.year-end-financial-period-main h2 {
+  margin: 0 0 3px;
+  color: #101828;
+  font-size: 20px;
+}
+
+.year-end-financial-period-main p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.year-end-financial-period-meta {
+  min-width: 130px;
+  padding-left: 18px;
+  border-left: 1px solid #d6bbfb;
+}
+
+.year-end-financial-period-meta strong {
+  color: #344054;
+  font-size: 13px;
+}
+
+.year-end-financial-period-meta strong.is-closed {
+  color: #067647;
+}
+
+.year-end-financial-period-meta strong.is-open {
+  color: #b54708;
+}
+
+.year-end-close-details {
+  padding: 13px 18px;
+  border-bottom: 1px solid #eaecf0;
+  background: #fcfcfd;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.year-end-close-details>div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.year-end-close-details>div>span {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.year-end-close-details>div>strong {
+  color: #344054;
+  font-size: 12px;
+}
+
+.year-end-journal-link {
+  color: #6941c6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.year-end-journal-link:hover {
+  text-decoration: underline;
+}
+
+.year-end-journal-link.is-reversal {
+  color: #b42318;
+}
+
+.year-end-account-link,
+.year-end-amount-link {
+  text-decoration: none;
+}
+
+.year-end-account-link {
+  color: inherit;
+}
+
+.year-end-account-link:hover {
+  color: #6941c6;
+  text-decoration: underline;
+}
+
+.year-end-amount-link {
+  color: inherit;
+}
+
+.year-end-amount-link:hover {
+  color: #6941c6;
+  text-decoration: underline;
+}
+
+.year-end-history-item-expanded {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+.year-end-history-main {
+  padding: 16px 18px;
+  display: grid;
+  grid-template-columns:
+    minmax(180px, 1.5fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.year-end-history-year {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.year-end-history-year svg {
+  margin-top: 2px;
+  color: #6941c6;
+  flex: 0 0 auto;
+}
+
+.year-end-history-year strong,
+.year-end-history-year span {
+  display: block;
+}
+
+.year-end-history-year strong {
+  color: #101828;
+  font-size: 14px;
+}
+
+.year-end-history-year span {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.year-end-history-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.year-end-history-links a {
+  color: #6941c6;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.year-end-history-links a:hover {
+  text-decoration: underline;
+}
+
+.year-end-history-events {
+  border-top: 1px solid #eaecf0;
+  background: #fcfcfd;
+}
+
+.year-end-history-event {
+  padding: 12px 18px;
+  border-bottom: 1px solid #eaecf0;
+  display: grid;
+  grid-template-columns:
+    30px minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.year-end-history-event:last-child {
+  border-bottom: 0;
+}
+
+.year-end-history-event-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.year-end-history-event-icon.is-close {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.year-end-history-event-icon.is-reopen {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.year-end-history-event strong,
+.year-end-history-event span {
+  display: block;
+}
+
+.year-end-history-event strong {
+  color: #344054;
+  font-size: 12px;
+}
+
+.year-end-history-event span {
+  margin-top: 2px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.year-end-history-event p {
+  margin: 4px 0 0;
+  color: #475467;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.year-end-history-event>a {
+  margin-top: 4px;
+  color: #6941c6;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.year-end-history-event>a:hover {
+  text-decoration: underline;
+}
+
+.year-end-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1800;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(16, 24, 40, 0.58);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.year-end-reopen-modal {
+  width: min(650px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 24px 48px rgba(16, 24, 40, 0.22),
+    0 8px 20px rgba(16, 24, 40, 0.12);
+}
+
+.year-end-reopen-modal-header {
+  padding: 20px 22px;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.year-end-reopen-modal-header>div>span {
+  display: block;
+  margin-bottom: 4px;
+  color: #b42318;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.year-end-reopen-modal-header h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 20px;
+}
+
+.year-end-reopen-modal-header p {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.year-end-reopen-modal-header>button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #667085;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.year-end-reopen-modal-header>button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.year-end-reopen-modal-body {
+  max-height: calc(100vh - 190px);
+  padding: 22px;
+  overflow-y: auto;
+  display: grid;
+  gap: 18px;
+}
+
+.year-end-reopen-warning {
+  padding: 14px;
+  border: 1px solid #fecdca;
+  border-radius: 10px;
+  background: #fef3f2;
+  color: #b42318;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.year-end-reopen-warning svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.year-end-reopen-warning strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 13px;
+}
+
+.year-end-reopen-warning p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.year-end-reopen-period {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.year-end-reopen-period>div {
+  padding: 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #fcfcfd;
+}
+
+.year-end-reopen-period span {
+  display: block;
+  margin-bottom: 4px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.year-end-reopen-period strong {
+  display: block;
+  color: #101828;
+  font-size: 12px;
+}
+
+.year-end-reopen-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.year-end-reopen-field input,
+.year-end-reopen-field textarea {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: none;
+  background: #ffffff;
+  color: #101828;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.year-end-reopen-field input {
+  min-height: 42px;
+  padding: 0 11px;
+}
+
+.year-end-reopen-field textarea {
+  min-height: 105px;
+  padding: 11px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.year-end-reopen-field input:focus,
+.year-end-reopen-field textarea:focus {
+  border-color: #d92d20;
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.1);
+}
+
+.year-end-reopen-field small {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.year-end-reopen-modal-footer {
+  padding: 16px 22px;
+  border-top: 1px solid #eaecf0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.year-end-reopen-cancel,
+.year-end-reopen-confirm {
+  min-height: 41px;
+  padding: 0 14px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.year-end-reopen-cancel {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.year-end-reopen-confirm {
+  border: 1px solid #d92d20;
+  background: #d92d20;
+  color: #ffffff;
+}
+
+.year-end-reopen-confirm:hover:not(:disabled) {
+  background: #b42318;
+}
+
+.year-end-reopen-cancel:disabled,
+.year-end-reopen-confirm:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.year-end-primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1000px) {
+  .year-end-history-main {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .year-end-history-status {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 750px) {
+  .year-end-financial-period-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .year-end-financial-period-main {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .year-end-financial-period-meta {
+    width: calc(50% - 8px);
+    padding: 12px;
+    border: 1px solid #d6bbfb;
+    border-radius: 9px;
+  }
+
+  .year-end-close-details {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .year-end-history-main {
+    grid-template-columns: 1fr;
+  }
+
+  .year-end-reopen-period {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .year-end-modal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .year-end-reopen-modal {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .year-end-reopen-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .year-end-reopen-cancel,
+  .year-end-reopen-confirm {
+    width: 100%;
+  }
+
+  .year-end-history-event {
+    grid-template-columns:
+      30px minmax(0, 1fr);
+  }
+
+  .year-end-history-event>a {
+    grid-column: 2;
+  }
+}
+
+.year-end-lock-control {
+  padding: 16px 18px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.year-end-lock-control.is-open {
+  border-color: #abefc6;
+  background: #ecfdf3;
+}
+
+.year-end-lock-control.is-locked {
+  border-color: #fecdca;
+  background: #fef3f2;
+}
+
+.year-end-lock-control-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.year-end-lock-control.is-open .year-end-lock-control-icon {
+  background: #d1fadf;
+  color: #067647;
+}
+
+.year-end-lock-control.is-locked .year-end-lock-control-icon {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.year-end-lock-control-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.year-end-lock-control-content>span {
+  display: block;
+  margin-bottom: 2px;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.year-end-lock-control-content>strong {
+  display: block;
+  color: #101828;
+  font-size: 13px;
+}
+
+.year-end-lock-control-content p {
+  margin: 4px 0 0;
+  color: #475467;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.year-end-lock-control-meta {
+  min-width: 150px;
+  padding-left: 18px;
+  border-left: 1px solid rgba(152,
+      162,
+      179,
+      0.35);
+}
+
+.year-end-lock-control-meta span,
+.year-end-lock-control-meta strong {
+  display: block;
+}
+
+.year-end-lock-control-meta span {
+  margin-bottom: 3px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.year-end-lock-control-meta strong {
+  color: #344054;
+  font-size: 12px;
+}
+
+.year-end-override-badge {
+  padding: 5px 8px;
+  border: 1px solid #fedf89;
+  border-radius: 999px;
+  background: #fffaeb;
+  color: #b54708;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.year-end-history-override-summary {
+  padding: 9px 18px;
+  border-top: 1px solid #fedf89;
+  background: #fffaeb;
+  color: #b54708;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.year-end-history-override-summary svg {
+  flex: 0 0 auto;
+}
+
+.year-end-history-override-badge {
+  width: fit-content;
+  margin-top: 6px;
+  padding: 4px 7px;
+  border: 1px solid #fedf89;
+  border-radius: 999px;
+  background: #fffaeb;
+  color: #b54708;
+  font-size: 9px !important;
+  font-weight: 700;
+}
+
+.year-end-reopen-lock-status {
+  padding: 12px 13px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.year-end-reopen-lock-status.is-open {
+  border-color: #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.year-end-reopen-lock-status.is-locked {
+  border-color: #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.year-end-reopen-lock-status>div:first-child {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.year-end-reopen-lock-status strong {
+  display: block;
+  font-size: 12px;
+}
+
+.year-end-reopen-lock-status p {
+  margin: 3px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.year-end-reopen-confirm:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 750px) {
+  .year-end-lock-control {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .year-end-lock-control-meta {
+    width: 100%;
+    padding: 10px 0 0;
+    border-left: 0;
+    border-top: 1px solid rgba(152,
+        162,
+        179,
+        0.35);
+  }
+}

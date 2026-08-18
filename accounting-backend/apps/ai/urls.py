@@ -1,0 +1,3 @@
+from rest_framework.routers import DefaultRouter
+from .views import ActionViewSet,AnomalyViewSet,ChatViewSet,ConversationViewSet,InsightViewSet,SettingsViewSet
+router=DefaultRouter();router.register("ai/chat",ChatViewSet,basename="ai-chat");router.register("ai/conversations",ConversationViewSet,basename="ai-conversation");router.register("ai/actions",ActionViewSet,basename="ai-action");router.register("ai/anomalies",AnomalyViewSet,basename="ai-anomaly");router.register("ai/insights",InsightViewSet,basename="ai-insight");router.register("ai/settings",SettingsViewSet,basename="ai-settings");urlpatterns=router.urls

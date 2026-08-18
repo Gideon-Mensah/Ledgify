@@ -1,0 +1,3 @@
+from rest_framework.routers import DefaultRouter
+from .views import BOMComponentViewSet,BOMVersionViewSet,BOMViewSet,ManufacturingReportViewSet,ProductionOrderViewSet
+router=DefaultRouter();router.register("boms",BOMViewSet,basename="bom");router.register("bom-versions",BOMVersionViewSet,basename="bom-version");router.register("bom-components",BOMComponentViewSet,basename="bom-component");router.register("production-orders",ProductionOrderViewSet,basename="production-order");router.register("manufacturing/reports",ManufacturingReportViewSet,basename="manufacturing-report");urlpatterns=router.urls

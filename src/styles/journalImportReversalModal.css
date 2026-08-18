@@ -1,0 +1,422 @@
+.journal-import-reversal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1800;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(16, 24, 40, 0.58);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.journal-import-reversal-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 24px 48px rgba(16, 24, 40, 0.22),
+    0 8px 20px rgba(16, 24, 40, 0.12);
+}
+
+.journal-import-reversal-modal form {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.journal-import-reversal-header {
+  padding: 20px 22px;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.journal-import-reversal-header span {
+  display: block;
+  margin-bottom: 4px;
+  color: #b42318;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.journal-import-reversal-header h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 21px;
+}
+
+.journal-import-reversal-header p {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.journal-import-reversal-header > button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #667085;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+.journal-import-reversal-header > button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.journal-import-reversal-body {
+  max-height: calc(100vh - 190px);
+  padding: 22px;
+  overflow-y: auto;
+  display: grid;
+  gap: 18px;
+}
+
+.journal-import-reversal-warning {
+  padding: 14px;
+  border: 1px solid #fecdca;
+  border-radius: 10px;
+  background: #fef3f2;
+  color: #b42318;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.journal-import-reversal-warning svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.journal-import-reversal-warning strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.journal-import-reversal-warning p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.journal-import-reversal-message {
+  padding: 12px 14px;
+  border-radius: 9px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.journal-import-reversal-message svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.journal-import-reversal-message.is-success {
+  border: 1px solid #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.journal-import-reversal-message.is-error {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.journal-import-reversal-message.is-warning {
+  border: 1px solid #fedf89;
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.journal-import-reversal-summary,
+.journal-import-reversal-result-summary {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.journal-import-reversal-summary div,
+.journal-import-reversal-result-summary div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #fcfcfd;
+}
+
+.journal-import-reversal-summary span,
+.journal-import-reversal-result-summary span {
+  display: block;
+  margin-bottom: 4px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.journal-import-reversal-summary strong,
+.journal-import-reversal-result-summary strong {
+  display: block;
+  overflow: hidden;
+  color: #101828;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-import-reversal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.journal-import-reversal-field input,
+.journal-import-reversal-field textarea {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: 0;
+  background: #ffffff;
+  color: #101828;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.journal-import-reversal-field input {
+  min-height: 42px;
+  padding: 0 11px;
+}
+
+.journal-import-reversal-field textarea {
+  min-height: 105px;
+  padding: 11px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.journal-import-reversal-field input:focus,
+.journal-import-reversal-field textarea:focus {
+  border-color: #d92d20;
+  box-shadow:
+    0 0 0 3px
+    rgba(217, 45, 32, 0.1);
+}
+
+.journal-import-reversal-results-panel,
+.journal-import-reversal-errors-panel {
+  overflow: hidden;
+  border: 1px solid #eaecf0;
+  border-radius: 11px;
+  background: #ffffff;
+}
+
+.journal-import-reversal-section-heading {
+  padding: 14px 15px;
+  border-bottom: 1px solid #eaecf0;
+  background: #fcfcfd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.journal-import-reversal-section-heading h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.journal-import-reversal-section-heading span {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.journal-import-reversal-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.journal-import-reversal-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.journal-import-reversal-table th,
+.journal-import-reversal-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #eaecf0;
+  text-align: left;
+}
+
+.journal-import-reversal-table th {
+  background: #fcfcfd;
+  color: #667085;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.journal-import-reversal-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.journal-import-reversal-table td {
+  color: #344054;
+  font-size: 12px;
+}
+
+.journal-import-reversal-table a {
+  color: #6941c6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.journal-import-reversal-table a:hover {
+  text-decoration: underline;
+}
+
+.journal-import-reversal-error-list {
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.journal-import-reversal-error-list > div {
+  padding: 10px 11px;
+  border: 1px solid #fecdca;
+  border-radius: 8px;
+  background: #fef3f2;
+  color: #b42318;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.journal-import-reversal-error-list svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.journal-import-reversal-error-list strong,
+.journal-import-reversal-error-list span {
+  display: block;
+}
+
+.journal-import-reversal-error-list strong {
+  margin-bottom: 3px;
+  font-size: 12px;
+}
+
+.journal-import-reversal-error-list span {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.journal-import-reversal-footer {
+  padding: 16px 22px;
+  border-top: 1px solid #eaecf0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.journal-import-reversal-cancel,
+.journal-import-reversal-confirm,
+.journal-import-reversal-close {
+  min-height: 41px;
+  padding: 0 14px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.journal-import-reversal-cancel {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.journal-import-reversal-confirm {
+  border: 1px solid #d92d20;
+  background: #d92d20;
+  color: #ffffff;
+}
+
+.journal-import-reversal-confirm:hover:not(:disabled) {
+  background: #b42318;
+}
+
+.journal-import-reversal-close {
+  border: 1px solid #7f56d9;
+  background: #7f56d9;
+  color: #ffffff;
+}
+
+.journal-import-reversal-cancel:disabled,
+.journal-import-reversal-confirm:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 650px) {
+  .journal-import-reversal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .journal-import-reversal-modal {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .journal-import-reversal-summary,
+  .journal-import-reversal-result-summary {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .journal-import-reversal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .journal-import-reversal-cancel,
+  .journal-import-reversal-confirm,
+  .journal-import-reversal-close {
+    width: 100%;
+  }
+}

@@ -1,0 +1,866 @@
+.account-transactions-page {
+    width: 100%;
+    max-width: 1600px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 4px 0 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    color: #101828;
+}
+
+.account-transactions-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.account-transactions-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.account-transactions-header h1 {
+    margin: 0 0 7px;
+    font-size: clamp(27px, 3vw, 35px);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.account-transactions-header p {
+    max-width: 720px;
+    margin: 0;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.account-transactions-export-button {
+    min-height: 42px;
+    padding: 0 16px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #344054;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.account-transactions-export-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.account-transactions-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.account-transactions-summary-card {
+    min-width: 0;
+    min-height: 114px;
+    padding: 20px;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #ffffff;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.account-transactions-summary-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #f4f3ff;
+    color: #6941c6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.account-transactions-summary-card span {
+    display: block;
+    margin-bottom: 7px;
+    color: #667085;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.account-transactions-summary-card strong {
+    display: block;
+    color: #101828;
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+}
+
+.account-transactions-summary-card small {
+    display: block;
+    margin-top: 6px;
+    color: #667085;
+    font-size: 12px;
+}
+
+.account-transactions-summary-card.is-debit {
+    border-color: #b2ddff;
+    background: #f5fbff;
+}
+
+.account-transactions-summary-card.is-credit {
+    border-color: #d6bbfb;
+    background: #f9f5ff;
+}
+
+.account-transactions-summary-card.is-closing {
+    border-color: #abefc6;
+    background: #f6fef9;
+}
+
+.account-transactions-panel {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.account-transactions-toolbar {
+    padding: 18px 20px;
+    border-bottom: 1px solid #eaecf0;
+    display: grid;
+    grid-template-columns:
+        minmax(250px, 0.8fr) minmax(280px, 1fr) auto auto;
+    align-items: end;
+    gap: 12px;
+}
+
+.account-transactions-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.account-transactions-field select,
+.account-transactions-field input {
+    min-width: 145px;
+    min-height: 42px;
+    padding: 0 11px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    outline: 0;
+    background: #ffffff;
+    color: #344054;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.account-transactions-search {
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    color: #667085;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.account-transactions-search input {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.account-transactions-field select:focus,
+.account-transactions-field input:focus,
+.account-transactions-search:focus-within {
+    border-color: #7f56d9;
+    box-shadow: 0 0 0 3px rgba(127, 86, 217, 0.12);
+}
+
+.account-transactions-account-bar,
+.account-transactions-error {
+    min-height: 44px;
+    padding: 0 20px;
+    border-bottom: 1px solid #eaecf0;
+}
+
+.account-transactions-account-bar {
+    background: #f9fafb;
+    color: #475467;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    font-size: 13px;
+}
+
+.account-transactions-account-bar div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.account-transactions-error {
+    background: #fef3f2;
+    color: #b42318;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.account-transactions-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.account-transactions-table {
+    width: 100%;
+    min-width: 1250px;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+.account-transactions-table th,
+.account-transactions-table td {
+    padding: 14px 15px;
+    border-bottom: 1px solid #eaecf0;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.account-transactions-table th {
+    background: #fcfcfd;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.account-transactions-table tbody td {
+    background: #ffffff;
+    color: #344054;
+    font-size: 13px;
+}
+
+.account-transactions-table tbody tr:hover td {
+    background: #fcfcfd;
+}
+
+.account-transactions-opening-row td {
+    background: #f9fafb !important;
+    color: #475467 !important;
+    font-weight: 650;
+}
+
+.account-transactions-journal-link {
+    display: block;
+    color: #6941c6;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.account-transactions-journal-link:hover {
+    text-decoration: underline;
+}
+
+.account-transactions-table td small {
+    display: block;
+    margin-top: 4px;
+    overflow: hidden;
+    color: #667085;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-transactions-description {
+    display: block;
+    overflow: hidden;
+    color: #101828;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-transactions-source {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #f2f4f7;
+    color: #475467;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.account-transactions-amount {
+    text-align: right !important;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.account-transactions-running {
+    color: #067647 !important;
+    font-weight: 800;
+}
+
+.account-transactions-table tfoot td {
+    border-bottom: 0;
+    background: #f2f4f7;
+    color: #101828;
+    font-weight: 800;
+}
+
+.account-transactions-empty {
+    padding: 52px 20px !important;
+    color: #667085 !important;
+    text-align: center !important;
+}
+
+@media (max-width: 1100px) {
+    .account-transactions-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .account-transactions-toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .account-transactions-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .account-transactions-export-button {
+        width: 100%;
+    }
+
+    .account-transactions-summary-grid,
+    .account-transactions-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .account-transactions-field select,
+    .account-transactions-field input {
+        width: 100%;
+    }
+
+    .account-transactions-account-bar {
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: center;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+}
+
+.account-transactions-search-clear {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #667085;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    font-family: inherit;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.account-transactions-search-clear:hover {
+    background: #f2f4f7;
+    color: #344054;
+}
+
+.account-transactions-report-warning {
+  padding: 12px 14px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.account-transactions-report-warning.is-error {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.account-transactions-report-warning svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.account-transactions-report-warning strong,
+.account-transactions-report-warning span {
+  display: block;
+}
+
+.account-transactions-report-warning strong {
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+
+.account-transactions-report-warning span {
+  font-size: 12px;
+}
+
+.account-transactions-period-controls {
+  padding: 18px 20px;
+  border-bottom: 1px solid #eaecf0;
+  background: #fcfcfd;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.account-transactions-period-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.account-transactions-period-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f4f3ff;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.account-transactions-period-heading h2 {
+  margin: 0 0 3px;
+  color: #101828;
+  font-size: 15px;
+}
+
+.account-transactions-period-heading p {
+  margin: 0;
+  color: #667085;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.account-transactions-period-selectors {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.account-transactions-period-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-transactions-period-field > span {
+  color: #475467;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.account-transactions-period-field select {
+  min-width: 205px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #344054;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.account-transactions-period-field select:focus {
+  border-color: #7f56d9;
+  box-shadow:
+    0 0 0 3px
+    rgba(127, 86, 217, 0.1);
+}
+
+.account-transactions-period-reset {
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #344054;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.account-transactions-period-reset:hover {
+  background: #f9fafb;
+}
+
+.account-transactions-refresh {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #475467;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  cursor: pointer;
+}
+
+.account-transactions-refresh:hover {
+  background: #f9fafb;
+  color: #6941c6;
+}
+
+.account-transactions-period-bar {
+  padding: 13px 20px;
+  border-bottom: 1px solid #eaecf0;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.account-transactions-period-bar > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-transactions-period-bar span {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.account-transactions-period-bar strong {
+  color: #344054;
+  font-size: 12px;
+}
+
+.account-transactions-account-bar {
+  gap: 24px;
+}
+
+.account-transactions-account-bar > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.account-transactions-account-bar > div:first-child > div {
+  min-width: 0;
+}
+
+.account-transactions-account-bar > div:first-child span,
+.account-transactions-account-bar > div:first-child small {
+  display: block;
+}
+
+.account-transactions-account-bar > div:first-child small {
+  margin-top: 2px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.account-transactions-account-bar-summary {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.account-transactions-account-bar-summary + .account-transactions-account-bar-summary {
+  margin-left: 0;
+}
+
+.account-transactions-account-bar-summary span {
+  color: #667085;
+  font-size: 9px;
+}
+
+.account-transactions-account-bar-summary strong {
+  color: #344054;
+  font-size: 11px;
+}
+
+.account-transactions-journal-link {
+  color: #6941c6;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.account-transactions-journal-link:hover {
+  text-decoration: underline;
+}
+
+.account-transactions-journal-text {
+  color: #344054;
+}
+
+.account-transactions-entry-badge {
+  width: fit-content;
+  margin-top: 5px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.account-transactions-entry-badge.is-reversal {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.account-transactions-entry-badge.is-reversed {
+  border: 1px solid #fedf89;
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.account-transactions-reversal-row {
+  background: #fffafa;
+}
+
+.account-transactions-state {
+  padding: 56px 20px;
+  color: #667085;
+  text-align: center;
+}
+
+.account-transactions-state svg {
+  margin-bottom: 10px;
+  color: #d92d20;
+}
+
+.account-transactions-state h2 {
+  margin: 0 0 6px;
+  color: #344054;
+  font-size: 16px;
+}
+
+.account-transactions-state p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.account-transactions-integrity {
+  padding: 12px 18px;
+  border-top: 1px solid #eaecf0;
+  background: #ecfdf3;
+  color: #067647;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.account-transactions-integrity svg {
+  flex: 0 0 auto;
+}
+
+.account-transactions-export-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .account-transactions-period-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-transactions-period-selectors {
+    width: 100%;
+  }
+
+  .account-transactions-period-field {
+    flex: 1;
+  }
+
+  .account-transactions-period-field select {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 800px) {
+  .account-transactions-period-selectors {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .account-transactions-period-reset {
+    width: 100%;
+  }
+
+  .account-transactions-period-bar {
+    display: grid;
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+    gap: 12px;
+  }
+
+  .account-transactions-account-bar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .account-transactions-account-bar-summary {
+    margin-left: 0;
+  }
+
+  .account-transactions-refresh {
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .account-transactions-period-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.account-transactions-search-summary {
+  padding: 12px 18px;
+  border-bottom: 1px solid #fedf89;
+  background: #fffaeb;
+  color: #854a0e;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-transactions-search-summary > svg {
+  flex: 0 0 auto;
+}
+
+.account-transactions-search-summary > div:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+
+.account-transactions-search-summary strong,
+.account-transactions-search-summary span {
+  display: block;
+}
+
+.account-transactions-search-summary > div:nth-child(2) > strong {
+  margin-bottom: 2px;
+  font-size: 11px;
+}
+
+.account-transactions-search-summary > div:nth-child(2) > span {
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.account-transactions-search-summary-values {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.account-transactions-search-summary-values > span {
+  color: #667085;
+  font-size: 9px;
+}
+
+.account-transactions-search-summary-values strong {
+  margin-top: 2px;
+  color: #344054;
+  font-size: 11px;
+}
+
+.account-transactions-entry-badge.is-opening {
+  border: 1px solid #b2ddff;
+  background: #eff8ff;
+  color: #175cd3;
+}
+
+.account-transactions-visible-total-row {
+  background: #fffaeb;
+}
+
+.account-transactions-visible-total-row td {
+  color: #854a0e;
+}
+
+.account-transactions-running small,
+.account-transactions-table tfoot small {
+  margin-top: 2px;
+  display: block;
+  color: #667085;
+  font-size: 9px;
+}
+
+@media (max-width: 760px) {
+  .account-transactions-search-summary {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .account-transactions-search-summary-values {
+    width: 100%;
+    padding-left: 26px;
+  }
+}

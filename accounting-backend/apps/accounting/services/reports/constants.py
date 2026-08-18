@@ -1,0 +1,5 @@
+REVENUE = "revenue"
+EXPENSE = "expense"
+ASSET = "asset"
+LIABILITY = "liability"
+EQUITY = "equity"

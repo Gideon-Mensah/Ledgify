@@ -1,0 +1,590 @@
+.asset-transaction-accounting-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.asset-transaction-accounting-header {
+  padding: 19px 20px;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.asset-transaction-accounting-header h2 {
+  margin: 0 0 4px;
+  color: #101828;
+  font-size: 17px;
+}
+
+.asset-transaction-accounting-header p {
+  max-width: 650px;
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.asset-transaction-accounting-header-summary {
+  min-width: 175px;
+  padding: 11px 13px;
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  background: #fcfcfd;
+  flex-shrink: 0;
+}
+
+.asset-transaction-accounting-header-summary span {
+  display: block;
+  margin-bottom: 4px;
+  color: #667085;
+  font-size: 11px;
+}
+
+.asset-transaction-accounting-header-summary strong {
+  color: #101828;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.asset-transaction-accounting-message {
+  margin: 16px 20px 0;
+  padding: 11px 13px;
+  border-radius: 9px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.asset-transaction-accounting-message svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.asset-transaction-accounting-message.is-success {
+  border: 1px solid #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.asset-transaction-accounting-message.is-error {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.asset-transaction-accounting-grid {
+  padding: 20px;
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.asset-transaction-accounting-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid #eaecf0;
+  border-radius: 12px;
+  background: #fcfcfd;
+}
+
+.asset-transaction-accounting-card-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.asset-transaction-accounting-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: #f4f3ff;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.asset-transaction-accounting-icon.is-disposal {
+  background: #fef0c7;
+  color: #b54708;
+}
+
+.asset-transaction-accounting-card-heading h3 {
+  margin: 0 0 4px;
+  color: #101828;
+  font-size: 15px;
+}
+
+.asset-transaction-accounting-card-heading p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.asset-transaction-accounting-entry {
+  margin-top: 17px;
+  padding: 13px;
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  background: #ffffff;
+  display: grid;
+  gap: 11px;
+}
+
+.asset-transaction-accounting-entry div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.asset-transaction-accounting-entry span {
+  color: #667085;
+  font-size: 11px;
+}
+
+.asset-transaction-accounting-entry strong {
+  color: #344054;
+  font-size: 12px;
+  text-align: right;
+}
+
+.asset-transaction-accounting-entry strong.is-gain {
+  color: #067647;
+}
+
+.asset-transaction-accounting-entry strong.is-loss {
+  color: #b42318;
+}
+
+.asset-transaction-accounting-status-row {
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.asset-transaction-accounting-status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.asset-transaction-accounting-status.posted {
+  background: #dcfae6;
+  color: #067647;
+}
+
+.asset-transaction-accounting-status.reversed {
+  background: #fee4e2;
+  color: #b42318;
+}
+
+.asset-transaction-accounting-status.not-posted {
+  background: #f2f4f7;
+  color: #475467;
+}
+
+.asset-transaction-accounting-status-row a {
+  color: #6941c6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.asset-transaction-accounting-status-row a:hover {
+  text-decoration: underline;
+}
+
+.asset-transaction-accounting-primary-button,
+.asset-transaction-accounting-disposal-button,
+.asset-transaction-accounting-reverse-button {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 13px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.asset-transaction-accounting-primary-button {
+  border: 1px solid #7f56d9;
+  background: #7f56d9;
+  color: #ffffff;
+}
+
+.asset-transaction-accounting-primary-button:hover {
+  background: #6941c6;
+}
+
+.asset-transaction-accounting-disposal-button {
+  border: 1px solid #b54708;
+  background: #b54708;
+  color: #ffffff;
+}
+
+.asset-transaction-accounting-disposal-button:hover:not(:disabled) {
+  background: #93370d;
+}
+
+.asset-transaction-accounting-reverse-button {
+  border: 1px solid #fda29b;
+  background: #ffffff;
+  color: #b42318;
+}
+
+.asset-transaction-accounting-reverse-button:hover {
+  background: #fef3f2;
+}
+
+.asset-transaction-accounting-disposal-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.asset-transaction-accounting-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(16, 24, 40, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asset-transaction-accounting-modal {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 24px 48px rgba(16, 24, 40, 0.22),
+    0 8px 20px rgba(16, 24, 40, 0.12);
+}
+
+.asset-transaction-accounting-modal.is-wide {
+  width: min(760px, 100%);
+}
+
+.asset-transaction-accounting-modal form {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-transaction-accounting-modal-header {
+  padding: 20px 22px;
+  border-bottom: 1px solid #eaecf0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.asset-transaction-accounting-modal-header span {
+  display: block;
+  margin-bottom: 4px;
+  color: #7f56d9;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.asset-transaction-accounting-modal-header h2 {
+  margin: 0;
+  color: #101828;
+  font-size: 21px;
+}
+
+.asset-transaction-accounting-modal-header button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #eaecf0;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #667085;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.asset-transaction-accounting-modal-body {
+  min-height: 0;
+  padding: 22px;
+  overflow-y: auto;
+  display: grid;
+  gap: 17px;
+}
+
+.asset-transaction-accounting-journal-preview {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.asset-transaction-accounting-journal-preview div,
+.asset-transaction-accounting-disposal-summary div {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+  background: #fcfcfd;
+}
+
+.asset-transaction-accounting-journal-preview span,
+.asset-transaction-accounting-journal-preview strong,
+.asset-transaction-accounting-journal-preview small,
+.asset-transaction-accounting-disposal-summary span,
+.asset-transaction-accounting-disposal-summary strong {
+  display: block;
+}
+
+.asset-transaction-accounting-journal-preview span,
+.asset-transaction-accounting-disposal-summary span {
+  margin-bottom: 5px;
+  color: #667085;
+  font-size: 10px;
+}
+
+.asset-transaction-accounting-journal-preview strong,
+.asset-transaction-accounting-disposal-summary strong {
+  overflow: hidden;
+  color: #101828;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asset-transaction-accounting-journal-preview small {
+  margin-top: 5px;
+  color: #6941c6;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.asset-transaction-accounting-warning {
+  padding: 13px;
+  border: 1px solid #fedf89;
+  border-radius: 10px;
+  background: #fffaeb;
+  color: #b54708;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.asset-transaction-accounting-warning.is-reversal {
+  border-color: #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.asset-transaction-accounting-warning svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.asset-transaction-accounting-warning p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.asset-transaction-accounting-disposal-summary {
+  display: grid;
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.asset-transaction-accounting-form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.asset-transaction-accounting-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #344054;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.asset-transaction-accounting-field input,
+.asset-transaction-accounting-field select,
+.asset-transaction-accounting-field textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: 0;
+  background: #ffffff;
+  color: #101828;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.asset-transaction-accounting-field input,
+.asset-transaction-accounting-field select {
+  min-height: 42px;
+  padding: 0 11px;
+}
+
+.asset-transaction-accounting-field textarea {
+  min-height: 100px;
+  padding: 11px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.asset-transaction-accounting-field input:focus,
+.asset-transaction-accounting-field select:focus,
+.asset-transaction-accounting-field textarea:focus {
+  border-color: #7f56d9;
+  box-shadow:
+    0 0 0 3px
+    rgba(127, 86, 217, 0.12);
+}
+
+.asset-transaction-accounting-field small {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.asset-transaction-accounting-modal-footer {
+  padding: 16px 22px;
+  border-top: 1px solid #eaecf0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.asset-transaction-accounting-cancel-button,
+.asset-transaction-accounting-confirm-button,
+.asset-transaction-accounting-disposal-confirm-button,
+.asset-transaction-accounting-reversal-confirm-button {
+  min-height: 41px;
+  padding: 0 14px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.asset-transaction-accounting-cancel-button {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.asset-transaction-accounting-confirm-button {
+  border: 1px solid #7f56d9;
+  background: #7f56d9;
+  color: #ffffff;
+}
+
+.asset-transaction-accounting-disposal-confirm-button {
+  border: 1px solid #b54708;
+  background: #b54708;
+  color: #ffffff;
+}
+
+.asset-transaction-accounting-reversal-confirm-button {
+  border: 1px solid #d92d20;
+  background: #d92d20;
+  color: #ffffff;
+}
+
+.asset-transaction-accounting-cancel-button:disabled,
+.asset-transaction-accounting-confirm-button:disabled,
+.asset-transaction-accounting-disposal-confirm-button:disabled,
+.asset-transaction-accounting-reversal-confirm-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+  .asset-transaction-accounting-header {
+    flex-direction: column;
+  }
+
+  .asset-transaction-accounting-header-summary {
+    width: 100%;
+  }
+
+  .asset-transaction-accounting-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .asset-transaction-accounting-journal-preview,
+  .asset-transaction-accounting-disposal-summary,
+  .asset-transaction-accounting-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-transaction-accounting-modal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .asset-transaction-accounting-modal,
+  .asset-transaction-accounting-modal.is-wide {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .asset-transaction-accounting-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .asset-transaction-accounting-cancel-button,
+  .asset-transaction-accounting-confirm-button,
+  .asset-transaction-accounting-disposal-confirm-button,
+  .asset-transaction-accounting-reversal-confirm-button {
+    width: 100%;
+  }
+}

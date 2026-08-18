@@ -1,0 +1,423 @@
+.financial-year-settings-page {
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 4px 0 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    color: #101828;
+}
+
+.financial-year-settings-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.financial-year-settings-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.financial-year-settings-header h1 {
+    margin: 0 0 7px;
+    font-size: clamp(27px, 3vw, 35px);
+    letter-spacing: -0.025em;
+}
+
+.financial-year-settings-header p {
+    max-width: 720px;
+    margin: 0;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.financial-year-settings-reset-button,
+.financial-year-settings-save-button {
+    min-height: 42px;
+    padding: 0 15px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.financial-year-settings-reset-button {
+    border: 1px solid #d0d5dd;
+    background: #fff;
+    color: #344054;
+}
+
+.financial-year-settings-reset-button:hover:not(:disabled) {
+    background: #f9fafb;
+}
+
+.financial-year-settings-save-button {
+    border: 1px solid #7f56d9;
+    background: #7f56d9;
+    color: #fff;
+}
+
+.financial-year-settings-save-button:hover:not(:disabled) {
+    background: #6941c6;
+}
+
+.financial-year-settings-reset-button:disabled,
+.financial-year-settings-save-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.financial-year-settings-message {
+    padding: 12px 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.financial-year-settings-message.is-success {
+    border: 1px solid #abefc6;
+    background: #ecfdf3;
+    color: #067647;
+}
+
+.financial-year-settings-message.is-error {
+    border: 1px solid #fecdca;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.financial-year-settings-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.financial-year-settings-summary-card {
+    min-height: 116px;
+    padding: 20px;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #fff;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.financial-year-settings-summary-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #f4f3ff;
+    color: #6941c6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.financial-year-settings-summary-card span {
+    display: block;
+    margin-bottom: 6px;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.financial-year-settings-summary-card strong {
+    display: block;
+    color: #101828;
+    font-size: 19px;
+}
+
+.financial-year-settings-summary-card small {
+    display: block;
+    margin-top: 6px;
+    color: #667085;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.financial-year-settings-panel {
+    margin-bottom: 22px;
+    overflow: hidden;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #fff;
+}
+
+.financial-year-settings-panel-header {
+    padding: 19px 20px;
+    border-bottom: 1px solid #eaecf0;
+}
+
+.financial-year-settings-panel-header h2 {
+    margin: 0 0 4px;
+    font-size: 17px;
+}
+
+.financial-year-settings-panel-header p {
+    margin: 0;
+    color: #667085;
+    font-size: 13px;
+}
+
+.financial-year-settings-form-grid {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.financial-year-settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: #344054;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.financial-year-settings-field select,
+.financial-year-settings-field input {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 11px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    outline: none;
+    background: #fff;
+    color: #101828;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.financial-year-settings-field select:focus,
+.financial-year-settings-field input:focus {
+    border-color: #7f56d9;
+    box-shadow: 0 0 0 3px rgba(127, 86, 217, 0.1);
+}
+
+.financial-year-settings-field small {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.financial-year-settings-preview {
+    margin: 0 20px 20px;
+    padding: 16px;
+    border: 1px solid #d6bbfb;
+    border-radius: 11px;
+    background: #f9f5ff;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.financial-year-settings-preview-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #ebe9fe;
+    color: #6941c6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.financial-year-settings-preview span {
+    color: #6941c6;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.financial-year-settings-preview h3 {
+    margin: 3px 0;
+    font-size: 15px;
+}
+
+.financial-year-settings-preview p {
+    margin: 0;
+    color: #667085;
+    font-size: 12px;
+}
+
+.financial-year-settings-period-options {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.financial-year-settings-period-option {
+    padding: 16px;
+    border: 1px solid #d0d5dd;
+    border-radius: 11px;
+    background: #fff;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    cursor: pointer;
+}
+
+.financial-year-settings-period-option.is-selected {
+    border-color: #7f56d9;
+    background: #f9f5ff;
+    box-shadow: 0 0 0 1px #7f56d9;
+}
+
+.financial-year-settings-period-option input {
+    margin-top: 3px;
+    accent-color: #7f56d9;
+}
+
+.financial-year-settings-period-option strong {
+    color: #101828;
+    font-size: 13px;
+}
+
+.financial-year-settings-period-option p {
+    margin: 4px 0 0;
+    color: #667085;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.financial-year-settings-years-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.financial-year-settings-years-table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.financial-year-settings-years-table th,
+.financial-year-settings-years-table td {
+    padding: 13px 18px;
+    border-bottom: 1px solid #eaecf0;
+    text-align: left;
+}
+
+.financial-year-settings-years-table th {
+    background: #fcfcfd;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.financial-year-settings-years-table td {
+    color: #344054;
+    font-size: 13px;
+}
+
+.financial-year-settings-years-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.financial-year-settings-current-badge,
+.financial-year-settings-standard-badge {
+    padding: 5px 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.financial-year-settings-current-badge {
+    background: #dcfae6;
+    color: #067647;
+}
+
+.financial-year-settings-standard-badge {
+    background: #f2f4f7;
+    color: #475467;
+}
+
+.financial-year-settings-footer {
+    padding: 18px 20px;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.financial-year-settings-footer > div {
+    max-width: 780px;
+    color: #667085;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+}
+
+.financial-year-settings-footer svg {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.financial-year-settings-footer p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+    .financial-year-settings-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .financial-year-settings-period-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 700px) {
+    .financial-year-settings-header {
+        flex-direction: column;
+    }
+
+    .financial-year-settings-reset-button {
+        width: 100%;
+    }
+
+    .financial-year-settings-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .financial-year-settings-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .financial-year-settings-save-button {
+        width: 100%;
+    }
+}

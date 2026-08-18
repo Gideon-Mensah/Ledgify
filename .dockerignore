@@ -1,0 +1,7 @@
+.git
+node_modules
+dist
+accounting-backend/venv
+accounting-backend/db.sqlite3
+accounting-backend/.env
+.env

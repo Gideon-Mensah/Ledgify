@@ -1,0 +1,3 @@
+from apps.consolidation.models import ConsolidationAccountMapping,EliminationJournal
+from apps.consolidation.services import consolidated_balance_sheet,consolidated_profit_loss,consolidated_trial_balance
+def consolidation_context(*,group,period):return {"trial_balance":consolidated_trial_balance(group=group,period=period),"profit_loss":consolidated_profit_loss(group=group,period=period),"balance_sheet":consolidated_balance_sheet(group=group,period=period),"mappings":ConsolidationAccountMapping.objects.filter(group=group).count(),"eliminations":list(EliminationJournal.objects.filter(group=group,period=period).values("id","entry_number","status")),"limitations":["NCI, equity method, proportionate consolidation, full CTA and consolidated cash flow are unsupported."]}

@@ -1,0 +1,68 @@
+.credit-notes-page { display: flex; width: 100%; min-width: 0; padding-bottom: 36px; flex-direction: column; gap: 20px; }
+.credit-notes-summary, .credit-note-detail-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.credit-notes-summary article, .credit-note-detail-summary article { display: flex; min-width: 0; align-items: center; gap: 12px; padding: 18px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface-color); box-shadow: var(--shadow-sm); }
+.credit-note-summary-icon { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: #eaf6f8; color: var(--primary-color); }
+.credit-notes-summary article > div, .credit-note-detail-summary article > div { display: grid; min-width: 0; gap: 3px; }
+.credit-notes-summary article > div > span, .credit-note-detail-summary article > div > span { color: var(--text-secondary); font-size: 11px; }
+.credit-notes-summary strong, .credit-note-detail-summary strong { overflow-wrap: anywhere; color: var(--text-primary); font-size: 19px; font-variant-numeric: tabular-nums; }
+.credit-notes-summary small, .credit-note-detail-summary small { color: var(--text-muted); font-size: 10px; line-height: 1.4; }
+.credit-notes-panel, .credit-note-panel { min-width: 0; overflow: hidden; border: 1px solid var(--border-color); border-radius: var(--radius-lg); background: var(--surface-color); box-shadow: var(--shadow-sm); }
+.credit-notes-panel > header, .credit-note-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 19px 22px; border-bottom: 1px solid var(--border-color); }
+.credit-notes-panel h2, .credit-note-panel h2 { margin: 0 0 4px; color: var(--text-primary); font-size: 17px; }
+.credit-notes-panel header p, .credit-note-panel header p { margin: 0; color: var(--text-secondary); font-size: 12px; }
+.credit-notes-panel > header > span { padding: 5px 9px; border-radius: 999px; background: var(--surface-tertiary); color: var(--text-secondary); font-size: 10px; font-weight: 750; }
+.credit-notes-filters { display: grid; grid-template-columns: minmax(280px, 1fr) 210px; gap: 12px; padding: 15px 22px; background: var(--surface-secondary); }
+.credit-notes-filters > div { display: flex; align-items: center; gap: 8px; padding: 0 11px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--surface-color); color: var(--text-muted); }
+.credit-notes-filters > div:focus-within { border-color: var(--secondary-color); box-shadow: var(--focus-ring); }
+.credit-notes-filters input { min-height: 40px !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; }
+.credit-notes-filters label { display: grid; gap: 6px; color: var(--text-secondary); font-size: 10px; }
+.credit-notes-table-wrapper, .credit-note-lines-wrapper { width: 100%; overflow-x: auto; border-top: 1px solid var(--border-color); }
+.credit-notes-table-wrapper table { width: 100%; min-width: 960px; }
+.credit-note-lines-wrapper table { width: 100%; min-width: 760px; }
+.credit-notes-table-wrapper td > small, .credit-note-lines-wrapper td > small { display: block; margin-top: 3px; color: var(--text-muted); font-size: 9px; }
+.credit-note-reference { color: var(--primary-color); font-weight: 800; text-decoration: none; }
+.credit-note-reference:hover { color: var(--primary-hover); text-decoration: underline; text-underline-offset: 2px; }
+.credit-notes-number { text-align: right !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.credit-note-available { color: #17643a !important; font-weight: 750; }
+.credit-note-status { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: var(--surface-tertiary); color: var(--text-secondary); font-size: 9px; font-weight: 800; letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
+.credit-note-status.is-awaiting_approval { background: var(--warning-surface); color: #8a4b12; }
+.credit-note-status.is-approved { background: #eff6ff; color: #1d4ed8; }
+.credit-note-status.is-partly_applied { background: #f3e8ff; color: #7e22ce; }
+.credit-note-status.is-applied { background: var(--success-surface); color: #17643a; }
+.credit-note-status.is-void { background: var(--danger-surface); color: var(--danger-color); }
+.credit-notes-loading, .credit-notes-empty { display: flex; min-height: 240px; align-items: center; justify-content: center; flex-direction: column; gap: 8px; padding: 44px 22px; color: var(--text-secondary); text-align: center; }
+.credit-notes-loading { min-height: 180px; flex-direction: row; font-size: 12px; }
+.credit-notes-empty h2, .credit-notes-empty h3 { margin: 4px 0 0; color: var(--text-primary); font-size: 17px; }
+.credit-notes-empty p { max-width: 440px; margin: 0 0 8px; font-size: 12px; }
+.credit-note-detail-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.credit-note-detail-header > div:first-child { min-width: 0; }
+.credit-note-detail-header > div:first-child > a { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; color: var(--primary-color); font-size: 12px; font-weight: 750; text-decoration: none; }
+.credit-note-detail-header > div:first-child > span { display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.credit-note-detail-header > div:first-child > div { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; }
+.credit-note-detail-header h1 { margin: 0; color: var(--text-primary); font-size: clamp(27px, 3vw, 35px); letter-spacing: -.025em; }
+.credit-note-detail-header p { max-width: 720px; margin: 7px 0 0; color: var(--text-secondary); font-size: 13px; line-height: 1.55; }
+.credit-note-detail-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; padding-top: 30px; }
+.credit-note-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.credit-note-panel dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+.credit-note-panel dl > div { display: grid; gap: 4px; padding: 13px 20px; border-bottom: 1px solid var(--border-color); }
+.credit-note-panel dl > div:nth-child(odd) { border-right: 1px solid var(--border-color); }
+.credit-note-panel dl > div:nth-last-child(-n + 2) { border-bottom: 0; }
+.credit-note-panel dt { color: var(--text-muted); font-size: 10px; }
+.credit-note-panel dd { margin: 0; overflow-wrap: anywhere; color: var(--text-primary); font-size: 12px; font-weight: 650; }
+.credit-note-panel dd a { color: var(--primary-color); text-decoration: none; }
+.credit-note-totals > div { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 20px; border-bottom: 1px solid var(--border-color); }
+.credit-note-totals > div:last-child { border-bottom: 0; }
+.credit-note-totals > div span { color: var(--text-secondary); font-size: 11px; }
+.credit-note-totals > div strong { font-size: 12px; font-variant-numeric: tabular-nums; }
+.credit-note-totals .is-total { background: var(--surface-secondary); }
+.credit-note-totals .is-total strong { font-size: 15px; }
+.credit-note-totals .is-available { background: var(--success-surface); color: #17643a; }
+.credit-note-totals .is-available span, .credit-note-totals .is-available strong { color: inherit; font-weight: 800; }
+.credit-note-approval p { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.55; }
+.credit-note-approval > div { display: flex; justify-content: flex-end; gap: 9px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); }
+
+@media (max-width: 1050px) { .credit-notes-summary, .credit-note-detail-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .credit-note-detail-header { flex-direction: column; } .credit-note-detail-actions { width: 100%; padding-top: 0; } .credit-note-detail-actions > button { flex: 1; } .credit-note-detail-grid { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .credit-notes-summary, .credit-note-detail-summary, .credit-notes-filters { grid-template-columns: 1fr; } .credit-notes-panel > header { align-items: flex-start; } .credit-note-panel dl { grid-template-columns: 1fr; } .credit-note-panel dl > div, .credit-note-panel dl > div:nth-child(odd), .credit-note-panel dl > div:nth-last-child(-n + 2) { border-right: 0; border-bottom: 1px solid var(--border-color); } .credit-note-panel dl > div:last-child { border-bottom: 0; } .credit-note-approval > div > button { flex: 1; } }
+
+@media print { .credit-note-detail-actions, .credit-note-detail-header > div:first-child > a { display: none !important; } .credit-notes-page { gap: 12px; } .credit-note-panel, .credit-note-detail-summary article { box-shadow: none; } }

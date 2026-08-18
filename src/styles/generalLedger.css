@@ -1,0 +1,690 @@
+.general-ledger-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.general-ledger-summary-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.general-ledger-summary-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #2563eb;
+}
+
+.general-ledger-summary-card > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.general-ledger-summary-card span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.general-ledger-summary-card strong {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: 20px;
+  text-overflow: ellipsis;
+}
+
+.general-ledger-summary-card small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.general-ledger-panel {
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.general-ledger-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 18px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.general-ledger-search {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+  min-width: 230px;
+  padding: 0 12px;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  color: #94a3b8;
+}
+
+.general-ledger-search:focus-within {
+  border-color: #2563eb;
+  box-shadow:
+    0 0 0 3px
+    rgba(37, 99, 235, 0.1);
+}
+
+.general-ledger-search input {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.general-ledger-toolbar > select,
+.general-ledger-toolbar > input {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 13px;
+}
+
+.general-ledger-toolbar > select {
+  min-width: 220px;
+}
+
+.general-ledger-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid #dbe3ee;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #475569;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.general-ledger-account-banner {
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 1.5fr)
+    repeat(2, minmax(170px, 1fr));
+  gap: 18px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #eff6ff;
+}
+
+.general-ledger-account-banner > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.general-ledger-account-banner span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.general-ledger-account-banner strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.general-ledger-table-wrapper {
+  overflow-x: auto;
+}
+
+.general-ledger-table {
+  width: 100%;
+  min-width: 1180px;
+  border-collapse: collapse;
+}
+
+.general-ledger-table th {
+  padding: 11px 14px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.general-ledger-table td {
+  padding: 14px;
+  border-bottom: 1px solid #edf2f7;
+  color: #334155;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.general-ledger-table tbody tr:hover {
+  background: #fbfdff;
+}
+
+.general-ledger-reversal-row {
+  background: #fffafa;
+}
+
+.general-ledger-journal-cell,
+.general-ledger-account-cell,
+.general-ledger-description-cell {
+  display: flex;
+  max-width: 300px;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.general-ledger-journal-cell strong,
+.general-ledger-account-cell strong,
+.general-ledger-description-cell strong {
+  color: #0f172a;
+  font-size: 12px;
+}
+
+.general-ledger-journal-cell span,
+.general-ledger-account-cell span,
+.general-ledger-description-cell span {
+  overflow: hidden;
+  color: #94a3b8;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.general-ledger-money {
+  white-space: nowrap;
+}
+
+.general-ledger-money strong {
+  color: #0f172a;
+}
+
+.general-ledger-money small {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.general-ledger-entry-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.general-ledger-entry-posted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.general-ledger-entry-reversed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.general-ledger-entry-reversal {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.general-ledger-empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding: 64px 20px;
+  color: #64748b;
+  text-align: center;
+}
+
+.general-ledger-empty h2 {
+  margin: 13px 0 5px;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.general-ledger-empty p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.general-ledger-notice {
+  padding: 13px 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+@media (max-width: 1050px) {
+  .general-ledger-summary-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .general-ledger-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .general-ledger-toolbar > select,
+  .general-ledger-toolbar > input,
+  .general-ledger-reset {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 700px) {
+  .general-ledger-account-banner {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .general-ledger-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.general-ledger-warning {
+  padding: 12px 14px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.general-ledger-warning.is-error {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.general-ledger-warning svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.general-ledger-warning strong,
+.general-ledger-warning span {
+  display: block;
+}
+
+.general-ledger-warning strong {
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+
+.general-ledger-warning span {
+  font-size: 12px;
+}
+
+.general-ledger-period-controls {
+  padding: 18px 20px;
+  border-bottom: 1px solid #eaecf0;
+  background: #fcfcfd;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.general-ledger-period-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.general-ledger-period-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f4f3ff;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.general-ledger-period-heading h2 {
+  margin: 0 0 3px;
+  color: #101828;
+  font-size: 15px;
+}
+
+.general-ledger-period-heading p {
+  margin: 0;
+  color: #667085;
+  font-size: 11px;
+}
+
+.general-ledger-period-selectors {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.general-ledger-period-field,
+.general-ledger-filter-field,
+.general-ledger-date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.general-ledger-period-field > span,
+.general-ledger-filter-field > span,
+.general-ledger-date-field > span {
+  color: #475467;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.general-ledger-period-field select {
+  min-width: 205px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #344054;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.general-ledger-period-field select:focus,
+.general-ledger-filter-field select:focus,
+.general-ledger-date-field input:focus {
+  border-color: #7f56d9;
+  box-shadow:
+    0 0 0 3px
+    rgba(127, 86, 217, 0.1);
+}
+
+.general-ledger-default-button {
+  min-height: 40px;
+  padding: 0 13px;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #344054;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.general-ledger-default-button:hover {
+  background: #f9fafb;
+}
+
+.general-ledger-filter-field select,
+.general-ledger-date-field input {
+  min-height: 40px;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  outline: none;
+  background: #ffffff;
+  color: #344054;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.general-ledger-filter-field select {
+  min-width: 210px;
+  padding: 0 10px;
+}
+
+.general-ledger-date-field input {
+  padding: 0 10px;
+}
+
+.general-ledger-report-period {
+  padding: 13px 20px;
+  border-bottom: 1px solid #eaecf0;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.general-ledger-report-period > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.general-ledger-report-period span {
+  color: #667085;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.general-ledger-report-period strong {
+  color: #344054;
+  font-size: 12px;
+}
+
+.general-ledger-refresh-button {
+  min-height: 34px;
+  margin-left: auto;
+  padding: 0 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #344054;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.general-ledger-refresh-button:hover {
+  background: #f9fafb;
+}
+
+.general-ledger-account-banner {
+  display: grid;
+  grid-template-columns:
+    minmax(220px, 1.5fr)
+    repeat(
+      4,
+      minmax(125px, 1fr)
+    );
+  gap: 14px;
+}
+
+.general-ledger-account-banner > div {
+  min-width: 0;
+}
+
+.general-ledger-account-banner span,
+.general-ledger-account-banner strong,
+.general-ledger-account-banner small {
+  display: block;
+}
+
+.general-ledger-account-banner small {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 9px;
+}
+
+.general-ledger-selected-account {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.general-ledger-account-transactions-link {
+  margin-top: 5px;
+  color: #6941c6;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.general-ledger-account-transactions-link:hover {
+  text-decoration: underline;
+}
+
+.general-ledger-journal-link {
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+}
+
+.general-ledger-journal-link:hover {
+  color: #6941c6;
+  text-decoration: underline;
+}
+
+.general-ledger-account-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.general-ledger-account-link:hover {
+  color: #6941c6;
+  text-decoration: underline;
+}
+
+.general-ledger-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.general-ledger-notice svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.invoice-secondary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1150px) {
+  .general-ledger-period-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .general-ledger-period-selectors {
+    width: 100%;
+  }
+
+  .general-ledger-period-field {
+    flex: 1;
+  }
+
+  .general-ledger-period-field select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .general-ledger-account-banner {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .general-ledger-selected-account {
+    grid-column:
+      1 / -1;
+  }
+}
+
+@media (max-width: 800px) {
+  .general-ledger-period-selectors {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .general-ledger-default-button {
+    width: 100%;
+  }
+
+  .general-ledger-filter-field {
+    width: 100%;
+  }
+
+  .general-ledger-filter-field select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .general-ledger-report-period {
+    display: grid;
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+    gap: 12px;
+  }
+
+  .general-ledger-refresh-button {
+    width: fit-content;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .general-ledger-account-banner {
+    grid-template-columns:
+      1fr;
+  }
+
+  .general-ledger-selected-account {
+    grid-column: auto;
+  }
+
+  .general-ledger-report-period {
+    grid-template-columns:
+      1fr;
+  }
+}

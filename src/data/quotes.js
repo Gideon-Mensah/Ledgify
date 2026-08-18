@@ -1,0 +1,145 @@
+export const quotes = [
+  {
+    id: 1,
+    quoteNumber: "QUO-1002",
+    customer: "Oakfield Services",
+    customerEmail: "accounts@oakfieldservices.co.uk",
+    customerAddress: [
+      "14 Westfield Road",
+      "Sheffield",
+      "S10 2AB",
+      "United Kingdom",
+    ],
+    issueDate: "18 Jul 2026",
+    expiryDate: "17 Aug 2026",
+    reference: "OAKFIELD-JUL-26",
+    status: "Sent",
+    currency: "GBP",
+    pricingMode: "exclusive",
+    items: [
+      {
+        id: 1,
+        description: "Monthly bookkeeping",
+        quantity: 6,
+        unitPrice: 350,
+        discountRate: 0,
+        vatRate: 20,
+      },
+      {
+        id: 2,
+        description: "Payroll processing",
+        quantity: 3,
+        unitPrice: 250,
+        discountRate: 10,
+        vatRate: 20,
+      },
+    ],
+    notes:
+      "This quote is valid for 30 days from the issue date.",
+    activity: [
+      {
+        id: 1,
+        title: "Quote emailed",
+        description:
+          "Quote was emailed to accounts@oakfieldservices.co.uk.",
+        date: "18 Jul 2026 at 12:20",
+      },
+      {
+        id: 2,
+        title: "Quote created",
+        description: "Quote was created and marked as sent.",
+        date: "18 Jul 2026 at 12:10",
+      },
+    ],
+  },
+  {
+    id: 2,
+    quoteNumber: "QUO-1001",
+    customer: "Horizon Technology",
+    customerEmail: "finance@horizontechnology.co.uk",
+    customerAddress: [
+      "25 Digital Avenue",
+      "Leeds",
+      "LS2 4GH",
+      "United Kingdom",
+    ],
+    issueDate: "14 Jul 2026",
+    expiryDate: "13 Aug 2026",
+    reference: "HORIZON-001",
+    status: "Accepted",
+    currency: "GBP",
+    pricingMode: "exclusive",
+    items: [
+      {
+        id: 1,
+        description: "Accounting consultation",
+        quantity: 5,
+        unitPrice: 150,
+        discountRate: 0,
+        vatRate: 20,
+      },
+      {
+        id: 2,
+        description: "VAT return preparation",
+        quantity: 2,
+        unitPrice: 180,
+        discountRate: 0,
+        vatRate: 20,
+      },
+    ],
+    notes:
+      "Work will begin after written acceptance of this quote.",
+    activity: [
+      {
+        id: 1,
+        title: "Quote accepted",
+        description: "The customer accepted the quote.",
+        date: "16 Jul 2026 at 09:15",
+      },
+      {
+        id: 2,
+        title: "Quote emailed",
+        description:
+          "Quote was emailed to finance@horizontechnology.co.uk.",
+        date: "14 Jul 2026 at 14:45",
+      },
+    ],
+  },
+  {
+    id: 3,
+    quoteNumber: "QUO-1000",
+    customer: "Prime Property Group",
+    customerEmail: "office@primepropertygroup.co.uk",
+    customerAddress: [
+      "10 Property House",
+      "Manchester",
+      "M2 7AB",
+      "United Kingdom",
+    ],
+    issueDate: "10 Jul 2026",
+    expiryDate: "09 Aug 2026",
+    reference: "PPG-BOOKKEEPING",
+    status: "Draft",
+    currency: "GBP",
+    pricingMode: "exclusive",
+    items: [
+      {
+        id: 1,
+        description: "Monthly bookkeeping",
+        quantity: 12,
+        unitPrice: 350,
+        discountRate: 5,
+        vatRate: 20,
+      },
+    ],
+    notes: "Draft quote awaiting internal review.",
+    activity: [
+      {
+        id: 1,
+        title: "Quote created",
+        description: "Quote was created as a draft.",
+        date: "10 Jul 2026 at 11:30",
+      },
+    ],
+  },
+];

@@ -1,0 +1,58 @@
+:root {
+  --primary-color: #0f6075;
+  --primary-hover: #0b4b5b;
+  --secondary-color: #22a3b8;
+
+  --background-color: #f4f7f9;
+  --surface-color: #ffffff;
+  --surface-secondary: #f7f9fa;
+  --surface-tertiary: #eef3f5;
+  --sidebar-color: #0d2633;
+
+  --text-primary: #17252e;
+  --text-secondary: #61717c;
+  --text-muted: #7b8b94;
+  --text-light: #ffffff;
+
+  --border-color: #dce5e9;
+  --border-strong: #c4d2d8;
+  --success-color: #16a34a;
+  --success-surface: #ecfdf3;
+  --warning-color: #d97706;
+  --warning-surface: #fff7ed;
+  --danger-color: #dc2626;
+  --danger-surface: #fef2f2;
+  --info-color: #2563eb;
+  --info-surface: #eff6ff;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --font-xs: 11px;
+  --font-sm: 12px;
+  --font-md: 14px;
+  --font-lg: 17px;
+  --font-xl: 24px;
+  --font-page-title: clamp(27px, 2.5vw, 34px);
+  --weight-medium: 600;
+  --weight-bold: 700;
+  --weight-heavy: 800;
+  --control-height: 42px;
+  --content-width: 1600px;
+  --focus-ring: 0 0 0 3px rgba(34, 163, 184, 0.2);
+
+  --sidebar-width: 260px;
+  --header-height: 72px;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 13px;
+  --border-radius: 12px;
+  --shadow-sm: 0 1px 3px rgba(18, 45, 56, 0.07);
+  --box-shadow: 0 8px 28px rgba(18, 45, 56, 0.07);
+  --shadow-popover: 0 18px 44px rgba(18, 45, 56, 0.16);
+}

@@ -1,0 +1,588 @@
+.depreciation-run-page {
+  width: 100%;
+  max-width: 1600px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 4px 0 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  color: #101828;
+}
+
+.depreciation-run-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.depreciation-run-eyebrow {
+  display: inline-block;
+  margin-bottom: 5px;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.depreciation-run-header h1 {
+  margin: 0 0 7px;
+  font-size: clamp(27px, 3vw, 35px);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+.depreciation-run-header p {
+  max-width: 720px;
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.depreciation-run-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.depreciation-run-primary-button,
+.depreciation-run-secondary-button,
+.depreciation-run-refresh-button,
+.depreciation-run-post-button {
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.depreciation-run-primary-button {
+  border: 1px solid #7f56d9;
+  background: #7f56d9;
+  color: #ffffff;
+}
+
+.depreciation-run-primary-button:hover:not(:disabled) {
+  background: #6941c6;
+}
+
+.depreciation-run-secondary-button,
+.depreciation-run-refresh-button {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.depreciation-run-secondary-button:hover:not(:disabled),
+.depreciation-run-refresh-button:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.depreciation-run-primary-button:disabled,
+.depreciation-run-secondary-button:disabled,
+.depreciation-run-post-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.depreciation-run-message {
+  padding: 12px 15px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.depreciation-run-message svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.depreciation-run-message.is-success {
+  border: 1px solid #abefc6;
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.depreciation-run-message.is-error {
+  border: 1px solid #fecdca;
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.depreciation-run-summary-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.depreciation-run-summary-card {
+  min-width: 0;
+  min-height: 114px;
+  padding: 20px;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.depreciation-run-summary-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: #f4f3ff;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.depreciation-run-summary-card span {
+  display: block;
+  margin-bottom: 7px;
+  color: #667085;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.depreciation-run-summary-card strong {
+  display: block;
+  color: #101828;
+  font-size: 23px;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.depreciation-run-summary-card small {
+  display: block;
+  margin-top: 6px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.depreciation-run-summary-card.is-pending {
+  border-color: #fedf89;
+  background: #fffcf5;
+}
+
+.depreciation-run-summary-card.is-pending
+  .depreciation-run-summary-icon {
+  background: #fef0c7;
+  color: #b54708;
+}
+
+.depreciation-run-guidance {
+  padding: 18px 20px;
+  border: 1px solid #d6bbfb;
+  border-radius: 14px;
+  background: #f9f5ff;
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.depreciation-run-guidance-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #e9d7fe;
+  color: #6941c6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.depreciation-run-guidance h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.depreciation-run-guidance p {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.depreciation-run-result-panel {
+  overflow: hidden;
+  border: 1px solid #abefc6;
+  border-radius: 14px;
+  background: #f6fef9;
+}
+
+.depreciation-run-result-header {
+  padding: 17px 20px;
+  border-bottom: 1px solid #abefc6;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.depreciation-run-result-header h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.depreciation-run-result-header p {
+  margin: 0;
+  color: #667085;
+  font-size: 12px;
+}
+
+.depreciation-run-result-header button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #067647;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.depreciation-run-result-grid {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.depreciation-run-result-grid div {
+  padding: 13px;
+  border: 1px solid #d1fadf;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.depreciation-run-result-grid span {
+  display: block;
+  margin-bottom: 5px;
+  color: #667085;
+  font-size: 11px;
+}
+
+.depreciation-run-result-grid strong {
+  color: #101828;
+  font-size: 17px;
+}
+
+.depreciation-run-error-list {
+  padding: 0 20px 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.depreciation-run-error-list div {
+  padding: 10px 12px;
+  border: 1px solid #fecdca;
+  border-radius: 8px;
+  background: #fef3f2;
+  color: #b42318;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.depreciation-run-error-list strong {
+  margin-right: 6px;
+}
+
+.depreciation-run-panel {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #eaecf0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.depreciation-run-toolbar {
+  padding: 18px 20px;
+  border-bottom: 1px solid #eaecf0;
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 1fr)
+    auto auto auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.depreciation-run-search input,
+.depreciation-run-field select,
+.depreciation-run-field input {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  outline: 0;
+  background: #ffffff;
+  color: #344054;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.depreciation-run-search input:focus,
+.depreciation-run-field select:focus,
+.depreciation-run-field input:focus {
+  border-color: #7f56d9;
+  box-shadow:
+    0 0 0 3px
+    rgba(127, 86, 217, 0.12);
+}
+
+.depreciation-run-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.depreciation-run-field select,
+.depreciation-run-field input {
+  min-width: 170px;
+}
+
+.depreciation-run-results-bar {
+  padding: 11px 20px;
+  border-bottom: 1px solid #eaecf0;
+  background: #f9fafb;
+  color: #475467;
+  font-size: 13px;
+}
+
+.depreciation-run-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.depreciation-run-table {
+  width: 100%;
+  min-width: 1280px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.depreciation-run-table th,
+.depreciation-run-table td {
+  padding: 14px 15px;
+  border-bottom: 1px solid #eaecf0;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.depreciation-run-table th {
+  background: #fcfcfd;
+  color: #667085;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.depreciation-run-table tbody td {
+  background: #ffffff;
+  color: #344054;
+  font-size: 14px;
+}
+
+.depreciation-run-table tbody tr:hover td {
+  background: #fcfcfd;
+}
+
+.depreciation-run-asset-link {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-decoration: none;
+}
+
+.depreciation-run-asset-link strong {
+  overflow: hidden;
+  color: #101828;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.depreciation-run-asset-link span {
+  color: #6941c6;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.depreciation-run-asset-link:hover strong {
+  color: #6941c6;
+  text-decoration: underline;
+}
+
+.depreciation-run-account-list {
+  display: grid;
+  gap: 4px;
+}
+
+.depreciation-run-account-list span {
+  color: #475467;
+  font-size: 12px;
+}
+
+.depreciation-run-account-warning {
+  max-width: 280px;
+  color: #b42318;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.depreciation-run-account-warning svg {
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.depreciation-run-status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.depreciation-run-status.ready {
+  background: #dcfae6;
+  color: #067647;
+}
+
+.depreciation-run-status.up-to-date {
+  background: #f2f4f7;
+  color: #475467;
+}
+
+.depreciation-run-status.setup-required {
+  background: #fef0c7;
+  color: #b54708;
+}
+
+.depreciation-run-amount {
+  text-align: right !important;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.depreciation-run-pending-value {
+  color: #b54708 !important;
+  font-weight: 750;
+}
+
+.depreciation-run-post-button {
+  min-height: 35px;
+  padding: 0 11px;
+  border: 1px solid #7f56d9;
+  border-radius: 8px;
+  background: #7f56d9;
+  color: #ffffff;
+}
+
+.depreciation-run-post-button:hover:not(:disabled) {
+  background: #6941c6;
+}
+
+.depreciation-run-view-link {
+  color: #6941c6;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.depreciation-run-view-link:hover {
+  text-decoration: underline;
+}
+
+.depreciation-run-table tfoot td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-bottom: 0;
+  background: #f2f4f7;
+  color: #101828;
+  font-weight: 800;
+}
+
+.depreciation-run-empty {
+  padding: 52px 20px !important;
+  color: #667085 !important;
+  text-align: center !important;
+}
+
+@media (max-width: 1180px) {
+  .depreciation-run-summary-grid,
+  .depreciation-run-result-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .depreciation-run-toolbar {
+    grid-template-columns:
+      minmax(240px, 1fr)
+      repeat(2, auto);
+  }
+}
+
+@media (max-width: 760px) {
+  .depreciation-run-page {
+    gap: 18px;
+  }
+
+  .depreciation-run-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .depreciation-run-header-actions {
+    width: 100%;
+    flex-direction: column-reverse;
+  }
+
+  .depreciation-run-primary-button,
+  .depreciation-run-secondary-button {
+    width: 100%;
+  }
+
+  .depreciation-run-summary-grid,
+  .depreciation-run-result-grid,
+  .depreciation-run-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .depreciation-run-field select,
+  .depreciation-run-field input,
+  .depreciation-run-refresh-button {
+    width: 100%;
+  }
+}

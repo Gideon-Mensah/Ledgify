@@ -1,0 +1,950 @@
+.recurring-journals-page {
+    width: 100%;
+    max-width: 1600px;
+    min-width: 0;
+    margin: 0 auto;
+    padding: 4px 0 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    color: #101828;
+}
+
+.recurring-journals-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.recurring-journals-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #667085;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.recurring-journals-header h1 {
+    margin: 0 0 7px;
+    font-size: clamp(27px, 3vw, 35px);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.recurring-journals-header p {
+    max-width: 720px;
+    margin: 0;
+    color: #667085;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.recurring-journals-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.recurring-journals-primary-button,
+.recurring-journals-secondary-button {
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.recurring-journals-primary-button {
+    border: 1px solid #7f56d9;
+    background: #7f56d9;
+    color: #ffffff;
+}
+
+.recurring-journals-primary-button:hover:not(:disabled) {
+    background: #6941c6;
+}
+
+.recurring-journals-secondary-button {
+    border: 1px solid #d0d5dd;
+    background: #ffffff;
+    color: #344054;
+}
+
+.recurring-journals-secondary-button:hover:not(:disabled) {
+    background: #f9fafb;
+}
+
+.recurring-journals-primary-button:disabled,
+.recurring-journals-secondary-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.recurring-journals-message {
+    padding: 12px 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.recurring-journals-message svg {
+    margin-top: 1px;
+    flex: 0 0 auto;
+}
+
+.recurring-journals-message.is-success {
+    border: 1px solid #abefc6;
+    background: #ecfdf3;
+    color: #067647;
+}
+
+.recurring-journals-message.is-error {
+    border: 1px solid #fecdca;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.recurring-journals-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.recurring-journals-summary-card {
+    min-width: 0;
+    min-height: 114px;
+    padding: 20px;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #ffffff;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.recurring-journals-summary-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #f4f3ff;
+    color: #6941c6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.recurring-journals-summary-card span {
+    display: block;
+    margin-bottom: 7px;
+    color: #667085;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.recurring-journals-summary-card strong {
+    display: block;
+    color: #101828;
+    font-size: 23px;
+    font-variant-numeric: tabular-nums;
+}
+
+.recurring-journals-summary-card small {
+    display: block;
+    margin-top: 6px;
+    color: #667085;
+    font-size: 12px;
+}
+
+.recurring-journals-summary-card.is-due {
+    border-color: #fedf89;
+    background: #fffcf5;
+}
+
+.recurring-journals-summary-card.is-due .recurring-journals-summary-icon {
+    background: #fef0c7;
+    color: #b54708;
+}
+
+.recurring-journals-summary-card.is-value {
+    border-color: #abefc6;
+    background: #f6fef9;
+}
+
+.recurring-journals-summary-card.is-value .recurring-journals-summary-icon {
+    background: #dcfae6;
+    color: #067647;
+}
+
+.recurring-journals-run-panel {
+    padding: 18px 20px;
+    border: 1px solid #d6bbfb;
+    border-radius: 14px;
+    background: #f9f5ff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.recurring-journals-run-panel>div:first-child {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+}
+
+.recurring-journals-run-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #e9d7fe;
+    color: #6941c6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.recurring-journals-run-panel h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.recurring-journals-run-panel p {
+    margin: 0;
+    color: #667085;
+    font-size: 13px;
+}
+
+.recurring-journals-run-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.recurring-journals-run-actions label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.recurring-journals-run-actions input {
+    min-height: 42px;
+    padding: 0 10px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    background: #ffffff;
+    font-family: inherit;
+}
+
+.recurring-journals-run-actions button {
+    min-height: 42px;
+    padding: 0 15px;
+    border: 1px solid #7f56d9;
+    border-radius: 10px;
+    background: #7f56d9;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.recurring-journals-run-actions button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.recurring-journals-result-panel {
+    overflow: hidden;
+    border: 1px solid #abefc6;
+    border-radius: 14px;
+    background: #f6fef9;
+}
+
+.recurring-journals-result-header {
+    padding: 17px 20px;
+    border-bottom: 1px solid #abefc6;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.recurring-journals-result-header h2 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.recurring-journals-result-header p {
+    margin: 0;
+    color: #667085;
+    font-size: 12px;
+}
+
+.recurring-journals-result-header button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #067647;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.recurring-journals-result-grid {
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.recurring-journals-result-grid div {
+    padding: 13px;
+    border: 1px solid #d1fadf;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.recurring-journals-result-grid span {
+    display: block;
+    margin-bottom: 5px;
+    color: #667085;
+    font-size: 11px;
+}
+
+.recurring-journals-result-grid strong {
+    font-size: 17px;
+}
+
+.recurring-journals-error-list {
+    padding: 0 20px 18px;
+    display: grid;
+    gap: 8px;
+}
+
+.recurring-journals-error-list div {
+    padding: 10px 12px;
+    border: 1px solid #fecdca;
+    border-radius: 8px;
+    background: #fef3f2;
+    color: #b42318;
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.recurring-journals-error-list strong {
+    margin-right: 6px;
+}
+
+.recurring-journals-panel {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #eaecf0;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.recurring-journals-toolbar {
+    padding: 18px 20px;
+    border-bottom: 1px solid #eaecf0;
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) auto auto;
+    align-items: end;
+    gap: 12px;
+}
+
+.recurring-journals-search {
+    min-height: 42px;
+    padding: 0 12px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    color: #667085;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.recurring-journals-search input {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.recurring-journals-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: #344054;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.recurring-journals-filter select {
+    min-width: 155px;
+    min-height: 42px;
+    padding: 0 10px;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    background: #ffffff;
+    font-family: inherit;
+}
+
+.recurring-journals-results-bar {
+    padding: 11px 20px;
+    border-bottom: 1px solid #eaecf0;
+    background: #f9fafb;
+    color: #475467;
+    font-size: 13px;
+}
+
+.recurring-journals-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.recurring-journals-table {
+    width: 100%;
+    min-width: 1300px;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+.recurring-journals-table th,
+.recurring-journals-table td {
+    padding: 14px 15px;
+    border-bottom: 1px solid #eaecf0;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.recurring-journals-table th {
+    background: #fcfcfd;
+    color: #667085;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.recurring-journals-table tbody td {
+    background: #ffffff;
+    color: #344054;
+    font-size: 13px;
+}
+
+.recurring-journals-table tbody tr:hover td {
+    background: #fcfcfd;
+}
+
+.recurring-journals-template-cell,
+.recurring-journals-schedule,
+.recurring-journals-due-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.recurring-journals-template-cell strong {
+    color: #101828;
+}
+
+.recurring-journals-template-cell span {
+    color: #6941c6;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.recurring-journals-template-cell small,
+.recurring-journals-schedule span,
+.recurring-journals-due-cell span,
+.recurring-journals-cell-note {
+    display: block;
+    margin-top: 3px;
+    color: #667085;
+    font-size: 11px;
+}
+
+.recurring-journals-frequency,
+.recurring-journals-status {
+    padding: 5px 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.recurring-journals-frequency {
+    background: #f4f3ff;
+    color: #6941c6;
+}
+
+.recurring-journals-status.active {
+    background: #dcfae6;
+    color: #067647;
+}
+
+.recurring-journals-status.paused {
+    background: #fef0c7;
+    color: #b54708;
+}
+
+.recurring-journals-amount {
+    text-align: right !important;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.recurring-journals-row-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.recurring-journals-row-actions button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475467;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.recurring-journals-row-actions button:hover:not(:disabled) {
+    border-color: #b692f6;
+    background: #f9f5ff;
+    color: #6941c6;
+}
+
+.recurring-journals-row-actions button.is-post {
+    border-color: #abefc6;
+    color: #067647;
+}
+
+.recurring-journals-row-actions button.is-danger:hover {
+    border-color: #fda29b;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.recurring-journals-processing {
+    display: block;
+    margin-top: 5px;
+    color: #6941c6;
+    font-size: 10px;
+}
+
+.recurring-journals-empty {
+    padding: 55px 20px !important;
+    color: #667085 !important;
+    text-align: center !important;
+}
+
+.recurring-journals-empty svg {
+    margin-bottom: 10px;
+}
+
+.recurring-journals-empty h2 {
+    margin: 0 0 6px;
+    color: #101828;
+    font-size: 18px;
+}
+
+.recurring-journals-empty p {
+    margin: 0;
+}
+
+.recurring-journals-empty button {
+    min-height: 40px;
+    margin-top: 17px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: #7f56d9;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Modal */
+
+.recurring-journals-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    padding: 24px;
+    overflow-y: auto;
+    background: rgba(16, 24, 40, 0.55);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+}
+
+.recurring-journals-modal {
+    width: min(1100px, 100%);
+    max-height: calc(100vh - 48px);
+    margin: auto;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 24px 48px rgba(16, 24, 40, 0.22);
+    display: flex;
+    flex-direction: column;
+}
+
+.recurring-journals-modal form {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.recurring-journals-modal-header {
+    padding: 20px 22px;
+    border-bottom: 1px solid #eaecf0;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.recurring-journals-modal-header span {
+    display: block;
+    margin-bottom: 4px;
+    color: #7f56d9;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.recurring-journals-modal-header h2 {
+    margin: 0;
+    font-size: 21px;
+}
+
+.recurring-journals-modal-header>button {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid #eaecf0;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #667085;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.recurring-journals-modal-body {
+    min-height: 0;
+    padding: 22px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 23px;
+}
+
+.recurring-journals-form-section {
+    padding-bottom: 22px;
+    border-bottom: 1px solid #eaecf0;
+}
+
+.recurring-journals-form-section:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+}
+
+.recurring-journals-form-heading,
+.recurring-journals-lines-heading {
+    margin-bottom: 16px;
+}
+
+.recurring-journals-form-heading h3,
+.recurring-journals-lines-heading h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.recurring-journals-form-heading p,
+.recurring-journals-lines-heading p {
+    margin: 0;
+    color: #667085;
+    font-size: 12px;
+}
+
+.recurring-journals-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.recurring-journals-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: #344054;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.recurring-journals-field.is-full-width {
+    grid-column: 1 / -1;
+}
+
+.recurring-journals-field input,
+.recurring-journals-field select,
+.recurring-journals-field textarea {
+    width: 100%;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    outline: 0;
+    background: #ffffff;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.recurring-journals-field input,
+.recurring-journals-field select {
+    min-height: 42px;
+    padding: 0 11px;
+}
+
+.recurring-journals-field textarea {
+    padding: 11px;
+    resize: vertical;
+}
+
+.recurring-journals-field small {
+    color: #667085;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.recurring-journals-lines-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.recurring-journals-lines-heading button {
+    min-height: 36px;
+    padding: 0 11px;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #344054;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.recurring-journals-lines-wrapper {
+    overflow-x: auto;
+}
+
+.recurring-journals-lines-table {
+    width: 100%;
+    min-width: 850px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.recurring-journals-lines-table th,
+.recurring-journals-lines-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eaecf0;
+    text-align: left;
+}
+
+.recurring-journals-lines-table th {
+    background: #f9fafb;
+    color: #667085;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.recurring-journals-lines-table select,
+.recurring-journals-lines-table input {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 9px;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    font-family: inherit;
+}
+
+.recurring-journals-lines-table td:nth-child(3),
+.recurring-journals-lines-table td:nth-child(4) {
+    width: 150px;
+}
+
+.recurring-journals-lines-table td:last-child {
+    width: 50px;
+}
+
+.recurring-journals-lines-table td:last-child button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid #fda29b;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #b42318;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.recurring-journals-lines-table tfoot td {
+    background: #f2f4f7;
+    font-weight: 800;
+}
+
+.recurring-journals-balance-status {
+    margin-top: 14px;
+    padding: 11px 13px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.recurring-journals-balance-status.is-balanced {
+    border: 1px solid #abefc6;
+    background: #ecfdf3;
+    color: #067647;
+}
+
+.recurring-journals-balance-status.is-unbalanced {
+    border: 1px solid #fecdca;
+    background: #fef3f2;
+    color: #b42318;
+}
+
+.recurring-journals-modal-footer {
+    padding: 16px 22px;
+    border-top: 1px solid #eaecf0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+@media (max-width: 1100px) {
+
+    .recurring-journals-summary-grid,
+    .recurring-journals-result-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 800px) {
+
+    .recurring-journals-header,
+    .recurring-journals-run-panel {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .recurring-journals-header-actions,
+    .recurring-journals-run-actions {
+        width: 100%;
+    }
+
+    .recurring-journals-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .recurring-journals-filter select {
+        width: 100%;
+    }
+}
+
+@media (max-width: 650px) {
+
+    .recurring-journals-summary-grid,
+    .recurring-journals-result-grid,
+    .recurring-journals-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .recurring-journals-header-actions,
+    .recurring-journals-run-actions,
+    .recurring-journals-modal-footer {
+        flex-direction: column;
+    }
+
+    .recurring-journals-primary-button,
+    .recurring-journals-secondary-button,
+    .recurring-journals-run-actions button,
+    .recurring-journals-run-actions label,
+    .recurring-journals-run-actions input {
+        width: 100%;
+    }
+
+    .recurring-journals-field.is-full-width {
+        grid-column: auto;
+    }
+
+    .recurring-journals-modal-overlay {
+        padding: 0;
+    }
+
+    .recurring-journals-modal {
+        width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+}
+
+.recurring-journals-template-link {
+    min-width: 0;
+    color: inherit;
+    display: block;
+    text-decoration: none;
+}
+
+.recurring-journals-template-link:hover .recurring-journals-template-cell strong {
+    color: #6941c6;
+    text-decoration: underline;
+}
