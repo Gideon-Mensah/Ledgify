@@ -38,3 +38,12 @@ test("General Journal warns about malformed lines and has complete print rules",
   assert.match(page, /Both debit and credit are populated/); assert.match(page, /general-journal-print-register/);
   assert.match(css, /general-journal-table thead \{ display: table-header-group; \}/); assert.match(css, /@page \{ size: A4 portrait/);
 });
+
+test("General Journal pagination preserves groups, URL state, and full export batches", async () => {
+  const page = await readFile("src/pages/accounting/GeneralJournalPage.jsx", "utf8");
+  for (const value of ["10","25","50","100"]) assert.match(page, new RegExp(value));
+  assert.match(page, /Showing \{first\}–\{last\} of \{total\} journals/);
+  assert.match(page, /Previous page/); assert.match(page, /Next page/); assert.match(page, /aria-current/);
+  assert.match(page, /page_size: 100/); assert.match(page, /fetchAll/); assert.match(page, /loadRows=\{exportAll\}/);
+  assert.match(page, /general-journal-print-register/); assert.match(page, /if \(key !== "page"\) next\.set\("page", "1"\)/);
+});

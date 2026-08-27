@@ -4,7 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import ModelViewSet, ViewSet
 
 from common.views import OrganisationScopedViewSetMixin
@@ -15,7 +16,7 @@ from apps.organisations.permissions import (
     REOPEN_PERIOD, REVERSE_JOURNAL, VIEW_ACCOUNTING,
 )
 
-from .models import Account, AccountingPeriod, FinancialYear, JournalEntry
+from .models import Account, AccountingPeriod, FinancialYear, JournalEntry, JournalLine
 from .report_serializers import (
     BalanceSheetQuerySerializer,
     CashFlowQuerySerializer,
@@ -26,6 +27,12 @@ from .report_serializers import (
     RatioTrendQuerySerializer,
     TrialBalanceQuerySerializer,
 )
+
+
+class GeneralJournalPagination(PageNumberPagination):
+    page_size = 25
+    page_size_query_param = "page_size"
+    max_page_size = 100
 from .serializers import (
     AccountSerializer,
     AccountingPeriodSerializer,
@@ -127,6 +134,7 @@ class JournalEntryViewSet(
         "create_manual": CREATE_JOURNAL,
         "post": POST_JOURNAL,
         "reverse": REVERSE_JOURNAL,
+        "register": VIEW_ACCOUNTING,
     }
 
     http_method_names = [
@@ -194,6 +202,49 @@ class JournalEntryViewSet(
             )
 
         return queryset.distinct().order_by("date", "entry_number")
+
+    @action(detail=False, methods=["get"], url_path="register")
+    def register(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        totals = JournalLine.objects.filter(journal_entry__in=queryset).aggregate(
+            total_debit=Sum("debit"),
+            total_credit=Sum("credit"),
+        )
+        ledger_totals = JournalLine.objects.filter(
+            journal_entry__in=queryset.filter(status__in=["posted", "reversed"])
+        ).aggregate(
+            total_debit=Sum("debit"),
+            total_credit=Sum("credit"),
+        )
+        paginator = GeneralJournalPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        response = paginator.get_paginated_response(
+            self.get_serializer(page, many=True).data
+        )
+        organisation = self.get_organisation()
+        response.data["totals"] = {
+            "debit": totals["total_debit"] or 0,
+            "credit": totals["total_credit"] or 0,
+        }
+        response.data["ledger_totals"] = {
+            "debit": ledger_totals["total_debit"] or 0,
+            "credit": ledger_totals["total_credit"] or 0,
+        }
+        response.data["facets"] = {
+            "sources": list(
+                JournalEntry.objects.filter(organisation=organisation)
+                .exclude(source_type="").values_list("source_type", flat=True)
+                .distinct().order_by("source_type")
+            ),
+            "accounts": [
+                {"id": str(row.id), "code": row.code, "name": row.name}
+                for row in Account.objects.filter(
+                    organisation=organisation,
+                    journal_lines__isnull=False,
+                ).distinct().order_by("code", "name")
+            ],
+        }
+        return response
 
     @action(detail=False, methods=["post"], url_path="manual")
     @transaction.atomic

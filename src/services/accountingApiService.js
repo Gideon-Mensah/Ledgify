@@ -15,6 +15,7 @@ export const accountingApiService = {
   createAccount: (data) => api.post("accounts/", data),
   updateAccount: (id, data) => api.patch(`accounts/${id}/`, data),
   journals: (params) => api.get(`journals/${query(params)}`),
+  journalRegister: (params, options) => api.get(`journals/register/${query(params)}`, options),
   journal: (id) => api.get(`journals/${id}/`),
   createManualJournal: (data) => api.post("journals/manual/", data),
   postJournal: (id) => api.post(`journals/${id}/post/`, {}),
