@@ -60,6 +60,7 @@ td { font-variant-numeric: tabular-nums; }
 .report-export-menu button { display: flex; width: 100%; align-items: center; justify-content: space-between; padding: 9px 10px; border: 0; background: transparent; color: var(--text-primary); text-align: left; }
 .report-export-menu button:hover { background: #eef7f8; }
 .report-export-menu span { color: var(--text-secondary); font-size: 11px; font-weight: 500; }
+.report-export-error { position: absolute; top: calc(100% + 6px); right: 0; z-index: 51; width: 260px; padding: 8px 10px; border: 1px solid #fecdca; border-radius: 8px; background: #fef3f2; color: #b42318; font-size: 12px; }
 .report-number-column { font-variant-numeric: tabular-nums; }
 .table-actions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
 .ask-ai-button { display: inline-flex; align-items: center; gap: 7px; }

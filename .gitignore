@@ -28,3 +28,18 @@ staticfiles/
 *.njsproj
 *.sln
 *.sw?
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Django
+*.sqlite3-journal
+
+# macOS
+.DS_Store

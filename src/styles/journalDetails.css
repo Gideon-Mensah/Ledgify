@@ -10,6 +10,8 @@
     color: var(--text-primary);
 }
 
+.journal-print-meta { display: none; }
+
 .visually-hidden {
     position: absolute !important;
     width: 1px !important;
@@ -632,4 +634,76 @@
 .journal-details-account-link:hover .journal-details-account span {
     color: #6941c6;
     text-decoration: underline;
+}
+
+@page {
+    size: A4 portrait;
+    margin: 14mm 12mm 16mm;
+}
+
+@media print {
+    body * { visibility: hidden; }
+
+    .journal-details-page,
+    .journal-details-page * { visibility: visible; }
+
+    .journal-details-page {
+        position: absolute;
+        inset: 0;
+        display: block;
+        max-width: none;
+        padding: 0;
+        color: #101828;
+        font-size: 9pt;
+    }
+
+    .journal-details-back,
+    .journal-details-header-actions,
+    .journal-print-error,
+    .chart-accounts-success,
+    .invoice-form-alert,
+    .modal-overlay { display: none !important; }
+
+    .journal-details-header {
+        margin-bottom: 5mm;
+        padding-bottom: 4mm;
+        border-bottom: 2px solid #0f4c5c;
+    }
+
+    .journal-details-eyebrow { font-size: 18pt; color: #0e2d3a; text-transform: none; }
+    .journal-details-title-row h1 { font-size: 14pt; }
+    .journal-details-title-row p { font-size: 9pt; }
+    .journal-details-status { border: 1px solid currentColor; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .journal-print-meta { display: block; margin: -2mm 0 5mm; color: #475467; font-size: 8pt; }
+
+    .journal-details-summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 3mm;
+        margin-bottom: 5mm;
+    }
+
+    .journal-details-summary-card { min-height: 0; padding: 3mm; border-radius: 0; box-shadow: none; break-inside: avoid; }
+    .journal-details-summary-icon { display: none; }
+    .journal-details-summary-card strong { font-size: 10pt; }
+    .journal-details-summary-card span,
+    .journal-details-summary-card small { font-size: 7.5pt; }
+
+    .journal-details-reversal-panel,
+    .journal-details-content-grid,
+    .journal-details-panel { margin-bottom: 5mm; break-inside: avoid; box-shadow: none; }
+    .journal-details-content-grid { grid-template-columns: repeat(2, 1fr); gap: 4mm; }
+    .journal-details-panel { overflow: visible; border-radius: 0; }
+    .journal-details-panel-header { padding: 3mm; }
+    .journal-details-information-list,
+    .journal-details-activity-list { padding: 3mm; gap: 2mm; }
+
+    .journal-details-table-wrapper { overflow: visible; }
+    .journal-details-table { width: 100%; table-layout: fixed; font-size: 8pt; }
+    .journal-details-table thead { display: table-header-group; }
+    .journal-details-table tfoot { display: table-row-group; }
+    .journal-details-table tr { break-inside: avoid; page-break-inside: avoid; }
+    .journal-details-table th,
+    .journal-details-table td { padding: 2mm 1.5mm; overflow: visible; }
+    .journal-details-table tfoot { break-inside: avoid; page-break-inside: avoid; }
+    .journal-details-account { color: #101828; text-decoration: none; }
 }
