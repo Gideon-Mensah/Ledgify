@@ -69,6 +69,10 @@
 .ai-anomaly strong, .ai-proposal strong { display: block; margin: 6px 0; font-size: 12px; line-height: 1.4; }
 .ai-anomaly p, .ai-safety-note { margin: 5px 0 8px; color: var(--text-secondary); font-size: 10px; line-height: 1.45; }
 .ai-proposal { border-left-color: var(--primary-color); }.ai-proposal > span, .ai-proposal > small { color: var(--text-secondary); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.ai-proposal-lines { display: grid; gap: 5px; padding: 7px 0; margin: 7px 0; border-block: 1px solid var(--border-color); }
+.ai-proposal-lines > div { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; }
+.ai-proposal-lines small { color: var(--text-secondary); white-space: nowrap; }
+.ai-proposal > p { margin: 6px 0; color: var(--text-secondary); font-size: 10px; line-height: 1.4; }
 .ai-mobile-close, .ai-context-toggle, .ai-drawer-overlay { display: none; }
 
 @media (max-width: 1180px) {

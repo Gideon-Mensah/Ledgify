@@ -115,16 +115,38 @@ function genericRows(title, rows, metadata) {
   ];
 }
 
+function generalJournalRows(rows, metadata) {
+  const accounts = rows.filter((row) => row.row_type === "account");
+  const totalDebit = accounts.reduce((sum, row) => sum + number(row.debit), 0);
+  const totalCredit = accounts.reduce((sum, row) => sum + number(row.credit), 0);
+  const difference = totalDebit - totalCredit;
+  const output = [
+    { values: [metadata.organisation || "Ledgify", "", "", "", ""], style: 1, height: 25 },
+    { values: ["General Journal", "", "", "", ""], style: 2, height: 32 },
+    { values: [periodText(metadata), "", "", "", ""], style: 3 },
+    { values: [`Currency: ${metadata.currency || "—"}`, `Generated: ${generated()}`, `Filters: ${metadata.filters || "All"}`, "", ""], style: 3 },
+    { values: ["", "", "", "", ""] },
+    { values: ["Date", "Journal / Particulars", "Post Ref", "Debit", "Credit", "Status", "Source", "Reversal Reference", "Narration"], style: 4 },
+  ];
+  rows.forEach((row) => {
+    if (row.row_type === "narration") output.push({ values: ["", `Narration: ${row.narration || "No narration"}`, "", "", "", row.status, "", row.reversal_reference, ""], style: 3 });
+    else output.push({ values: [row.date, `${row.journal_number} · ${row.particulars}`, row.post_ref, number(row.debit), number(row.credit), humanise(row.status), humanise(row.source), row.reversal_reference, row.narration], styles: [0,0,10,6,6,0,0,0,0] });
+  });
+  output.push({ values: ["", "Total", "", totalDebit, totalCredit, "", "", "", ""], styles: [5,5,5,7,7,5,5,5,5] });
+  output.push({ values: ["", difference === 0 ? "BALANCED" : "OUT OF BALANCE", "Difference", difference, "", "", "", "", ""], styles: [difference === 0 ? 11 : 12,difference === 0 ? 11 : 12,5,7,5,5,5,5,5] });
+  return output;
+}
+
 export function createXlsxWorkbook({ title, rows = [], metadata = {} }) {
   const specialised = ["Profit and Loss", "Trial Balance", "Balance Sheet", "Cash Flow Statement"].includes(title);
-  const sheetRows = specialised ? financialRows(title, rows, metadata) : genericRows(title, rows, metadata);
+  const sheetRows = title === "General Journal" ? generalJournalRows(rows, metadata) : specialised ? financialRows(title, rows, metadata) : genericRows(title, rows, metadata);
   const maxColumns = Math.max(2, ...sheetRows.map((row) => row.values.length));
   const rowXml = sheetRows.map((item, index) => {
     const rowNumber = index + 1; const styles = item.styles || item.values.map(() => item.style || 0);
     return `<row r="${rowNumber}"${item.height ? ` ht="${item.height}" customHeight="1"` : ""}>${item.values.map((value, col) => cell(value, rowNumber, col + 1, styles[col] || 0, styles[col] === 10)).join("")}</row>`;
   }).join("");
   const widths = Array.from({ length: maxColumns }, (_, index) => `<col min="${index + 1}" max="${index + 1}" width="${index === 0 ? 42 : index === 1 ? 30 : 18}" customWidth="1"/>`).join("");
-  const headerRow = specialised ? 6 : 4;
+  const headerRow = specialised || title === "General Journal" ? 6 : 4;
   const worksheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="${headerRow}" topLeftCell="A${headerRow + 1}" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><sheetFormatPr defaultRowHeight="18"/><cols>${widths}</cols><sheetData>${rowXml}</sheetData><autoFilter ref="A${headerRow}:${column(maxColumns)}${Math.max(headerRow, sheetRows.length)}"/><printOptions horizontalCentered="1"/><pageMargins left="0.3" right="0.3" top="0.5" bottom="0.5" header="0.2" footer="0.2"/><pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/><headerFooter><oddFooter>&amp;L${xml(metadata.organisation || "Ledgify")}&amp;RPage &amp;P of &amp;N</oddFooter></headerFooter></worksheet>`;
   const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="_(* #,##0.00_);_(* (#,##0.00);_(* &quot;-&quot;??_);_(@_)"/></numFmts><fonts count="5"><font><sz val="10"/><name val="Aptos"/></font><font><b/><sz val="11"/><color rgb="FF0E2D3A"/><name val="Aptos"/></font><font><b/><sz val="20"/><color rgb="FF0E2D3A"/><name val="Aptos Display"/></font><font><b/><color rgb="FFFFFFFF"/><name val="Aptos"/></font><font><b/><color rgb="FF067647"/><name val="Aptos"/></font></fonts><fills count="6"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0F4C5C"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFEAF6F8"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDCFCE7"/></patternFill></fill><fill><patternFill patternType="solid"><fgColor rgb="FFFEE2E2"/></patternFill></fill></fills><borders count="3"><border/><border><bottom style="thin"><color rgb="FFBFD0D7"/></bottom></border><border><top style="double"><color rgb="FF0F4C5C"/></top><bottom style="double"><color rgb="FF0F4C5C"/></bottom></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="13"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"><alignment wrapText="1"/></xf><xf numFmtId="0" fontId="3" fillId="2" borderId="0" xfId="0"><alignment wrapText="1"/></xf><xf numFmtId="0" fontId="1" fillId="3" borderId="1" xfId="0"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0"><alignment horizontal="right"/></xf><xf numFmtId="164" fontId="1" fillId="3" borderId="1" xfId="0"><alignment horizontal="right"/></xf><xf numFmtId="0" fontId="1" fillId="3" borderId="2" xfId="0"/><xf numFmtId="164" fontId="1" fillId="3" borderId="2" xfId="0"><alignment horizontal="right"/></xf><xf numFmtId="49" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="4" fillId="4" borderId="1" xfId="0"/><xf numFmtId="0" fontId="1" fillId="5" borderId="1" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
   return zip({

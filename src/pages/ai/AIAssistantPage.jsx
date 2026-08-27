@@ -33,7 +33,7 @@ function SourceList({ metadata }) {
   if (!metadata?.sources?.length) return null;
   return <div className="ai-sources"><strong>Sources</strong><div>{metadata.sources.map((source, index) => {
     const period = Object.values(source.period || {}).filter(Boolean).join(" – ");
-    const route = sourceRoutes[source.source_type];
+    const route = sourceRoutes[source.source_type] || (source.source_type === "ledgify_help" ? source.route : null);
     const content = <><span>{title(source.source_type)}</span>{period && <small>{period}</small>}</>;
     return route ? <a key={index} href={route}>{content}<ChevronRight size={14}/></a> : <div className="ai-source-chip" key={index}>{content}</div>;
   })}</div></div>;
@@ -53,6 +53,7 @@ export default function AIAssistantPage() {
   const auth = useAuth();
   const [searchParams] = useSearchParams();
   const contextualPrompt = searchParams.get("prompt") || "";
+  const sourceRoute = searchParams.get("route") || "";
   const [question, setQuestion] = useState(contextualPrompt);
   const [conversation, setConversation] = useState(null);
   const [conversations, setConversations] = useState([]);
@@ -64,18 +65,20 @@ export default function AIAssistantPage() {
   const [loading, setLoading] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [contextOpen, setContextOpen] = useState(false);
+  const canUseActions = auth.hasPermission("use_ai_actions");
+  const canViewInsights = auth.hasPermission("view_ai_insights");
 
   const loadPanels = useCallback(async () => {
     try {
       const requests = [aiService.conversations()];
-      if (auth.hasPermission("use_ai_actions")) requests.push(aiService.actions()); else requests.push(Promise.resolve([]));
-      if (auth.hasPermission("view_ai_insights")) requests.push(aiService.anomalies()); else requests.push(Promise.resolve([]));
+      if (canUseActions) requests.push(aiService.actions()); else requests.push(Promise.resolve([]));
+      if (canViewInsights) requests.push(aiService.anomalies()); else requests.push(Promise.resolve([]));
       const [chatRows, actionRows, anomalyRows] = await Promise.all(requests);
       setConversations((Array.isArray(chatRows) ? chatRows : chatRows.results || []).filter((item) => item.status !== "archived"));
       setActions(Array.isArray(actionRows) ? actionRows : actionRows.results || []);
       setAnomalies(Array.isArray(anomalyRows) ? anomalyRows : anomalyRows.results || []);
     } catch (requestError) { setError(normaliseApiError(requestError)); }
-  }, [auth]);
+  }, [canUseActions, canViewInsights, setActions, setAnomalies, setConversations, setError]);
   useEffect(() => { const frame = requestAnimationFrame(() => void loadPanels()); return () => cancelAnimationFrame(frame); }, [loadPanels]);
 
   const newChat = () => { setConversation(null); setMessages([]); setQuestion(""); setError(""); };
@@ -92,7 +95,10 @@ export default function AIAssistantPage() {
     if (!value.trim() || loading) return;
     setLoading(true); setError(""); setMessages((items) => [...items, { role: "user", content: value }]); setQuestion("");
     try {
-      const result = await aiService.chat(value, conversation?.id, contextualPrompt ? { context: contextualPrompt } : {});
+      const result = await aiService.chat(value, conversation?.id, contextualPrompt ? { context: contextualPrompt } : {}, {
+        route: sourceRoute,
+        page_title: document.title.slice(0, 100),
+      });
       setConversation(result.conversation); setMessages(result.conversation.messages || [...messages, { role: "user", content: value }, result.message]); await loadPanels();
     } catch (requestError) { setError(normaliseApiError(requestError, "The assistant could not answer that request. Please try again.")); }
     finally { setLoading(false); }
@@ -109,6 +115,6 @@ export default function AIAssistantPage() {
       <main className="ai-conversation"><div className="ai-conversation-scroll">{!messages.length ? <div className="ai-welcome"><div className="ai-welcome-icon"><Sparkles size={25}/></div><span>Ledgify accounting copilot</span><h2>{greeting}. What would you like to understand about your business?</h2><p>Ask for an explanation or analysis. Ledgify AI cannot post financial transactions automatically.</p><div className="ai-category-list">{Object.keys(categories).map((item) => <button className={category === item ? "active" : ""} key={item} onClick={() => setCategory(item)}>{item}</button>)}</div><div className="ai-prompt-grid">{categories[category].map((item) => <button key={item} onClick={() => void send(item)}><span>{item}</span><ChevronRight size={17}/></button>)}</div></div> : <div className="ai-messages">{messages.filter((item) => ["user", "assistant"].includes(item.role)).map((item, index) => <Message item={item} key={item.id || index}/>)}{loading && <div className="ai-generating"><Sparkles size={17}/><span>Analysing your financial data…</span><i/><i/><i/></div>}</div>}</div>
         <form className="ai-composer" onSubmit={(event) => { event.preventDefault(); void send(); }}><textarea rows="2" value={question} onChange={(event) => setQuestion(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} placeholder="Ask about your finances…" aria-label="Message Ledgify AI"/><button disabled={!question.trim() || loading} aria-label="Send message"><Send size={18}/></button><small>Enter to send · Shift+Enter for a new line</small></form>
       </main>
-      <aside className={`ai-context ${contextOpen ? "is-open" : ""}`}><div className="ai-panel-head"><div><span>Financial context</span><strong>Insights &amp; actions</strong></div><button className="ai-mobile-close" onClick={() => setContextOpen(false)}>Close</button></div><section><div className="ai-section-title"><h3>Anomalies</h3>{auth.hasPermission("view_ai_insights") && <button onClick={() => aiService.detect().then(setAnomalies).catch((requestError) => setError(normaliseApiError(requestError)))}>Refresh</button>}</div>{anomalies.length ? anomalies.slice(0, 5).map((item) => <article className={`ai-anomaly severity-${item.severity}`} key={item.id}><div><span>{title(item.severity)}</span><small>{title(item.status)}</small></div><strong>{item.summary}</strong><p>{title(item.source_type)} · {dateTime(item.detected_at)}</p>{item.status === "open" && <div><button onClick={() => aiService.review(item.id, "reviewed").then(loadPanels)}>Review</button><button onClick={() => aiService.review(item.id, "dismissed").then(loadPanels)}>Dismiss</button></div>}</article>) : <div className="ai-panel-empty">No open anomalies.</div>}</section><section><h3>Draft action proposals</h3><p className="ai-safety-note">Proposals remain drafts. Posting and payment actions require the normal Ledgify review controls.</p>{actions.length ? actions.slice(0, 4).map((item) => <article className="ai-proposal" key={item.id}><span>{title(item.action_type)}</span><strong>{item.proposed_payload?.summary || item.requested_action}</strong><small>{title(item.status)}</small>{item.status === "proposed" && auth.hasPermission("approve_ai_actions") && <button onClick={() => aiService.execute(item.id).then(loadPanels)}>Review draft action</button>}</article>) : <div className="ai-panel-empty">No action proposals.</div>}</section></aside>
+      <aside className={`ai-context ${contextOpen ? "is-open" : ""}`}><div className="ai-panel-head"><div><span>Financial context</span><strong>Insights &amp; actions</strong></div><button className="ai-mobile-close" onClick={() => setContextOpen(false)}>Close</button></div><section><div className="ai-section-title"><h3>Anomalies</h3>{auth.hasPermission("view_ai_insights") && <button onClick={() => aiService.detect().then(setAnomalies).catch((requestError) => setError(normaliseApiError(requestError)))}>Refresh</button>}</div>{anomalies.length ? anomalies.slice(0, 5).map((item) => <article className={`ai-anomaly severity-${item.severity}`} key={item.id}><div><span>{title(item.severity)}</span><small>{title(item.status)}</small></div><strong>{item.summary}</strong><p>{title(item.source_type)} · {dateTime(item.detected_at)}</p>{item.status === "open" && <div><button onClick={() => aiService.review(item.id, "reviewed").then(loadPanels)}>Review</button><button onClick={() => aiService.review(item.id, "dismissed").then(loadPanels)}>Dismiss</button></div>}</article>) : <div className="ai-panel-empty">No open anomalies.</div>}</section><section><h3>Draft action proposals</h3><p className="ai-safety-note">This transaction was drafted by the AI Assistant. Review all accounts, dates, tax treatments, and amounts before approving. Creating it here produces a draft only.</p>{actions.length ? actions.slice(0, 4).map((item) => { const payload = item.proposed_payload?.payload; return <article className="ai-proposal" key={item.id}><span>{title(item.action_type)}</span><strong>{item.proposed_payload?.summary || item.requested_action}</strong><small>{title(item.status)}{payload?.date ? ` · ${payload.date}` : ""}</small>{payload?.lines?.length > 0 && <div className="ai-proposal-lines">{payload.lines.map((line, index) => <div key={`${line.account_id}-${index}`}><span>{line.account?.code} · {line.account?.name}</span><small>{Number(line.debit) ? `Debit ${line.debit}` : `Credit ${line.credit}`}</small></div>)}</div>}{item.proposed_payload?.warnings?.map((warning) => <p key={warning}>{warning}</p>)}{item.status === "proposed" && auth.hasPermission("use_ai_actions") && <button onClick={() => aiService.execute(item.id).then(loadPanels).catch((requestError) => setError(normaliseApiError(requestError)))}>Create draft for review</button>}</article>; }) : <div className="ai-panel-empty">No action proposals.</div>}</section></aside>
     </div><button className="ai-context-toggle" onClick={() => setContextOpen(true)}>Insights</button>{(historyOpen || contextOpen) && <button className="ai-drawer-overlay" aria-label="Close panels" onClick={() => { setHistoryOpen(false); setContextOpen(false); }}/>}</div>;
 }

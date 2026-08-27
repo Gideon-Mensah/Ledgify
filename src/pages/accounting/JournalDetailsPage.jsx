@@ -8,11 +8,10 @@ import { accountingApiService } from "../../services/accountingApiService";
 import { normaliseApiError } from "../../services/apiError";
 import { getJournalSourceRoute, journalSourceLabel } from "../../utils/journalSourceRoutes";
 import { useAuth } from "../../store/AuthContext";
+import { formatDisplayDate, formatTimestamp, getOrganisationToday } from "../../utils/dateUtils";
 import "../../styles/journalDetails.css";
 
 const humanise = (value) => String(value || "—").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-const dateTime = (value) => value ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "—";
-const dateOnly = (value) => value ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)) : "—";
 
 export default function JournalDetailsPage() {
   const { journalId } = useParams(); const [searchParams] = useSearchParams(); const auth = useAuth(); const [journal, setJournal] = useState(null); const [state, setState] = useState({ loading: true, error: "" }); const [action, setAction] = useState(""); const [actionError, setActionError] = useState(""); const [printError, setPrintError] = useState("");
@@ -21,9 +20,12 @@ export default function JournalDetailsPage() {
   const totals = useMemo(() => (journal?.lines || []).reduce((sum, line) => ({ debit: sum.debit + Number(line.debit || 0), credit: sum.credit + Number(line.credit || 0) }), { debit: 0, credit: 0 }), [journal]);
   const difference = totals.debit - totals.credit; const balanced = Math.abs(difference) < 0.005;
   const currency = journal?.organisation?.base_currency || journal?.transaction_currency || "GBP";
+  const timezone = auth.selectedOrganisation?.timezone || "UTC";
+  const dateTime = (value) => value ? formatTimestamp(value, { timeZone: timezone }) : "—";
+  const dateOnly = (value) => value ? formatDisplayDate(value) : "—";
   const money = (value) => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
   const printJournal = () => { if (!journal?.lines?.length) { setPrintError("This journal has no lines to print."); return; } setPrintError(""); window.requestAnimationFrame(() => window.print()); };
-  const mutate = async () => { setActionError(""); try { const result = action === "post" ? await accountingApiService.postJournal(journal.id) : await accountingApiService.reverseJournal(journal.id, { reversal_date: new Date().toISOString().slice(0, 10) }); setAction(""); if (action === "reverse") window.location.assign(`/accounting/journals/${result.id}`); else setJournal(result); } catch (error) { setActionError(normaliseApiError(error)); setAction(""); } };
+  const mutate = async () => { setActionError(""); try { const result = action === "post" ? await accountingApiService.postJournal(journal.id) : await accountingApiService.reverseJournal(journal.id, { reversal_date: getOrganisationToday(timezone) }); setAction(""); if (action === "reverse") window.location.assign(`/accounting/journals/${result.id}`); else setJournal(result); } catch (error) { setActionError(normaliseApiError(error)); setAction(""); } };
   if (state.loading) return <div className="journal-details-page"><section className="journal-details-not-found"><span className="header-spinner"/><h1>Loading journal entry</h1><p>Retrieving the accounting record and its lines.</p></section></div>;
   if (!journal) return <div className="journal-details-page"><section className="journal-details-not-found"><div className="journal-details-not-found-icon"><TriangleAlert/></div><h1>Journal entry unavailable</h1><p>{state.error || "The journal could not be found in this organisation."}</p><button className="invoice-secondary-button" onClick={() => void load()}>Try again</button><br/><Link to="/accounting/journals"><ArrowLeft size={16}/>Back to journals</Link></section></div>;
   const sourceRoute = getJournalSourceRoute(journal.source_type, journal.source_id);

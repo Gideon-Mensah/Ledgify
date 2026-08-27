@@ -22,15 +22,15 @@ class ConversationViewSet(AIBase,ModelViewSet):
  def perform_create(self,s):s.save(organisation=self.get_organisation(),user=self.request.user)
  @action(detail=True,methods=["post"])
  def messages(self,r,pk=None):
-  query=ChatSerializer(data={**r.data,"conversation_id":pk});query.is_valid(raise_exception=True);message=ask_assistant(conversation=self.get_object(),question=query.validated_data["question"],parameters=query.validated_data["parameters"]);return Response(MessageSerializer(message).data,status=201)
+  query=ChatSerializer(data={**r.data,"conversation_id":pk});query.is_valid(raise_exception=True);message=ask_assistant(conversation=self.get_object(),question=query.validated_data["question"],parameters=query.validated_data["parameters"],page_context=query.validated_data["page_context"]);return Response(MessageSerializer(message).data,status=201)
 class ChatViewSet(AIBase,ViewSet):
  action_permissions={"create":USE_AI_ASSISTANT}
  def create(self,r):
   query=ChatSerializer(data=r.data);query.is_valid(raise_exception=True);org=self.get_organisation();allowed=int(getattr(settings,"AI_REQUESTS_PER_USER_PER_HOUR",60));recent=AIConversation.objects.filter(organisation=org,user=r.user,messages__role="user",messages__created_at__gte=timezone.now()-__import__("datetime").timedelta(hours=1)).count()
   if recent>=allowed:raise BusinessRuleError("AI request limit reached. Try again later.")
-  conversation=AIConversation.objects.filter(organisation=org,user=r.user,id=query.validated_data.get("conversation_id")).first() if query.validated_data.get("conversation_id") else AIConversation.objects.create(organisation=org,user=r.user,title=query.validated_data["question"][:80]);message=ask_assistant(conversation=conversation,question=query.validated_data["question"],parameters=query.validated_data["parameters"]);return Response({"conversation":ConversationSerializer(conversation).data,"message":MessageSerializer(message).data},status=201)
+  conversation=AIConversation.objects.filter(organisation=org,user=r.user,id=query.validated_data.get("conversation_id")).first() if query.validated_data.get("conversation_id") else AIConversation.objects.create(organisation=org,user=r.user,title=query.validated_data["question"][:80]);message=ask_assistant(conversation=conversation,question=query.validated_data["question"],parameters=query.validated_data["parameters"],page_context=query.validated_data["page_context"]);return Response({"conversation":ConversationSerializer(conversation).data,"message":MessageSerializer(message).data},status=201)
 class ActionViewSet(AIBase,ReadOnlyModelViewSet):
- serializer_class=ActionSerializer;action_permissions={"list":USE_AI_ACTIONS,"retrieve":USE_AI_ACTIONS,"propose_journal":USE_AI_ACTIONS,"execute":APPROVE_AI_ACTIONS}
+ serializer_class=ActionSerializer;action_permissions={"list":USE_AI_ACTIONS,"retrieve":USE_AI_ACTIONS,"propose_journal":USE_AI_ACTIONS,"execute":USE_AI_ACTIONS}
  def get_queryset(self):return AIActionAudit.objects.filter(organisation=self.get_organisation(),user=self.request.user)
  @action(detail=False,methods=["post"],url_path="propose-journal")
  def propose_journal(self,r):

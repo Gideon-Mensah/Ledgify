@@ -1,0 +1,24 @@
+"""Small, versioned, code-backed Ledgify help index."""
+import re
+KNOWLEDGE_VERSION="2026.08"
+DOCUMENTS=[
+{"id":"sales.invoices.create","title":"Create an invoice","route":"/sales/invoices/new","permission":"manage_invoices","keywords":"invoice customer issue due line account tax save approve payment","content":"Go to Sales → Invoices → New Invoice. Select the customer, issue and due dates, currency, line descriptions, quantities, prices, revenue accounts and configured sales tax. Save the draft, review totals, then use the normal approval control if permitted. Approval creates accounting; recording payment is separate."},
+{"id":"purchases.bills.create","title":"Enter a supplier bill","route":"/purchases/bills/new","permission":"manage_bills","keywords":"bill supplier due expense tax payment purchase","content":"Go to Purchases → Bills → New Bill. Select the supplier, bill and due dates, currency, expense accounts, lines and configured purchase tax. Save and review the draft before an authorised user approves it. Paying the bill is separate."},
+{"id":"contacts.manage","title":"Customers and suppliers","route":"/contacts","permission":"manage_contacts","keywords":"add customer supplier contact","content":"Open Contacts and choose Customers or Suppliers, then create the contact using the available identity, address and communication fields."},
+{"id":"accounting.journals","title":"Manual journals and reversals","route":"/accounting/journals","permission":"create_journal","keywords":"journal debit credit reverse print post","content":"Go to Accounting → Journals. A manual journal needs a date, narration and at least two lines with equal debits and credits. Save Draft does not post. Posting and reversal require existing permissions. Open Journal Details to print or reverse an eligible posted journal."},
+{"id":"banking.reconcile","title":"Bank accounts and reconciliation","route":"/banking/reconciliation","permission":"manage_bank_transactions","keywords":"bank account reconcile transaction match","content":"Use Banking to configure an account and review statement transactions. Open Banking → Reconciliation, select the bank account and match or code unreconciled activity."},
+{"id":"reports.financial","title":"Financial reports","route":"/accounting/reports","permission":"view_reports","keywords":"profit loss trial balance balance sheet cash flow export report","content":"Financial Reports contains Profit and Loss, Trial Balance, Balance Sheet and Cash Flow. Choose date boundaries, run the report, and use Export for Excel. Print is available where shown."},
+{"id":"inventory.products","title":"Products and inventory","route":"/inventory/products","permission":"view_inventory","keywords":"product inventory stock warehouse reorder","content":"Use Inventory → Products to maintain products and tracking settings. Inventory reports show stock activity and reorder information from recorded transactions."},
+{"id":"settings.organisation","title":"Organisation and users","route":"/settings","permission":"manage_organisation","keywords":"organisation timezone user role permission settings","content":"Open Settings for organisation details, timezone, accounting configuration, users and roles. Controls depend on permissions. The AI Assistant cannot change roles or permissions."},
+{"id":"accounting.concepts","title":"Accounting concepts in Ledgify","route":"/accounting/reports","permission":"view_accounting","keywords":"receivable payable unpaid invoice cash owner capital financing bill expense trial balance","content":"Accounts Receivable is money customers owe on approved invoices; it is not cash until payment is recorded. A supplier bill records an amount owed, while an expense describes the cost. Owner capital increases cash and equity and is a financing cash inflow when posted to appropriate bank and equity accounts."},]
+ALLOWED_ROUTES=frozenset(doc["route"] for doc in DOCUMENTS)
+def safe_page_context(value):
+ value=value if isinstance(value,dict) else {};route=str(value.get("route",""))[:200]
+ prefixes=("/sales/invoices","/purchases/bills","/accounting/","/banking/","/inventory/","/settings")
+ return {"route":route if route in ALLOWED_ROUTES or route.startswith(prefixes) else "","page_title":str(value.get("page_title",""))[:100],"selected_record_type":str(value.get("selected_record_type",""))[:40]}
+def retrieve_knowledge(question,page_context=None,limit=3):
+ tokens=set(re.findall(r"[a-z0-9]+",question.lower()));route=safe_page_context(page_context).get("route");ranked=[]
+ for doc in DOCUMENTS:
+  haystack=f"{doc['title']} {doc['keywords']} {doc['content']}".lower();parent=doc["route"].rsplit("/",1)[0];score=sum(token in haystack for token in tokens)+(5 if route and parent and route.startswith(parent) else 0)
+  if score:ranked.append((score,doc))
+ return [{**doc,"version":KNOWLEDGE_VERSION} for _,doc in sorted(ranked,key=lambda row:(-row[0],row[1]["id"]))[:limit]]

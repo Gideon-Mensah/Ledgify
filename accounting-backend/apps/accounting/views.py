@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db import transaction
+from django.db.models import Q
 from rest_framework.viewsets import ModelViewSet, ViewSet
 
 from common.views import OrganisationScopedViewSetMixin
@@ -161,6 +162,10 @@ class JournalEntryViewSet(
         source_type = self.request.query_params.get(
             "source_type"
         )
+        start_date = self.request.query_params.get("start_date")
+        end_date = self.request.query_params.get("end_date")
+        account_id = self.request.query_params.get("account_id")
+        search = self.request.query_params.get("search", "").strip()
 
         if journal_status:
             queryset = queryset.filter(
@@ -172,7 +177,23 @@ class JournalEntryViewSet(
                 source_type=source_type,
             )
 
-        return queryset
+        if start_date:
+            queryset = queryset.filter(date__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(date__lte=end_date)
+        if account_id:
+            queryset = queryset.filter(lines__account_id=account_id)
+        if search:
+            queryset = queryset.filter(
+                Q(entry_number__icontains=search)
+                | Q(reference__icontains=search)
+                | Q(description__icontains=search)
+                | Q(lines__description__icontains=search)
+                | Q(lines__account__code__icontains=search)
+                | Q(lines__account__name__icontains=search)
+            )
+
+        return queryset.distinct().order_by("date", "entry_number")
 
     @action(detail=False, methods=["post"], url_path="manual")
     @transaction.atomic

@@ -9,9 +9,10 @@ from apps.ai.tools.manufacturing_tools import manufacturing_context
 from apps.ai.tools.purchase_tools import payable_context
 from apps.ai.tools.sales_tools import receivable_context
 from apps.ai.tools.ratio_tools import get_financial_ratio_analysis
+from .knowledge_service import retrieve_knowledge,safe_page_context
 
 def safe_json(value):return json.loads(json.dumps(value,cls=DjangoJSONEncoder))
-def get_ai_context(*,organisation,user,intent,parameters):
+def get_ai_context(*,organisation,user,intent,parameters,page_context=None):
  params={**parameters,"question":parameters.get("question","")};as_of=params.get("as_of_date") or timezone.localdate();citations=[]
  if intent=="performance_analysis":
   data=get_financial_ratio_analysis(organisation=organisation,start_date=params.get("start_date"),end_date=params.get("end_date"));citations=[{"source_type":"financial_ratio_analysis","period":{"start_date":params.get("start_date"),"end_date":params.get("end_date") or str(as_of)}}]
@@ -22,5 +23,6 @@ def get_ai_context(*,organisation,user,intent,parameters):
  elif intent=="inventory_analysis":data=inventory_context(organisation=organisation);citations=[{"source_type":"inventory_reports","period":{"as_of_date":str(as_of)}}]
  elif intent=="manufacturing_analysis":data=manufacturing_context(organisation=organisation);citations=[{"source_type":"manufacturing_reports","period":{"as_of_date":str(as_of)}}]
  else:data={"routes":{"supplier":"/purchases/suppliers/new","reconcile":"/banking/reconciliation","manufacturing_wip":"/manufacturing/reports","journals":"/accounting/journals","reports":"/reports"}}
- payload={"intent":intent,"data":safe_json(data),"citations":citations,"data_as_of":str(as_of),"limitations":["Insights describe available accounting data and are not legal, tax, or investment advice."]}
+ knowledge=retrieve_knowledge(params.get("question",""),page_context);citations += [{"source_type":"ledgify_help","section_id":doc["id"],"title":doc["title"],"route":doc["route"],"version":doc["version"]} for doc in knowledge]
+ payload={"intent":intent,"data":safe_json(data),"knowledge":knowledge,"page_context":safe_page_context(page_context),"citations":citations,"data_as_of":str(as_of),"limitations":["Insights describe available accounting data and are not legal, tax, or investment advice."]}
  encoded=json.dumps(payload);return json.loads(encoded[:getattr(__import__("django.conf",fromlist=["settings"]).settings,"AI_MAX_CONTEXT_CHARS",50000)]) if len(encoded)<=getattr(__import__("django.conf",fromlist=["settings"]).settings,"AI_MAX_CONTEXT_CHARS",50000) else {**payload,"data":{},"limitations":payload["limitations"]+["Context exceeded the configured safe size and was omitted."]}
