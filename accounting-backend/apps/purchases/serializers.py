@@ -27,6 +27,7 @@ from .services.payments import (
 )
 from .services.commercial import create_purchase_order
 from apps.inventory.models import Product
+from apps.date_fields import accounting_date
 
 
 class PurchaseOrderLineSerializer(serializers.Serializer):
@@ -44,6 +45,8 @@ class PurchaseOrderLineSerializer(serializers.Serializer):
 
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
+    order_date = accounting_date("purchase order date")
+    expected_delivery_date = accounting_date("expected delivery date", required=False, allow_null=True)
     supplier_id = serializers.PrimaryKeyRelatedField(source="supplier", queryset=Contact.objects.all())
     lines = PurchaseOrderLineSerializer(many=True)
     class Meta:
@@ -62,12 +65,12 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 class ReceivePurchaseOrderSerializer(serializers.Serializer):
     line_id = serializers.UUIDField(); warehouse_id = serializers.UUIDField()
     quantity = serializers.DecimalField(max_digits=18, decimal_places=4, min_value=Decimal("0.0001"))
-    transaction_date = serializers.DateField(); grni_account_id = serializers.UUIDField()
+    transaction_date = accounting_date("receipt date"); grni_account_id = serializers.UUIDField()
 
 
 class ConvertPurchaseOrderSerializer(serializers.Serializer):
     bill_number = serializers.CharField(max_length=50)
-    issue_date = serializers.DateField(); due_date = serializers.DateField()
+    issue_date = accounting_date("bill date"); due_date = accounting_date("bill due date")
 
 
 class BillLineSerializer(serializers.ModelSerializer):
@@ -127,6 +130,8 @@ class BillLineSerializer(serializers.ModelSerializer):
 
 
 class BillSerializer(serializers.ModelSerializer):
+    issue_date = accounting_date("bill date")
+    due_date = accounting_date("bill due date")
     supplier_id = serializers.PrimaryKeyRelatedField(
         source="supplier",
         queryset=Contact.objects.all(),
@@ -146,6 +151,13 @@ class BillSerializer(serializers.ModelSerializer):
         decimal_places=2,
         read_only=True,
     )
+
+    def validate(self, attrs):
+        issue_date = attrs.get("issue_date", getattr(self.instance, "issue_date", None))
+        due_date = attrs.get("due_date", getattr(self.instance, "due_date", None))
+        if issue_date and due_date and due_date < issue_date:
+            raise serializers.ValidationError({"due_date": "Bill due date cannot be before the bill date."})
+        return attrs
 
     class Meta:
         model = Bill
@@ -266,6 +278,7 @@ class BillSerializer(serializers.ModelSerializer):
         
         
 class SupplierPaymentSerializer(serializers.ModelSerializer):
+    payment_date = accounting_date("payment date")
     supplier_id = serializers.PrimaryKeyRelatedField(
         source="supplier", queryset=Contact.objects.all(), write_only=True
     )

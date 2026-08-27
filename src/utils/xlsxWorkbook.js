@@ -58,17 +58,26 @@ function financialRows(title, rows, metadata) {
   ];
   const totals = rows.find((row) => row.section === "Totals") || {};
   const addHeading = (label) => output.push({ values: [label, "Amount"], style: 4 });
+  const addSubheading = (label) => output.push({ values: [label, ""], style: 5 });
   const addAccounts = (items) => items.forEach((item) => output.push({ values: [`   ${account(item).code ? `${account(item).code} · ` : ""}${account(item).name || "Unlabelled account"}`, number(item.amount)], styles: [0, 6] }));
   const addTotal = (label, value, grand = false) => output.push({ values: [label, number(value)], styles: [grand ? 8 : 5, grand ? 9 : 7] });
+  const section = (label, items, totalLabel, totalValue, subheading = false) => { if (!items.length) return; (subheading ? addSubheading : addHeading)(label); addAccounts(items); addTotal(totalLabel, totalValue); };
 
   if (title === "Profit and Loss") {
-    const income = rows.filter((row) => row.section === "income");
+    const income = rows.filter((row) => row.section === "income" && account(row).account_class !== "other_income");
+    const otherIncome = rows.filter((row) => row.section === "income" && account(row).account_class === "other_income");
     const allExpenses = rows.filter((row) => row.section === "expenses");
-    const costs = allExpenses.filter((row) => /cost|cogs|direct/i.test(`${account(row).account_class || ""} ${account(row).name || ""}`));
-    const expenses = allExpenses.filter((row) => !costs.includes(row));
-    addHeading("Income"); addAccounts(income); addTotal("Total Income", totals.total_income);
-    if (costs.length) { addHeading("Cost of Sales"); addAccounts(costs); addTotal("Total Cost of Sales", costs.reduce((sum, row) => sum + number(row.amount), 0)); addTotal("Gross Profit", number(totals.total_income) - costs.reduce((sum, row) => sum + number(row.amount), 0)); }
-    addHeading("Operating Expenses"); addAccounts(expenses); addTotal("Total Operating Expenses", expenses.reduce((sum, row) => sum + number(row.amount), 0));
+    const costs = allExpenses.filter((row) => account(row).account_class === "cost_of_sales");
+    const otherExpenses = allExpenses.filter((row) => account(row).account_class === "other_expense");
+    const expenses = allExpenses.filter((row) => !["cost_of_sales", "other_expense"].includes(account(row).account_class));
+    const total = (items) => items.reduce((sum, row) => sum + number(row.amount), 0);
+    section("Income", income, "Total Income", total(income));
+    section("Cost of Sales", costs, "Total Cost of Sales", total(costs));
+    const grossProfit = total(income) - total(costs); if (costs.length) addTotal("Gross Profit", grossProfit);
+    section("Operating Expenses", expenses, "Total Operating Expenses", total(expenses));
+    if (expenses.length) addTotal("Operating Profit", grossProfit - total(expenses));
+    section("Other Income", otherIncome, "Total Other Income", total(otherIncome));
+    section("Other Expenses", otherExpenses, "Total Other Expenses", total(otherExpenses));
     addTotal(number(totals.net_profit) < 0 ? "Net Loss" : "Net Profit", totals.net_profit, true);
   } else if (title === "Trial Balance") {
     output.push({ values: ["Account Code", "Account Name", "Account Type", "Debit", "Credit", "Closing Balance"], style: 4 });
@@ -76,9 +85,22 @@ function financialRows(title, rows, metadata) {
     output.push({ values: ["", "Totals", "", number(totals.total_debit), number(totals.total_credit), number(totals.difference)], styles: [5,5,5,7,7,7] });
     output.push({ values: [number(totals.difference) === 0 && totals.balanced !== false ? "BALANCED" : `OUT OF BALANCE: ${number(totals.difference)}`, ""], style: number(totals.difference) === 0 && totals.balanced !== false ? 11 : 12 });
   } else if (title === "Balance Sheet") {
-    for (const [section, label, total] of [["assets","Assets","total_assets"],["liabilities","Liabilities","total_liabilities"],["equity","Equity","total_equity"]]) { addHeading(label); addAccounts(rows.filter((row) => row.section === section)); addTotal(`Total ${label}`, totals[total], section === "assets"); }
+    const assets = rows.filter((row) => row.section === "assets"); const liabilities = rows.filter((row) => row.section === "liabilities"); const equity = rows.filter((row) => row.section === "equity");
+    const currentAssets = assets.filter((row) => ["bank", "current_asset", "receivable"].includes(account(row).account_class)); const nonCurrentAssets = assets.filter((row) => !currentAssets.includes(row));
+    const currentLiabilities = liabilities.filter((row) => ["current_liability", "payable"].includes(account(row).account_class)); const nonCurrentLiabilities = liabilities.filter((row) => !currentLiabilities.includes(row));
+    const total = (items) => items.reduce((sum, row) => sum + number(row.amount), 0);
+    addHeading("Assets"); section("Current Assets", currentAssets, "Total Current Assets", total(currentAssets), true); section("Non-current Assets", nonCurrentAssets, "Total Non-current Assets", total(nonCurrentAssets), true); addTotal("Total Assets", totals.total_assets, true);
+    addHeading("Liabilities"); section("Current Liabilities", currentLiabilities, "Total Current Liabilities", total(currentLiabilities), true); section("Non-current Liabilities", nonCurrentLiabilities, "Total Non-current Liabilities", total(nonCurrentLiabilities), true); addTotal("Total Liabilities", totals.total_liabilities);
+    addHeading("Equity"); addAccounts(equity); addTotal("Total Equity", totals.total_equity);
     addTotal("Total Liabilities and Equity", totals.total_liabilities_and_equity, true);
     output.push({ values: [number(totals.difference) === 0 && totals.balanced !== false ? "ACCOUNTING EQUATION BALANCED" : `ACCOUNTING EQUATION OUT OF BALANCE: ${number(totals.difference)}`, ""], style: number(totals.difference) === 0 && totals.balanced !== false ? 11 : 12 });
+  } else if (title === "Cash Flow Statement") {
+    const total = (name) => number(totals[name]);
+    for (const [key, label, totalKey] of [["operating","Cash Flows from Operating Activities","total_operating"],["investing","Cash Flows from Investing Activities","total_investing"],["financing","Cash Flows from Financing Activities","total_financing"],["unclassified","Unclassified Cash Flows","total_unclassified"]]) section(label, rows.filter((row) => row.section === key), key === "unclassified" ? "Net Unclassified Cash Flow" : `Net Cash from ${label.replace("Cash Flows from ", "")}`, total(totalKey));
+    addTotal(total("net_cash_flow") < 0 ? "Net Decrease in Cash" : "Net Increase in Cash", total("net_cash_flow"));
+    addTotal("Opening Cash Balance", total("opening_cash"));
+    addTotal("Closing Cash Balance", total("closing_cash"), true);
+    output.push({ values: [total("difference") === 0 && totals.balanced !== false ? "CASH RECONCILIATION BALANCED" : `CASH RECONCILIATION OUT OF BALANCE: ${total("difference")}`, ""], style: total("difference") === 0 && totals.balanced !== false ? 11 : 12 });
   }
   return output;
 }
@@ -94,7 +116,7 @@ function genericRows(title, rows, metadata) {
 }
 
 export function createXlsxWorkbook({ title, rows = [], metadata = {} }) {
-  const specialised = ["Profit and Loss", "Trial Balance", "Balance Sheet"].includes(title);
+  const specialised = ["Profit and Loss", "Trial Balance", "Balance Sheet", "Cash Flow Statement"].includes(title);
   const sheetRows = specialised ? financialRows(title, rows, metadata) : genericRows(title, rows, metadata);
   const maxColumns = Math.max(2, ...sheetRows.map((row) => row.values.length));
   const rowXml = sheetRows.map((item, index) => {

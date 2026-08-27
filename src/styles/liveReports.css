@@ -114,3 +114,61 @@
   .table-pagination { justify-content: space-between; }
   .table-pagination small { display: none; }
 }
+
+.financial-report-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 14px; }
+.financial-report-filters label { display: grid; gap: 6px; color: var(--text-secondary); font-size: 12px; font-weight: 700; text-transform: capitalize; }
+
+.financial-statement {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 58px);
+  border: 1px solid #e4e7ec;
+  background: #fff;
+  color: #101828;
+  box-shadow: 0 2px 10px rgba(16, 24, 40, .05);
+}
+
+.financial-statement-header { padding-bottom: 26px; border-bottom: 2px solid #0f4c5c; }
+.financial-statement-header > strong { display: block; color: #0f4c5c; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+.financial-statement-header h2 { margin: 8px 0 6px; font-size: clamp(28px, 4vw, 40px); letter-spacing: -.035em; }
+.financial-statement-header p { margin: 0; color: #475467; font-size: 15px; }
+.financial-statement-header div { display: flex; justify-content: space-between; gap: 16px; margin-top: 18px; color: #667085; font-size: 12px; }
+.financial-statement-table-wrap { width: 100%; overflow-x: auto; }
+.financial-statement-table { width: 100%; min-width: 560px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.financial-statement-table th { padding: 15px 12px 10px; border-bottom: 1px solid #98a2b3; color: #475467; font-size: 11px; letter-spacing: .05em; text-align: left; text-transform: uppercase; }
+.financial-statement-table td { padding: 10px 12px; border-bottom: 1px solid #eaecf0; font-size: 13px; }
+.financial-statement-table .is-money { min-width: 150px; text-align: right; white-space: nowrap; }
+.financial-statement-table a { color: inherit; text-decoration: none; }
+.financial-statement-table a:hover { color: #0f4c5c; text-decoration: underline; text-underline-offset: 3px; }
+.financial-statement-section td { padding-top: 25px; border-bottom: 2px solid #344054; font-size: 14px; font-weight: 800; }
+.financial-statement-subsection td { padding-top: 18px; border-bottom-color: #98a2b3; color: #344054; font-weight: 750; }
+.financial-statement-account td:first-child { padding-left: 32px; }
+.financial-statement-subtotal td { border-top: 1px solid #98a2b3; border-bottom: 0; font-weight: 700; }
+.financial-statement-major-total td { padding-top: 13px; border-top: 1px solid #667085; border-bottom: 1px solid #667085; font-size: 14px; font-weight: 800; }
+.financial-statement-grand-total td { padding-top: 15px; padding-bottom: 15px; border-top: 2px solid #0f4c5c; border-bottom: 3px double #0f4c5c; color: #0e2d3a; font-size: 15px; font-weight: 850; }
+.financial-statement.is-trial-balance td:first-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+.financial-statement-empty { padding: 32px !important; color: #667085; text-align: center; }
+.financial-statement-balance { margin-top: 24px; padding: 12px 0; border-top: 1px solid #d0d5dd; color: #067647; font-size: 12px; font-weight: 750; text-align: right; }
+.financial-statement-balance.is-unbalanced { color: #b42318; }
+
+@media screen and (max-width: 700px) {
+  .financial-statement { padding: 22px 16px; }
+  .financial-statement-header div { align-items: flex-start; flex-direction: column; gap: 5px; }
+}
+
+@page { size: A4 portrait; margin: 13mm 12mm 15mm; }
+@media print {
+  body * { visibility: hidden; }
+  .financial-statement, .financial-statement * { visibility: visible; }
+  .financial-statement { position: absolute; inset: 0; width: 100%; max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; }
+  .financial-report-filters, .financial-report-print-button, .report-export, .table-pagination { display: none !important; }
+  .financial-statement-header { padding-bottom: 6mm; }
+  .financial-statement-header h2 { font-size: 24pt; }
+  .financial-statement-table { min-width: 0; }
+  .financial-statement-table thead { display: table-header-group; }
+  .financial-statement-table tr { break-inside: avoid; page-break-inside: avoid; }
+  .financial-statement-section, .financial-statement-subsection, .financial-statement-grand-total, .financial-statement-major-total { break-after: avoid; page-break-after: avoid; }
+  .financial-statement-table th { font-size: 8pt; }
+  .financial-statement-table td { padding: 2.2mm 2mm; font-size: 9pt; }
+  .financial-statement-balance { break-inside: avoid; page-break-inside: avoid; }
+}

@@ -8,9 +8,9 @@ import Modal from "../../components/common/Modal";
 import { accountingApiService } from "../../services/accountingApiService";
 import { normaliseApiError } from "../../services/apiError";
 import { useAuth } from "../../store/AuthContext";
+import { getOrganisationToday, toApiDate } from "../../utils/dateUtils";
 import "../../styles/journals.css";
 
-const today = () => new Date().toISOString().slice(0, 10);
 const blankLine = () => ({ id: crypto.randomUUID(), account_id: "", description: "", debit: "", credit: "" });
 const toCents = (value) => {
   const match = String(value || "").trim().match(/^(\d+)(?:\.(\d{0,2}))?$/);
@@ -19,7 +19,7 @@ const toCents = (value) => {
 export default function NewJournalPage() {
   const navigate = useNavigate(); const auth = useAuth();
   const [accounts, setAccounts] = useState([]); const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ date: today(), reference: "", description: "", lines: [blankLine(), blankLine()] });
+  const [form, setForm] = useState({ date: getOrganisationToday(auth.selectedOrganisation?.timezone), reference: "", description: "", lines: [blankLine(), blankLine()] });
   const [state, setState] = useState({ loading: true, saving: false, error: "" }); const [confirming, setConfirming] = useState(false); const [dirty, setDirty] = useState(false);
   useEffect(() => { let active = true; accountingApiService.accounts({ status: "active" }).then((rows) => { if (active) { setAccounts(rows.filter((account) => account.allow_manual_journals)); setState((value) => ({ ...value, loading: false })); } }).catch((error) => active && setState((value) => ({ ...value, loading: false, error: normaliseApiError(error) }))); return () => { active = false; }; }, []);
   useEffect(() => { const warn = (event) => { if (dirty) { event.preventDefault(); event.returnValue = ""; } }; window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn); }, [dirty]);
@@ -28,7 +28,7 @@ export default function NewJournalPage() {
   const visibleAccounts = accounts.filter((account) => `${account.code} ${account.name}`.toLowerCase().includes(search.toLowerCase()));
   const update = (id, field, value) => { setDirty(true); setForm((current) => ({ ...current, lines: current.lines.map((line) => line.id === id ? { ...line, [field]: value, ...(field === "debit" && toCents(value) > 0n ? { credit: "" } : {}), ...(field === "credit" && toCents(value) > 0n ? { debit: "" } : {}) } : line) })); };
   const validate = () => { if (!form.description.trim()) return "Description is required."; if (form.lines.length < 2) return "Add at least two journal lines."; for (const [index, line] of form.lines.entries()) { if (!line.account_id) return `Line ${index + 1} requires an account.`; if ((toCents(line.debit) > 0n) === (toCents(line.credit) > 0n)) return `Line ${index + 1} requires either a debit or a credit.`; } if (!balanced) return "Journal entries must balance before they can be posted."; return ""; };
-  const save = async (post) => { const error = validate(); if (error) { setState((value) => ({ ...value, error })); setConfirming(false); return; } setState((value) => ({ ...value, saving: true, error: "" })); try { const journal = await accountingApiService.createManualJournal({ date: form.date, reference: form.reference, description: form.description, post, lines: form.lines.map(({ account_id, description, debit, credit }) => ({ account_id, description, debit: debit || "0.00", credit: credit || "0.00" })) }); setDirty(false); navigate(`/accounting/journals/${journal.id}?created=${post ? "posted" : "draft"}`, { replace: true }); } catch (requestError) { setState((value) => ({ ...value, saving: false, error: normaliseApiError(requestError) })); setConfirming(false); } };
+  const save = async (post) => { const error = validate(); if (error) { setState((value) => ({ ...value, error })); setConfirming(false); return; } setState((value) => ({ ...value, saving: true, error: "" })); try { const journal = await accountingApiService.createManualJournal({ date: toApiDate(form.date, "journal date"), reference: form.reference, description: form.description, post, lines: form.lines.map(({ account_id, description, debit, credit }) => ({ account_id, description, debit: debit || "0.00", credit: credit || "0.00" })) }); setDirty(false); navigate(`/accounting/journals/${journal.id}?created=${post ? "posted" : "draft"}`, { replace: true }); } catch (requestError) { setState((value) => ({ ...value, saving: false, error: normaliseApiError(requestError) })); setConfirming(false); } };
   const money = (cents) => new Intl.NumberFormat("en-GB", { style: "currency", currency: auth.selectedOrganisation?.base_currency || "GBP" }).format(Number(cents) / 100);
   return <div className="journals-page new-journal-page"><PageHeader eyebrow="Accounting · Journals" title="New Journal Entry" description="Record a manual debit and credit adjustment in the general ledger." action={<Link className="invoice-secondary-button" to="/accounting/journals"><ArrowLeft size={16}/>Cancel</Link>}/>
     {state.error && <div className="invoice-form-alert" role="alert">{state.error}</div>}

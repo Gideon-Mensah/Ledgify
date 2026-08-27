@@ -415,3 +415,214 @@ class YearEndCloseTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.organisation.journal_entries.count(), before)
+
+
+class DirectCashFlowAccountingTests(TestCase):
+    """Required direct-method scenarios using metadata, never names/codes."""
+
+    ZERO = Decimal("0.00")
+    PERIOD_START = date(2026, 4, 1)
+    PERIOD_END = date(2026, 4, 30)
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="cash-flow-review", email="cash-flow-review@example.com", password="test"
+        )
+        self.organisation = Organisation.objects.create(
+            name="Cash Flow Review", created_by=self.user,
+        )
+        OrganisationMember.objects.create(
+            organisation=self.organisation, user=self.user,
+            role=OrganisationMember.Role.OWNER,
+        )
+        self.bank = self.account("0010", Account.AccountType.ASSET, Account.AccountClass.BANK)
+        self.savings = self.account("0011", Account.AccountType.ASSET, Account.AccountClass.BANK)
+        self.capital = self.account("3000", Account.AccountType.EQUITY, Account.AccountClass.EQUITY)
+        self.loan = self.account("2100", Account.AccountType.LIABILITY, Account.AccountClass.LONG_TERM_LIABILITY)
+        self.receivable = self.account("1100", Account.AccountType.ASSET, Account.AccountClass.RECEIVABLE)
+        self.payable = self.account("2000", Account.AccountType.LIABILITY, Account.AccountClass.PAYABLE)
+        self.sales = self.account("4000", Account.AccountType.REVENUE, Account.AccountClass.SALES)
+        self.rent = self.account("6000", Account.AccountType.EXPENSE, Account.AccountClass.OPERATING_EXPENSE)
+        self.equipment = self.account("1500", Account.AccountType.ASSET, Account.AccountClass.FIXED_ASSET)
+
+    def account(self, code, account_type, account_class):
+        return Account.objects.create(
+            organisation=self.organisation, code=code, name=f"Account {code}",
+            account_type=account_type, account_class=account_class, created_by=self.user,
+        )
+
+    def post(self, posting_date, description, lines):
+        journal = create_journal_entry(
+            organisation=self.organisation, date=posting_date,
+            description=description, lines=lines, user=self.user,
+        )
+        return post_journal_entry(journal_entry=journal, user=self.user)
+
+    def report(self):
+        return cash_flow(
+            organisation=self.organisation,
+            start_date=self.PERIOD_START, end_date=self.PERIOD_END,
+        )
+
+    def assert_reconciles(self, report):
+        self.assertEqual(
+            report["opening_cash"] + report["total_operating"]
+            + report["total_investing"] + report["total_financing"]
+            + report["total_unclassified"],
+            report["closing_cash"],
+        )
+        self.assertEqual(report["closing_cash"], report["cash_ledger_balance"])
+        self.assertEqual(report["difference"], self.ZERO)
+
+    def test_initial_capital_during_period_is_financing_and_reconciles_to_balance_sheet(self):
+        amount = Decimal("1000000.00")
+        self.post(self.PERIOD_START, "Initial capital", [
+            {"account": self.bank, "debit": amount, "credit": self.ZERO},
+            {"account": self.capital, "debit": self.ZERO, "credit": amount},
+        ])
+        report = self.report()
+        self.assertEqual(report["total_operating"], self.ZERO)
+        self.assertEqual(report["total_investing"], self.ZERO)
+        self.assertEqual(report["total_financing"], amount)
+        self.assertEqual(report["opening_cash"], self.ZERO)
+        self.assertEqual(report["net_cash_flow"], amount)
+        self.assertEqual(report["closing_cash"], amount)
+        self.assert_reconciles(report)
+        statement = balance_sheet(
+            organisation=self.organisation, as_of_date=self.PERIOD_END,
+        )
+        cash_on_balance_sheet = sum(
+            (row["amount"] for row in statement["assets"] if row["account"]["account_class"] == Account.AccountClass.BANK),
+            self.ZERO,
+        )
+        self.assertEqual(report["closing_cash"], cash_on_balance_sheet)
+
+    def test_preperiod_capital_is_opening_cash_and_date_boundaries_are_inclusive(self):
+        million = Decimal("1000000.00")
+        self.post(date(2026, 3, 31), "Earlier capital", [
+            {"account": self.bank, "debit": million, "credit": self.ZERO},
+            {"account": self.capital, "debit": self.ZERO, "credit": million},
+        ])
+        self.post(self.PERIOD_START, "First-day receipt", [
+            {"account": self.bank, "debit": Decimal("10.00"), "credit": self.ZERO},
+            {"account": self.sales, "debit": self.ZERO, "credit": Decimal("10.00")},
+        ])
+        self.post(self.PERIOD_END, "Last-day rent", [
+            {"account": self.rent, "debit": Decimal("2.00"), "credit": self.ZERO},
+            {"account": self.bank, "debit": self.ZERO, "credit": Decimal("2.00")},
+        ])
+        report = self.report()
+        self.assertEqual(report["opening_cash"], million)
+        self.assertEqual(report["total_financing"], self.ZERO)
+        self.assertEqual(report["total_operating"], Decimal("8.00"))
+        self.assertEqual(report["closing_cash"], Decimal("1000008.00"))
+        self.assert_reconciles(report)
+
+    def test_cash_and_credit_trading_transactions_use_only_actual_cash(self):
+        self.post(self.PERIOD_START, "Cash sale", [
+            {"account": self.bank, "debit": Decimal("10000.00"), "credit": self.ZERO},
+            {"account": self.sales, "debit": self.ZERO, "credit": Decimal("10000.00")},
+        ])
+        self.post(self.PERIOD_START, "Unpaid sale", [
+            {"account": self.receivable, "debit": Decimal("7000.00"), "credit": self.ZERO},
+            {"account": self.sales, "debit": self.ZERO, "credit": Decimal("7000.00")},
+        ])
+        self.post(date(2026, 4, 2), "Customer payment", [
+            {"account": self.bank, "debit": Decimal("7000.00"), "credit": self.ZERO},
+            {"account": self.receivable, "debit": self.ZERO, "credit": Decimal("7000.00")},
+        ])
+        self.post(date(2026, 4, 3), "Unpaid supplier bill", [
+            {"account": self.rent, "debit": Decimal("3000.00"), "credit": self.ZERO},
+            {"account": self.payable, "debit": self.ZERO, "credit": Decimal("3000.00")},
+        ])
+        self.post(date(2026, 4, 4), "Supplier payment", [
+            {"account": self.payable, "debit": Decimal("3000.00"), "credit": self.ZERO},
+            {"account": self.bank, "debit": self.ZERO, "credit": Decimal("3000.00")},
+        ])
+        report = self.report()
+        self.assertEqual(report["total_operating"], Decimal("14000.00"))
+        self.assertEqual(report["net_cash_flow"], Decimal("14000.00"))
+        self.assert_reconciles(report)
+
+    def test_investing_financing_loan_and_non_cash_transactions(self):
+        self.post(self.PERIOD_START, "Equipment paid", [
+            {"account": self.equipment, "debit": Decimal("50000.00"), "credit": self.ZERO},
+            {"account": self.bank, "debit": self.ZERO, "credit": Decimal("50000.00")},
+        ])
+        self.post(date(2026, 4, 2), "Loan received", [
+            {"account": self.bank, "debit": Decimal("100000.00"), "credit": self.ZERO},
+            {"account": self.loan, "debit": self.ZERO, "credit": Decimal("100000.00")},
+        ])
+        self.post(date(2026, 4, 3), "Loan principal repaid", [
+            {"account": self.loan, "debit": Decimal("25000.00"), "credit": self.ZERO},
+            {"account": self.bank, "debit": self.ZERO, "credit": Decimal("25000.00")},
+        ])
+        self.post(date(2026, 4, 4), "Non-cash capital contribution", [
+            {"account": self.equipment, "debit": Decimal("9000.00"), "credit": self.ZERO},
+            {"account": self.capital, "debit": self.ZERO, "credit": Decimal("9000.00")},
+        ])
+        report = self.report()
+        self.assertEqual(report["total_investing"], Decimal("-50000.00"))
+        self.assertEqual(report["total_financing"], Decimal("75000.00"))
+        self.assertEqual(report["net_cash_flow"], Decimal("25000.00"))
+        self.assert_reconciles(report)
+
+    def test_internal_transfer_compound_financing_and_multiple_banks_do_not_double_count(self):
+        self.post(self.PERIOD_START, "Compound finance", [
+            {"account": self.bank, "debit": Decimal("1000000.00"), "credit": self.ZERO},
+            {"account": self.capital, "debit": self.ZERO, "credit": Decimal("800000.00")},
+            {"account": self.loan, "debit": self.ZERO, "credit": Decimal("200000.00")},
+        ])
+        self.post(date(2026, 4, 2), "Internal transfer", [
+            {"account": self.savings, "debit": Decimal("5000.00"), "credit": self.ZERO},
+            {"account": self.bank, "debit": self.ZERO, "credit": Decimal("5000.00")},
+        ])
+        report = self.report()
+        self.assertEqual(report["total_financing"], Decimal("1000000.00"))
+        self.assertEqual(sum((row["amount"] for row in report["financing"]), self.ZERO), Decimal("1000000.00"))
+        self.assertEqual(report["closing_cash"], Decimal("1000000.00"))
+        self.assert_reconciles(report)
+
+    def test_reversal_nets_to_zero_and_drilldown_is_auditable_and_scoped(self):
+        original = self.post(self.PERIOD_START, "Receipt to reverse", [
+            {"account": self.bank, "debit": Decimal("500.00"), "credit": self.ZERO},
+            {"account": self.sales, "debit": self.ZERO, "credit": Decimal("500.00")},
+        ])
+        reverse_journal_entry(
+            journal_entry=original, user=self.user, reversal_date=date(2026, 4, 2),
+        )
+        report = self.report()
+        self.assertEqual(report["net_cash_flow"], self.ZERO)
+        self.assertEqual(report["closing_cash"], self.ZERO)
+        self.assert_reconciles(report)
+        detail = cash_flow_drilldown(
+            organisation=self.organisation, row_key=self.sales.id,
+            start_date=self.PERIOD_START, end_date=self.PERIOD_END,
+        )
+        self.assertEqual(detail["amount"], self.ZERO)
+        self.assertEqual(len(detail["transactions"]), 2)
+        for transaction in detail["transactions"]:
+            self.assertIn(transaction["journal_status"], {"posted", "reversed"})
+            self.assertEqual(transaction["cash_accounts"][0]["account_class"], Account.AccountClass.BANK)
+            self.assertEqual(transaction["cash_flow_category"], "operating")
+        foreign = Organisation.objects.create(name="Foreign Cash Flow", created_by=self.user)
+        self.assertIsNone(cash_flow_drilldown(
+            organisation=foreign, row_key=self.sales.id,
+            start_date=self.PERIOD_START, end_date=self.PERIOD_END,
+        ))
+
+    def test_cash_flow_api_requires_authentication_and_organisation_membership(self):
+        endpoint = "/api/v1/reports/cash-flow/?start_date=2026-04-01&end_date=2026-04-30"
+        client = APIClient()
+        self.assertEqual(
+            client.get(endpoint, HTTP_X_ORGANISATION_ID=str(self.organisation.id)).status_code,
+            401,
+        )
+        client.force_authenticate(self.user)
+        response = client.get(endpoint, HTTP_X_ORGANISATION_ID=str(self.organisation.id))
+        self.assertEqual(response.status_code, 200, response.content)
+        foreign = Organisation.objects.create(name="No Membership", created_by=self.user)
+        self.assertEqual(
+            client.get(endpoint, HTTP_X_ORGANISATION_ID=str(foreign.id)).status_code,
+            403,
+        )

@@ -2,6 +2,7 @@
 
 import { api } from "./api";
 import { statusLabel, toDateInput, toDisplayDate } from "./domainMappings";
+import { toApiDate } from "../utils/dateUtils";
 
 export function mapInvoice(invoice) {
   return {
@@ -125,7 +126,7 @@ export const salesApiService = {
       customer_id: invoice.customerId,
       invoice_id: invoice.id,
       bank_account_id: payment.bankAccountId,
-      payment_date: payment.paymentDate,
+      payment_date: toApiDate(payment.paymentDate, "payment date"),
       amount: String(payment.amount),
       currency: invoice.currency,
       reference: payment.reference || invoice.invoiceNumber,

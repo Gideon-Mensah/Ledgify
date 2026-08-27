@@ -11,10 +11,10 @@ import ReportExportMenu from "../../components/reports/ReportExportMenu";
 import { normaliseApiError } from "../../services/apiError";
 import { reportService } from "../../services/reportService";
 import { useAuth } from "../../store/AuthContext";
+import { addCalendarDays, getOrganisationToday } from "../../utils/dateUtils";
 import "../../styles/financialAnalysis.css";
 
-const iso = (date) => date.toISOString().slice(0, 10);
-const initialDates = () => { const end = new Date(); const start = new Date(end.getFullYear(), 0, 1); const days = Math.round((end - start) / 86400000) + 1; const previousEnd = new Date(start); previousEnd.setDate(previousEnd.getDate() - 1); const previousStart = new Date(previousEnd); previousStart.setDate(previousStart.getDate() - days + 1); return { start_date: iso(start), end_date: iso(end), comparison_start_date: iso(previousStart), comparison_end_date: iso(previousEnd) }; };
+const initialDates = (timezone) => { const end = getOrganisationToday(timezone); const start = `${end.slice(0, 4)}-01-01`; const days = Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86400000) + 1; const previousEnd = addCalendarDays(start, -1); return { start_date: start, end_date: end, comparison_start_date: addCalendarDays(previousEnd, -days + 1), comparison_end_date: previousEnd }; };
 const title = (value) => String(value || "").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const value = (item, currency) => item?.value == null ? "Not available" : item.unit === "percent" ? `${item.value}%` : item.unit === "currency" ? new Intl.NumberFormat(undefined, { style: "currency", currency }).format(Number(item.value)) : item.unit === "days" ? `${item.value} days` : `${item.value}${item.unit === "times" ? "×" : ""}`;
 
@@ -31,7 +31,7 @@ function RatioCard({ item, currency }) {
 
 export default function FinancialAnalysisPage() {
   const auth = useAuth(); const currency = auth.selectedOrganisation?.base_currency || "GBP";
-  const [filters, setFilters] = useState(initialDates); const [report, setReport] = useState(null); const [state, setState] = useState({ loading: true, error: "" });
+  const [filters, setFilters] = useState(() => initialDates(auth.selectedOrganisation?.timezone)); const [report, setReport] = useState(null); const [state, setState] = useState({ loading: true, error: "" });
   const [trendKey, setTrendKey] = useState("current_ratio"); const [trend, setTrend] = useState([]);
   const load = useCallback(async () => { setState({ loading: true, error: "" }); try { setReport(await reportService.financialAnalysis(filters)); setState({ loading: false, error: "" }); } catch (error) { setState({ loading: false, error: normaliseApiError(error) }); } }, [filters]);
   useEffect(() => { const frame = requestAnimationFrame(() => void load()); return () => cancelAnimationFrame(frame); }, [load]);

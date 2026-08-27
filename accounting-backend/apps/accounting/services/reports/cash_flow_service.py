@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 
-from django.db.models import Sum
+from django.db.models import Q, Sum
 
 from apps.accounting.models import Account
 
@@ -10,10 +10,34 @@ from .base import ReportQuery, ZERO
 
 
 class CashFlowReport(ReportQuery):
+    """Direct-method cash flow derived only from ledger-effective cash lines.
+
+    Cash accounts are identified by explicit cash-flow metadata, the Chart of
+    Accounts ``bank`` class, or a linked Banking profile. Counterpart accounts
+    use an explicit cash-flow category first, then the central class mapping
+    below. No account names, descriptions, or hard-coded codes are inspected.
+    """
+
     SECTION_NAMES = {
         Account.CashFlowCategory.OPERATING: "operating",
         Account.CashFlowCategory.INVESTING: "investing",
         Account.CashFlowCategory.FINANCING: "financing",
+    }
+
+    CLASSIFICATION_BY_ACCOUNT_CLASS = {
+        Account.AccountClass.FIXED_ASSET: "investing",
+        Account.AccountClass.EQUITY: "financing",
+        Account.AccountClass.RETAINED_EARNINGS: "financing",
+        Account.AccountClass.LONG_TERM_LIABILITY: "financing",
+        Account.AccountClass.CURRENT_ASSET: "operating",
+        Account.AccountClass.RECEIVABLE: "operating",
+        Account.AccountClass.CURRENT_LIABILITY: "operating",
+        Account.AccountClass.PAYABLE: "operating",
+        Account.AccountClass.SALES: "operating",
+        Account.AccountClass.OTHER_INCOME: "operating",
+        Account.AccountClass.COST_OF_SALES: "operating",
+        Account.AccountClass.OPERATING_EXPENSE: "operating",
+        Account.AccountClass.OTHER_EXPENSE: "operating",
     }
 
     def run(self):
@@ -27,7 +51,7 @@ class CashFlowReport(ReportQuery):
         for allocation in self._allocations():
             self._add_amount(
                 section_rows[allocation["section"]],
-                allocation["line"].account,
+                allocation["counterpart_line"].account,
                 allocation["amount"],
             )
 
@@ -82,7 +106,7 @@ class CashFlowReport(ReportQuery):
         transactions = []
         total = ZERO
         for allocation in self._allocations():
-            line = allocation["line"]
+            line = allocation["counterpart_line"]
             if line.account_id != account.id:
                 continue
             amount = allocation["amount"]
@@ -96,11 +120,28 @@ class CashFlowReport(ReportQuery):
                 "description": line.description or journal.description,
                 "source_type": journal.source_type,
                 "source_id": str(journal.source_id) if journal.source_id else None,
+                "journal_status": journal.status,
+                "reversal_of": (
+                    {
+                        "id": str(journal.reversal_of_id),
+                        "entry_number": journal.reversal_of.entry_number,
+                    }
+                    if journal.reversal_of_id else None
+                ),
+                "reversal_entry": (
+                    {
+                        "id": str(journal.reversal_entry.id),
+                        "entry_number": journal.reversal_entry.entry_number,
+                    }
+                    if hasattr(journal, "reversal_entry") else None
+                ),
+                "cash_accounts": allocation["cash_accounts"],
                 "account": {
                     "id": str(account.id),
                     "code": account.code,
                     "name": account.name,
                 },
+                "cash_flow_category": allocation["section"],
                 "cash_in": amount if amount > ZERO else ZERO,
                 "cash_out": -amount if amount < ZERO else ZERO,
                 "amount": amount,
@@ -125,7 +166,11 @@ class CashFlowReport(ReportQuery):
 
     def _allocations(self):
         journal_groups = OrderedDict()
-        queryset = self.journal_lines().order_by(
+        queryset = self.journal_lines().select_related(
+            "account__bank_profile",
+            "journal_entry__reversal_of",
+            "journal_entry__reversal_entry",
+        ).order_by(
             "journal_entry__date",
             "journal_entry__entry_number",
             "created_at",
@@ -136,13 +181,13 @@ class CashFlowReport(ReportQuery):
         for lines in journal_groups.values():
             cash_lines = [
                 line for line in lines
-                if line.account.cash_flow_category == Account.CashFlowCategory.CASH
+                if self._is_cash_account(line.account)
             ]
             if not cash_lines:
                 continue
             non_cash_lines = [
                 line for line in lines
-                if line.account.cash_flow_category != Account.CashFlowCategory.CASH
+                if not self._is_cash_account(line.account)
             ]
             # A journal containing only cash accounts is an internal transfer.
             if not non_cash_lines:
@@ -150,30 +195,64 @@ class CashFlowReport(ReportQuery):
             cash_movement = sum(
                 (line.debit - line.credit for line in cash_lines), ZERO,
             )
-            weighted_lines = [
-                (line, abs(line.debit - line.credit))
-                for line in non_cash_lines
-                if line.debit - line.credit != ZERO
-            ]
-            total_non_cash_amount = sum(
-                (amount for _, amount in weighted_lines), ZERO,
-            )
-            if total_non_cash_amount == ZERO:
+            # A pure/internal cash transfer, including a multi-bank transfer,
+            # does not change organisation-wide cash and is excluded.
+            if cash_movement == ZERO:
                 continue
-            allocated_total = ZERO
-            for index, (line, amount) in enumerate(weighted_lines):
-                if index == len(weighted_lines) - 1:
-                    allocated_cash = cash_movement - allocated_total
-                else:
-                    allocated_cash = cash_movement * amount / total_non_cash_amount
-                    allocated_total += allocated_cash
-                yield {
-                    "section": self.SECTION_NAMES.get(
-                        line.account.cash_flow_category, "unclassified",
-                    ),
-                    "line": line,
-                    "amount": allocated_cash,
+            cash_accounts = [
+                {
+                    "id": str(line.account_id),
+                    "code": line.account.code,
+                    "name": line.account.name,
+                    "account_class": line.account.account_class,
+                    "amount": line.debit - line.credit,
                 }
+                for line in cash_lines
+            ]
+            # In a balanced journal, the signed cash effect attributable to a
+            # counterpart is credit minus debit. These amounts reconcile to the
+            # journal's net cash movement without proportional/absolute-value
+            # distortion and naturally support compound journals.
+            allocations = [
+                (line, line.credit - line.debit)
+                for line in non_cash_lines
+                if line.credit - line.debit != ZERO
+            ]
+            if sum((amount for _, amount in allocations), ZERO) != cash_movement:
+                # Posted journals should be balanced. Do not manufacture a cash
+                # classification if corrupt historical data violates that rule.
+                continue
+            for line, allocated_cash in allocations:
+                yield {
+                    "section": self._classify_counterpart(line.account),
+                    "counterpart_line": line,
+                    "amount": allocated_cash,
+                    "cash_accounts": cash_accounts,
+                }
+
+    @staticmethod
+    def _is_cash_account(account):
+        return (
+            account.cash_flow_category == Account.CashFlowCategory.CASH
+            or account.account_class == Account.AccountClass.BANK
+            or hasattr(account, "bank_profile")
+        )
+
+    def _classify_counterpart(self, account):
+        explicit = self.SECTION_NAMES.get(account.cash_flow_category)
+        if explicit:
+            return explicit
+        return self.CLASSIFICATION_BY_ACCOUNT_CLASS.get(
+            account.account_class,
+            "operating" if account.account_type != Account.AccountType.EQUITY else "financing",
+        )
+
+    def _cash_account_filter(self):
+        return (
+            Q(account__cash_flow_category=Account.CashFlowCategory.CASH)
+            | Q(account__account_class=Account.AccountClass.BANK)
+            | Q(account__bank_profile__organisation=self.organisation)
+        )
 
     def _opening_cash(self):
         if not self.start_date:
@@ -187,10 +266,11 @@ class CashFlowReport(ReportQuery):
             .journal_lines()
             .filter(
                 journal_entry__date__lt=self.start_date,
-                account__cash_flow_category=(
-                    Account.CashFlowCategory.CASH
-                ),
             )
+            .filter(
+                self._cash_account_filter(),
+            )
+            .distinct()
         )
 
         return self._cash_balance(queryset)
@@ -203,10 +283,9 @@ class CashFlowReport(ReportQuery):
             )
             .journal_lines()
             .filter(
-                account__cash_flow_category=(
-                    Account.CashFlowCategory.CASH
-                ),
+                self._cash_account_filter(),
             )
+            .distinct()
         )
 
         return self._cash_balance(queryset)

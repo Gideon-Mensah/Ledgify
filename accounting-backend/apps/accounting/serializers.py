@@ -1,6 +1,7 @@
 """Validate accounting API data while keeping calculated and posted fields read-only."""
 
 from rest_framework import serializers
+from apps.date_fields import accounting_date
 
 
 from .models import Account, AccountingPeriod, FinancialYear, JournalEntry, JournalLine
@@ -137,7 +138,7 @@ class ManualJournalLineInputSerializer(serializers.Serializer):
 
 
 class ManualJournalInputSerializer(serializers.Serializer):
-    date = serializers.DateField()
+    date = accounting_date("journal date")
     reference = serializers.CharField(required=False, allow_blank=True, max_length=100)
     description = serializers.CharField(max_length=500)
     lines = ManualJournalLineInputSerializer(many=True, min_length=2)
@@ -145,7 +146,7 @@ class ManualJournalInputSerializer(serializers.Serializer):
 
 
 class JournalReversalInputSerializer(serializers.Serializer):
-    reversal_date = serializers.DateField(required=False)
+    reversal_date = accounting_date("reversal date", required=False)
 
 
 class FinancialYearSerializer(serializers.ModelSerializer):

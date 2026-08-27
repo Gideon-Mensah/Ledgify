@@ -32,6 +32,12 @@ import { normaliseApiError } from "../../services/apiError";
 import { taxApiService } from "../../services/taxApiService";
 
 import { inventoryService } from "../../services/inventoryService";
+import { useAuth } from "../../store/AuthContext";
+import {
+  addCalendarDays,
+  formatDisplayDate,
+  getOrganisationToday,
+} from "../../utils/dateUtils";
 
 // Creates row id.
 const createRowId = () => {
@@ -71,71 +77,6 @@ const createEmptyItem = () => ({
   availableStock: 0,
   inventoryUnitCost: 0,
 });
-
-// Gets today.
-const getToday = () => {
-  const today = new Date();
-
-  const timezoneOffset =
-    today.getTimezoneOffset() *
-    60 *
-    1000;
-
-  return new Date(
-    today.getTime() -
-      timezoneOffset
-  )
-    .toISOString()
-    .slice(0, 10);
-};
-
-// Adds days.
-const addDays = (
-  date,
-  days
-) => {
-  const result = new Date(
-    `${date}T00:00:00`
-  );
-
-  result.setDate(
-    result.getDate() + days
-  );
-
-  const timezoneOffset =
-    result.getTimezoneOffset() *
-    60 *
-    1000;
-
-  return new Date(
-    result.getTime() -
-      timezoneOffset
-  )
-    .toISOString()
-    .slice(0, 10);
-};
-
-// Formats display date.
-const formatDisplayDate = (
-  date
-) => {
-  if (!date) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat(
-    "en-GB",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }
-  ).format(
-    new Date(
-      `${date}T00:00:00`
-    )
-  );
-};
 
 // Formats currency.
 const formatCurrency = (
@@ -207,6 +148,7 @@ const roundQuantity = (
 
 // Renders the new invoice page component.
 function NewInvoicePage({ editMode = false }) {
+  const auth = useAuth();
   const navigate = useNavigate();
   const { invoiceId } = useParams();
 
@@ -224,7 +166,7 @@ function NewInvoicePage({ editMode = false }) {
   const requestedCustomerId =
     searchParams.get("customerId");
 
-  const today = getToday();
+  const today = getOrganisationToday(auth.selectedOrganisation?.timezone);
 
   const [
     invoiceDetails,
@@ -233,7 +175,7 @@ function NewInvoicePage({ editMode = false }) {
     customerId: "",
     invoiceNumber: "",
     invoiceDate: today,
-    dueDate: addDays(
+    dueDate: addCalendarDays(
       today,
       14
     ),

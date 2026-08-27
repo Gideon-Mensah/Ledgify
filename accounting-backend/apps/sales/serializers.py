@@ -31,6 +31,7 @@ from apps.inventory.models import Product
 from apps.sales.services.invoices.helpers import money
 from apps.tax.services.calculation_service import calculate_tax
 from apps.fx.services import convert_amount
+from apps.date_fields import accounting_date
 
 
 class CommercialSalesLineSerializer(serializers.Serializer):
@@ -47,6 +48,8 @@ class CommercialSalesLineSerializer(serializers.Serializer):
 
 
 class QuoteSerializer(serializers.ModelSerializer):
+    issue_date = accounting_date("quote date")
+    expiry_date = accounting_date("quote expiry date")
     customer_id = serializers.PrimaryKeyRelatedField(source="customer", queryset=Contact.objects.all())
     lines = CommercialSalesLineSerializer(many=True)
     class Meta:
@@ -62,6 +65,8 @@ class QuoteSerializer(serializers.ModelSerializer):
 
 
 class SalesOrderSerializer(serializers.ModelSerializer):
+    order_date = accounting_date("sales order date")
+    expected_delivery_date = accounting_date("expected delivery date", required=False, allow_null=True)
     customer_id = serializers.PrimaryKeyRelatedField(source="customer", queryset=Contact.objects.all())
     quote_id = serializers.PrimaryKeyRelatedField(source="quote", queryset=Quote.objects.all(), required=False, allow_null=True)
     lines = CommercialSalesLineSerializer(many=True)
@@ -79,15 +84,15 @@ class SalesOrderSerializer(serializers.ModelSerializer):
 
 class DocumentConversionSerializer(serializers.Serializer):
     document_number = serializers.CharField(max_length=50)
-    issue_date = serializers.DateField()
-    due_date = serializers.DateField()
+    issue_date = accounting_date("invoice date")
+    due_date = accounting_date("invoice due date")
 
 
 class FulfilSalesOrderSerializer(serializers.Serializer):
     line_id = serializers.UUIDField()
     warehouse_id = serializers.UUIDField()
     quantity = serializers.DecimalField(max_digits=18, decimal_places=4, min_value=Decimal("0.0001"))
-    transaction_date = serializers.DateField()
+    transaction_date = accounting_date("fulfilment date")
 
 
 class InvoiceLineSerializer(serializers.ModelSerializer):
@@ -137,6 +142,8 @@ class InvoiceLineSerializer(serializers.ModelSerializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
+    issue_date = accounting_date("invoice date")
+    due_date = accounting_date("invoice due date")
     customer_id = serializers.PrimaryKeyRelatedField(
         source="customer",
         queryset=Contact.objects.all(),
@@ -156,6 +163,13 @@ class InvoiceSerializer(serializers.ModelSerializer):
         decimal_places=2,
         read_only=True,
     )
+
+    def validate(self, attrs):
+        issue_date = attrs.get("issue_date", getattr(self.instance, "issue_date", None))
+        due_date = attrs.get("due_date", getattr(self.instance, "due_date", None))
+        if issue_date and due_date and due_date < issue_date:
+            raise serializers.ValidationError({"due_date": "Invoice due date cannot be before the invoice date."})
+        return attrs
 
     class Meta:
         model = Invoice
@@ -291,6 +305,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         return instance
         
 class CustomerPaymentSerializer(serializers.ModelSerializer):
+    payment_date = accounting_date("payment date")
     customer_id = serializers.PrimaryKeyRelatedField(
         source="customer", queryset=Contact.objects.all(), write_only=True
     )

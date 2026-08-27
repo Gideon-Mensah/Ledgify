@@ -536,7 +536,9 @@ function BillsPage() {
   const duplicateBill = async (bill) => {
     setActionState({ busy: true, error: "", success: "" });
     try {
-      const copy = await purchasesApiService.duplicate(bill.id);
+      const copy = await purchasesApiService.duplicate(bill.id, {
+        timezone: auth.selectedOrganisation?.timezone,
+      });
       navigate(`/purchases/bills/${copy.id}/edit?duplicated=1`);
     } catch (error) {
       setActionState({ busy: false, error: normaliseApiError(error), success: "" });

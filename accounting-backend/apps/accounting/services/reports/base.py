@@ -11,7 +11,8 @@ ZERO = Decimal("0.00")
 class ReportQuery:
     """
     Shared base query for financial reports.
-    Only posted journal entries are included.
+    Only canonical ledger-effective journal entries are included: posted
+    entries and reversed originals whose posted reversals remain additive.
     """
 
     def __init__(

@@ -11,23 +11,8 @@ import {
 import Modal from "../common/Modal";
 
 import { accountLookupService } from "../../services/accountLookupService";
-
-// Gets today.
-const getToday = () => {
-  const today = new Date();
-
-  const year = today.getFullYear();
-
-  const month = String(
-    today.getMonth() + 1
-  ).padStart(2, "0");
-
-  const day = String(
-    today.getDate()
-  ).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
+import { useAuth } from "../../store/AuthContext";
+import { getOrganisationToday } from "../../utils/dateUtils";
 
 // Formats currency.
 const formatCurrency = (
@@ -68,6 +53,8 @@ function RecordBillPaymentModal({
   onClose,
   onRecord,
 }) {
+  const auth = useAuth();
+  const today = getOrganisationToday(auth.selectedOrganisation?.timezone);
   const [
     bankAccounts,
     setBankAccounts,
@@ -76,7 +63,7 @@ function RecordBillPaymentModal({
   const [details, setDetails] =
     useState({
       amount: "",
-      paymentDate: getToday(),
+      paymentDate: today,
       bankAccountId: "",
       paymentMethod:
         "Bank transfer",
@@ -182,7 +169,7 @@ function RecordBillPaymentModal({
             ).toFixed(2)
           : "",
 
-      paymentDate: getToday(),
+      paymentDate: today,
 
       bankAccountId:
         defaultAccount?.id || "",
@@ -209,6 +196,7 @@ function RecordBillPaymentModal({
     bill?.id,
     bill?.billNumber,
     billCurrency,
+    today,
   ]);
 
   // Handles change.

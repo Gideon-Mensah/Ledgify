@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Calculator, ChevronRight, CircleDollarSign, Ellipsis, Landmark, Plus, Search, ShieldCheck } from "lucide-react";
+import { Calculator, CircleDollarSign, Ellipsis, Landmark, Plus, Printer, Search, ShieldCheck } from "lucide-react";
 
 import PageHeader from "../../components/layout/PageHeader";
 import ReportExportMenu from "../../components/reports/ReportExportMenu";
@@ -177,7 +177,7 @@ export const LivePeriodsPage = () => <AdministrationPage kind="periods" />;
 const reportDefinitions = {
   "general-ledger": { title: "General Ledger", method: "generalLedger", date: "range", className: "general-ledger-page" },
   "trial-balance": { title: "Trial Balance", method: "trialBalance", date: "as_of", className: "trial-balance-page" },
-  "profit-and-loss": { title: "Profit & Loss", method: "profitLoss", date: "range", className: "profit-loss-page" },
+  "profit-and-loss": { title: "Profit and Loss", method: "profitLoss", date: "range", className: "profit-loss-page" },
   "balance-sheet": { title: "Balance Sheet", method: "balanceSheet", date: "as_of", className: "balance-sheet-page" },
   "cash-flow": { title: "Cash Flow Statement", method: "cashFlow", date: "range", className: "cash-flow-page" },
   "aged-receivables": { title: "Aged Receivables", method: "agedReceivables", date: "as_of", className: "aged-receivables-page" },
@@ -191,30 +191,88 @@ function GeneralLedgerDisplay({ ledgers, filters, currency }) {
   return <>{ledgers.map((ledger) => <section className="general-ledger-panel" key={ledger.account.id}><header className="journal-details-panel-header"><h2><Link className="invoice-number-link" to={`/accounting/accounts/${ledger.account.id}?${accountQuery}`}>{ledger.account.code} · {ledger.account.name}</Link></h2><p>{ledger.account.account_type.replaceAll("_", " ")} · {ledger.account.account_class.replaceAll("_", " ")} · {ledger.account.normal_balance} normal balance</p></header><div className="journal-details-table-wrapper"><table className="journal-details-table"><thead><tr><th>Date</th><th>Journal</th><th>Reference</th><th>Description</th><th>Source</th><th className="journal-details-amount">Debit</th><th className="journal-details-amount">Credit</th><th className="journal-details-amount">Running balance</th></tr></thead><tbody>{ledger.transactions.length ? ledger.transactions.map((row, index) => { const sourceRoute = getJournalSourceRoute(row.source_type, row.source_id); return <tr key={`${row.journal_id}-${index}`}><td>{row.date}</td><td><Link to={`/accounting/journals/${row.journal_id}`}>{row.entry_number}</Link></td><td>{row.reference || "—"}</td><td>{row.description || "—"}</td><td>{sourceRoute ? <Link to={sourceRoute}>{journalSourceLabel(row.source_type)}</Link> : journalSourceLabel(row.source_type)}</td><td className="journal-details-amount">{Number(row.debit) ? money(row.debit) : "—"}</td><td className="journal-details-amount">{Number(row.credit) ? money(row.credit) : "—"}</td><td className="journal-details-amount">{money(row.running_balance)}</td></tr>; }) : <tr><td colSpan="8" className="journal-details-empty">No transactions for this account in the selected period.</td></tr>}</tbody><tfoot><tr><td colSpan="5">Period totals</td><td className="journal-details-amount">{money(ledger.total_debit)}</td><td className="journal-details-amount">{money(ledger.total_credit)}</td><td className="journal-details-amount">{money(ledger.balance)}</td></tr></tfoot></table></div></section>)}</>;
 }
 
-function TrialBalanceDisplay({ report, filters, currency }) {
-  const money = (value) => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
-  const context = new URLSearchParams({ source: "trial-balance", as_of_date: filters.as_of_date });
-  const pagination = useTablePagination(report.rows);
-  return <section className="trial-balance-panel"><div className="journal-details-table-wrapper"><table className="journal-details-table trial-balance-drilldown-table"><thead><tr><th>Account</th><th>Type</th><th>Class</th><th className="journal-details-amount">Debit</th><th className="journal-details-amount">Credit</th><th aria-label="Drill down"/></tr></thead><tbody>{report.rows.length ? pagination.pageRows.map((row) => <tr key={row.account.id}><td><Link className="trial-balance-account-link" to={`/accounting/accounts/${row.account.id}?${context}`}><strong>{row.account.code}</strong><span>{row.account.name}</span></Link></td><td>{humaniseReportValue(row.account.account_type)}</td><td>{humaniseReportValue(row.account.account_class)}</td><td className="journal-details-amount">{Number(row.debit) ? money(row.debit) : "—"}</td><td className="journal-details-amount">{Number(row.credit) ? money(row.credit) : "—"}</td><td><Link className="trial-balance-row-arrow" aria-label={`View activity for ${row.account.code} ${row.account.name}`} to={`/accounting/accounts/${row.account.id}?${context}`}>›</Link></td></tr>) : <tr><td className="journal-details-empty" colSpan="6">No Trial Balance accounts were found as at this date.</td></tr>}</tbody><tfoot><tr><td colSpan="3">Grand total</td><td className="journal-details-amount">{money(report.total_debit)}</td><td className="journal-details-amount">{money(report.total_credit)}</td><td/></tr><tr><td colSpan="3">Difference</td><td className="journal-details-amount" colSpan="2">{money(report.difference)}</td><td/></tr></tfoot></table></div><TablePagination {...pagination}/></section>;
-}
-
-function StatementSection({ name, rows, report, filters, currency }) {
-  const money = (value) => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
-  const isCashFlow = report === "cash-flow";
-  const source = report === "profit-and-loss" ? "profit-loss" : report;
-  const pagination = useTablePagination(rows);
-  return <section className="invoice-form-card report-section" key={name}>
-    <h2>{humaniseReportValue(name)}</h2>
-    {rows.length ? <><div className="report-table-wrapper"><table className="report-data-table financial-drilldown-table"><thead><tr><th>Account</th><th className="report-number-column">Amount</th><th aria-label="Drill down"/></tr></thead><tbody>{pagination.pageRows.map((row) => {
-      const account = row.account;
-      const query = new URLSearchParams({ source, ...(filters.start_date ? { start_date: filters.start_date } : {}), ...(filters.end_date ? { end_date: filters.end_date } : {}), ...(filters.as_of_date ? { as_of_date: filters.as_of_date } : {}), report_amount: String(row.amount) });
-      const href = isCashFlow ? `/accounting/cash-flow/breakdown/${row.row_key}?${query}` : account?.id ? `/accounting/accounts/${account.id}?${query}` : null;
-      return <tr key={row.row_key || account?.id || account?.name} className={href ? "financial-drilldown-row" : "financial-calculated-row"}><td>{href ? <Link className="financial-account-link" to={href}><strong>{account?.code}</strong><span>{account?.name}</span></Link> : <span className="financial-calculated-label">{account?.name || "Calculated line"}<small>Calculated report line</small></span>}</td><td className="report-number-column">{money(row.amount)}</td><td>{href && <Link className="trial-balance-row-arrow" aria-label={`View breakdown for ${account?.code || "cash flow"} ${account?.name || name}`} to={href}><ChevronRight size={17}/></Link>}</td></tr>;
-    })}</tbody></table></div><TablePagination {...pagination}/></> : <div className="journal-details-empty">No activity for this report section in the selected period.</div>}
-  </section>;
-}
-
 const humaniseReportValue = (value) => String(value || "—").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const reportMoney = (value, currency) => {
+  const amount = Number(value || 0);
+  if (Math.abs(amount) < 0.005) return "—";
+  const formatted = new Intl.NumberFormat("en-GB", { style: "currency", currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(amount));
+  return amount < 0 ? `(${formatted})` : formatted;
+};
+const sumAmounts = (rows) => rows.reduce((total, row) => total + Number(row.amount || 0), 0);
+const reportPeriod = (filters) => filters.as_of_date ? `As at ${filters.as_of_date}` : `${filters.start_date || "Beginning"} to ${filters.end_date}`;
+const accountRow = (row, report, filters) => {
+  const source = report === "profit-and-loss" ? "profit-loss" : report;
+  const query = new URLSearchParams({ source, ...(filters.start_date ? { start_date: filters.start_date } : {}), ...(filters.end_date ? { end_date: filters.end_date } : {}), ...(filters.as_of_date ? { as_of_date: filters.as_of_date } : {}), report_amount: String(row.amount) });
+  return { kind: "account", label: `${row.account?.code ? `${row.account.code} · ` : ""}${row.account?.name || "Unlabelled account"}`, amount: Number(row.amount || 0), href: report === "cash-flow" ? `/accounting/cash-flow/breakdown/${row.row_key}?${query}` : row.account?.id ? `/accounting/accounts/${row.account.id}?${query}` : null };
+};
+const group = (heading, rows, totalLabel, total, report, filters, level = "section") => rows.length ? [{ kind: level, label: heading }, ...rows.map((row) => accountRow(row, report, filters)), { kind: "subtotal", label: totalLabel, amount: Number(total) }] : [];
+
+function statementRows(report, data, filters) {
+  if (report === "profit-and-loss") {
+    const income = (data.income || []).filter((row) => row.account?.account_class !== "other_income");
+    const otherIncome = (data.income || []).filter((row) => row.account?.account_class === "other_income");
+    const costs = (data.expenses || []).filter((row) => row.account?.account_class === "cost_of_sales");
+    const otherExpenses = (data.expenses || []).filter((row) => row.account?.account_class === "other_expense");
+    const operating = (data.expenses || []).filter((row) => !["cost_of_sales", "other_expense"].includes(row.account?.account_class));
+    const grossProfit = sumAmounts(income) - sumAmounts(costs);
+    const operatingProfit = grossProfit - sumAmounts(operating);
+    return [
+      ...group("Income", income, "Total Income", sumAmounts(income), report, filters),
+      ...group("Cost of Sales", costs, "Total Cost of Sales", sumAmounts(costs), report, filters),
+      ...(costs.length ? [{ kind: "major-total", label: "Gross Profit", amount: grossProfit }] : []),
+      ...group("Operating Expenses", operating, "Total Operating Expenses", sumAmounts(operating), report, filters),
+      ...(operating.length ? [{ kind: "major-total", label: "Operating Profit", amount: operatingProfit }] : []),
+      ...group("Other Income", otherIncome, "Total Other Income", sumAmounts(otherIncome), report, filters),
+      ...group("Other Expenses", otherExpenses, "Total Other Expenses", sumAmounts(otherExpenses), report, filters),
+      { kind: "grand-total", label: Number(data.net_profit) < 0 ? "Net Loss" : "Net Profit", amount: Number(data.net_profit || 0) },
+    ];
+  }
+  if (report === "balance-sheet") {
+    const currentAssets = (data.assets || []).filter((row) => ["bank", "current_asset", "receivable"].includes(row.account?.account_class));
+    const nonCurrentAssets = (data.assets || []).filter((row) => !currentAssets.includes(row));
+    const currentLiabilities = (data.liabilities || []).filter((row) => ["current_liability", "payable"].includes(row.account?.account_class));
+    const nonCurrentLiabilities = (data.liabilities || []).filter((row) => !currentLiabilities.includes(row));
+    return [
+      { kind: "section", label: "Assets" },
+      ...group("Current Assets", currentAssets, "Total Current Assets", sumAmounts(currentAssets), report, filters, "subsection"),
+      ...group("Non-current Assets", nonCurrentAssets, "Total Non-current Assets", sumAmounts(nonCurrentAssets), report, filters, "subsection"),
+      { kind: "grand-total", label: "Total Assets", amount: Number(data.total_assets || 0) },
+      { kind: "section", label: "Liabilities" },
+      ...group("Current Liabilities", currentLiabilities, "Total Current Liabilities", sumAmounts(currentLiabilities), report, filters, "subsection"),
+      ...group("Non-current Liabilities", nonCurrentLiabilities, "Total Non-current Liabilities", sumAmounts(nonCurrentLiabilities), report, filters, "subsection"),
+      { kind: "major-total", label: "Total Liabilities", amount: Number(data.total_liabilities || 0) },
+      ...group("Equity", data.equity || [], "Total Equity", data.total_equity, report, filters),
+      { kind: "grand-total", label: "Total Liabilities and Equity", amount: Number(data.total_liabilities_and_equity || 0) },
+    ];
+  }
+  if (report === "cash-flow") return [
+    ...group("Cash Flows from Operating Activities", data.operating || [], "Net Cash from Operating Activities", data.total_operating, report, filters),
+    ...group("Cash Flows from Investing Activities", data.investing || [], "Net Cash from Investing Activities", data.total_investing, report, filters),
+    ...group("Cash Flows from Financing Activities", data.financing || [], "Net Cash from Financing Activities", data.total_financing, report, filters),
+    ...group("Unclassified Cash Flows", data.unclassified || [], "Net Unclassified Cash Flow", data.total_unclassified, report, filters),
+    { kind: "major-total", label: Number(data.net_cash_flow) < 0 ? "Net Decrease in Cash" : "Net Increase in Cash", amount: Number(data.net_cash_flow || 0) },
+    { kind: "subtotal", label: "Opening Cash Balance", amount: Number(data.opening_cash || 0) },
+    { kind: "grand-total", label: "Closing Cash Balance", amount: Number(data.closing_cash || 0) },
+  ];
+  return [];
+}
+
+function FinancialStatement({ report, data, filters, organisation, currency }) {
+  const isTrial = report === "trial-balance";
+  const rows = isTrial ? [] : statementRows(report, data, filters);
+  const title = reportDefinitions[report].title;
+  const context = new URLSearchParams({ source: "trial-balance", as_of_date: filters.as_of_date || "" });
+  const balanced = data.balanced !== false;
+  return <article className="financial-statement" aria-label={`${title} report`}>
+    <header className="financial-statement-header"><strong>{organisation || "Ledgify"}</strong><h2>{title}</h2><p>{reportPeriod(filters)}</p><div><span>Currency: {currency}</span><span>Generated: {new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date())}</span></div></header>
+    <div className="financial-statement-table-wrap"><table className={`financial-statement-table${isTrial ? " is-trial-balance" : ""}`}>
+      <thead>{isTrial ? <tr><th>Account Code</th><th>Account Name</th><th>Account Type</th><th className="is-money">Debit</th><th className="is-money">Credit</th></tr> : <tr><th>Line Item or Account</th><th className="is-money">{filters.as_of_date || filters.end_date || "Amount"}</th></tr>}</thead>
+      {isTrial ? <><tbody>{(data.rows || []).length ? data.rows.map((row) => <tr className="financial-statement-account" key={row.account.id}><td><Link to={`/accounting/accounts/${row.account.id}?${context}`}>{row.account.code}</Link></td><td><Link to={`/accounting/accounts/${row.account.id}?${context}`}>{row.account.name}</Link></td><td>{humaniseReportValue(row.account.account_type)}</td><td className="is-money">{Number(row.debit) ? reportMoney(row.debit, currency) : ""}</td><td className="is-money">{Number(row.credit) ? reportMoney(row.credit, currency) : ""}</td></tr>) : <tr><td className="financial-statement-empty" colSpan="5">No Trial Balance accounts were found as at this date.</td></tr>}</tbody><tfoot><tr className="financial-statement-grand-total"><td/><td>Total</td><td/><td className="is-money">{reportMoney(data.total_debit, currency)}</td><td className="is-money">{reportMoney(data.total_credit, currency)}</td></tr></tfoot></> : <tbody>{rows.map((row, index) => <tr className={`financial-statement-${row.kind}`} key={`${row.kind}-${row.label}-${index}`}><td>{row.href ? <Link to={row.href}>{row.label}</Link> : row.label}</td><td className="is-money">{row.amount === undefined ? "" : reportMoney(row.amount, currency)}</td></tr>)}</tbody>}
+    </table></div>
+    <footer className={`financial-statement-balance ${balanced ? "is-balanced" : "is-unbalanced"}`}>{report === "balance-sheet" ? `Total Assets ${balanced ? "=" : "≠"} Total Liabilities + Total Equity` : isTrial ? `${balanced ? "Balanced" : "Out of balance"} · Difference ${reportMoney(data.difference, currency)}` : report === "cash-flow" ? `Opening Cash Balance + Net Movement ${balanced ? "=" : "≠"} Closing Cash Balance` : "Figures are derived from posted ledger activity for the selected period."}</footer>
+  </article>;
+}
 
 export function LiveReportPage({ report }) {
   const auth = useAuth();
@@ -239,9 +297,11 @@ export function LiveReportPage({ report }) {
     ? Object.fromEntries(Object.entries(data).filter(([, value]) => !Array.isArray(value)))
         : {};
   const exportRows = [...sections.flatMap(([section, rows]) => rows.map((row) => ({ section, ...row }))), ...(Object.keys(totals).length ? [{ section: "Totals", ...totals }] : [])];
-  return <div className={definition.className}><PageHeader eyebrow="Financial reports" title={definition.title} description="Review financial performance and position from posted accounting entries." action={<>{auth.hasPermission("use_ai_assistant") && <AskAIButton prompt={`Explain my ${definition.title} for the selected period and highlight anything I should review.`}/>}<ReportExportMenu title={definition.title} rows={exportRows} metadata={{ ...filters, organisation: auth.selectedOrganisation?.name, currency: auth.selectedOrganisation?.base_currency || "GBP" }} disabled={state.loading || Boolean(state.error)}/></>} />
-    <div className="invoice-form-card">{Object.keys(filters).map((field) => field === "account_id" ? <input key={field} type="hidden" value={filters[field]}/> : <label key={field}>{field.replaceAll("_", " ")} <input type="date" value={filters[field]} onChange={(event) => setFilters((current) => ({ ...current, [field]: event.target.value }))} /></label>)}<button className="page-primary-button" onClick={load}>Refresh</button></div>
-    <StatePanel {...state}>{data && <>{report === "general-ledger" ? <GeneralLedgerDisplay ledgers={Array.isArray(data) ? data : []} filters={filters} currency={auth.selectedOrganisation?.base_currency || "GBP"}/> : report === "trial-balance" ? <><div className="trial-balance-summary-grid"><article className="trial-balance-summary-card"><div><span>Total debit</span><strong>{displayValue(data.total_debit)}</strong></div></article><article className="trial-balance-summary-card"><div><span>Total credit</span><strong>{displayValue(data.total_credit)}</strong></div></article><article className={`trial-balance-summary-card ${data.balanced ? "is-balanced" : "is-unbalanced"}`}><div><span>Balance check</span><strong>{data.balanced ? "Balanced" : displayValue(data.difference)}</strong></div></article></div>{data.balanced === false && <div className="invoice-form-alert">This report is out of balance by {displayValue(data.difference)}. Review the underlying posted entries.</div>}<TrialBalanceDisplay report={data} filters={filters} currency={auth.selectedOrganisation?.base_currency || "GBP"}/></> : <>{data.balanced === false && <div className="invoice-form-alert">This report is out of balance by {displayValue(data.difference)}. Review the underlying posted entries.</div>}{Object.keys(totals).length > 0 && <div className="invoice-form-card report-totals-card"><DataTable reportTable rows={[totals]} /></div>}{sections.map(([name, rows]) => ["profit-and-loss", "balance-sheet", "cash-flow"].includes(report) ? <StatementSection key={name} name={name} rows={rows} report={report} filters={filters} currency={auth.selectedOrganisation?.base_currency || "GBP"}/> : <section className="invoice-form-card report-section" key={name}><h2>{humaniseReportValue(name)}</h2><DataTable reportTable rows={rows} /></section>)}</>}</>}</StatePanel></div>;
+  const isStatement = ["profit-and-loss", "trial-balance", "balance-sheet", "cash-flow"].includes(report);
+  const currency = auth.selectedOrganisation?.base_currency || "GBP";
+  return <div className={definition.className}><PageHeader eyebrow="Financial reports" title={definition.title} description="Review financial performance and position from posted accounting entries." action={<>{auth.hasPermission("use_ai_assistant") && <AskAIButton prompt={`Explain my ${definition.title} for the selected period and highlight anything I should review.`}/>}<ReportExportMenu title={definition.title} rows={exportRows} metadata={{ ...filters, organisation: auth.selectedOrganisation?.name, currency }} disabled={state.loading || Boolean(state.error)}/>{isStatement && <button className="invoice-secondary-button financial-report-print-button" disabled={!data || state.loading || Boolean(state.error)} onClick={() => window.print()}><Printer size={16}/>Print</button>}</>} />
+    <div className="invoice-form-card financial-report-filters">{Object.keys(filters).map((field) => field === "account_id" ? <input key={field} type="hidden" value={filters[field]}/> : <label key={field}>{field.replaceAll("_", " ")} <input type="date" value={filters[field]} onChange={(event) => setFilters((current) => ({ ...current, [field]: event.target.value }))} /></label>)}<button className="page-primary-button" onClick={load}>Refresh</button></div>
+    <StatePanel {...state}>{data && (isStatement ? <FinancialStatement report={report} data={data} filters={filters} organisation={auth.selectedOrganisation?.name} currency={currency}/> : report === "general-ledger" ? <GeneralLedgerDisplay ledgers={Array.isArray(data) ? data : []} filters={filters} currency={currency}/> : <>{data.balanced === false && <div className="invoice-form-alert">This report is out of balance by {displayValue(data.difference)}. Review the underlying posted entries.</div>}{Object.keys(totals).length > 0 && <div className="invoice-form-card report-totals-card"><DataTable reportTable rows={[totals]} /></div>}{sections.map(([name, rows]) => <section className="invoice-form-card report-section" key={name}><h2>{humaniseReportValue(name)}</h2><DataTable reportTable rows={rows} /></section>)}</>)}</StatePanel></div>;
 }
 
 export function LiveStatementPage({ type }) {

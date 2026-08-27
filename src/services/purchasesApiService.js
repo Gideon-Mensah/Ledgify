@@ -2,6 +2,7 @@
 
 import { api } from "./api";
 import { statusLabel, toDateInput, toDisplayDate } from "./domainMappings";
+import { addCalendarDays, getOrganisationToday, toApiDate } from "../utils/dateUtils";
 
 export function mapBill(bill) {
   return {
@@ -118,24 +119,19 @@ export const purchasesApiService = {
     };
     return mapBill(await api.patch(`bills/${id}/`, payload));
   },
-  async duplicate(id) {
+  async duplicate(id, { timezone = "UTC" } = {}) {
     const source = await this.get(id);
-    const today = new Date();
-    const issueDate = today.toISOString().slice(0, 10);
-    const oldIssue = new Date(`${source.issueDateIso}T00:00:00`);
-    const oldDue = new Date(`${source.dueDateIso}T00:00:00`);
-    const termsDays = Number.isNaN(oldIssue.getTime()) || Number.isNaN(oldDue.getTime())
-      ? 0
-      : Math.max(0, Math.round((oldDue - oldIssue) / 86400000));
-    const due = new Date(`${issueDate}T00:00:00`);
-    due.setDate(due.getDate() + termsDays);
+    const issueDate = getOrganisationToday(timezone);
+    const termsDays = Math.max(0, Math.round(
+      (Date.parse(`${source.dueDateIso}T00:00:00Z`) - Date.parse(`${source.issueDateIso}T00:00:00Z`)) / 86400000,
+    ));
     const copyNumber = `${source.billNumber.slice(0, 34)}-COPY-${Date.now().toString(36).toUpperCase()}`;
     return this.create({
       ...source,
       billNumber: copyNumber.slice(0, 50),
       supplierReference: "",
       issueDate,
-      dueDate: due.toISOString().slice(0, 10),
+      dueDate: addCalendarDays(issueDate, termsDays),
       pricingMode: "exclusive",
       approve: false,
     });
@@ -148,7 +144,7 @@ export const purchasesApiService = {
       supplier_id: bill.supplierId,
       bill_id: bill.id,
       bank_account_id: payment.bankAccountId,
-      payment_date: payment.paymentDate,
+      payment_date: toApiDate(payment.paymentDate, "payment date"),
       amount: String(payment.amount),
       currency: bill.currency,
       reference: payment.reference || bill.billNumber,

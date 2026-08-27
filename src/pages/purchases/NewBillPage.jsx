@@ -32,6 +32,12 @@ import { normaliseApiError } from "../../services/apiError";
 import { taxApiService } from "../../services/taxApiService";
 
 import { inventoryService } from "../../services/inventoryService";
+import { useAuth } from "../../store/AuthContext";
+import {
+  addCalendarDays,
+  formatDisplayDate,
+  getOrganisationToday,
+} from "../../utils/dateUtils";
 
 import {
   calculateBillTotals,
@@ -59,48 +65,6 @@ const createRecordId = () => {
     .slice(2)}`;
 };
 
-const getToday = () => {
-  const today = new Date();
-
-  const timezoneOffset =
-    today.getTimezoneOffset() *
-    60 *
-    1000;
-
-  return new Date(
-    today.getTime() -
-      timezoneOffset
-  )
-    .toISOString()
-    .slice(0, 10);
-};
-
-const addDays = (
-  dateValue,
-  numberOfDays
-) => {
-  const date = new Date(
-    `${dateValue}T00:00:00`
-  );
-
-  date.setDate(
-    date.getDate() +
-      numberOfDays
-  );
-
-  const timezoneOffset =
-    date.getTimezoneOffset() *
-    60 *
-    1000;
-
-  return new Date(
-    date.getTime() -
-      timezoneOffset
-  )
-    .toISOString()
-    .slice(0, 10);
-};
-
 const calculateDueDate = (
   issueDate,
   paymentTerms
@@ -117,31 +81,10 @@ const calculateDueDate = (
     "60 days": 60,
   };
 
-  return addDays(
+  return addCalendarDays(
     issueDate,
     daysByTerm[paymentTerms] ||
       0
-  );
-};
-
-const formatDisplayDate = (
-  dateValue
-) => {
-  if (!dateValue) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat(
-    "en-GB",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }
-  ).format(
-    new Date(
-      `${dateValue}T00:00:00`
-    )
   );
 };
 
@@ -289,6 +232,7 @@ const getSupplierAddressLines = (
 };
 
 function NewBillPage() {
+  const auth = useAuth();
   const navigate =
     useNavigate();
 
@@ -313,7 +257,7 @@ function NewBillPage() {
 
   const [details, setDetails] =
     useState(() => {
-      const today = getToday();
+      const today = getOrganisationToday(auth.selectedOrganisation?.timezone);
 
       return {
         supplierId: "",

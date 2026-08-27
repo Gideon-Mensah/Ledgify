@@ -48,6 +48,13 @@ test("Balance Sheet exposes, rather than masks, the accounting equation", async 
   assert.match(sheet, /OUT OF BALANCE: 100/); assert.match(sheet, /<v>900<\/v>/); assert.match(sheet, /<v>800<\/v>/);
 });
 
+test("Cash Flow workbook preserves the backend hierarchy and cash reconciliation", async () => {
+  const rows = [{ section: "operating", account: { code: "4000", name: "Customer receipts" }, amount: 750 }, { section: "investing", account: { code: "1500", name: "Equipment" }, amount: -200 }, { section: "financing", account: { code: "3000", name: "Capital" }, amount: 100 }, { section: "Totals", total_operating: 750, total_investing: -200, total_financing: 100, total_unclassified: 0, net_cash_flow: 650, opening_cash: 350, closing_cash: 1000, difference: 0, balanced: true }];
+  assert.equal(rows.at(-1).opening_cash + rows.at(-1).net_cash_flow, rows.at(-1).closing_cash);
+  const sheet = storedZipEntries(await bytes(createXlsxWorkbook({ title: "Cash Flow Statement", rows, metadata }))).get("xl/worksheets/sheet1.xml");
+  assert.match(sheet, /Cash Flows from Operating Activities/); assert.match(sheet, /Net Cash from Investing Activities/); assert.match(sheet, /Closing Cash Balance/); assert.match(sheet, /CASH RECONCILIATION BALANCED/); assert.match(sheet, /<v>1000<\/v>/);
+});
+
 test("comparison columns are not invented and filenames are safe", async () => {
   const sheet = storedZipEntries(await bytes(createXlsxWorkbook({ title: "Profit and Loss", rows: [], metadata }))).get("xl/worksheets/sheet1.xml");
   assert.doesNotMatch(sheet, /Comparison|Variance/);
@@ -58,4 +65,18 @@ test("journal print rules restore journal visibility and protect empty entries",
   const [page, css] = await Promise.all([readFile("src/pages/accounting/JournalDetailsPage.jsx", "utf8"), readFile("src/styles/journalDetails.css", "utf8")]);
   assert.match(page, /This journal has no lines to print/); assert.match(page, /disabled={!journal\.lines\?\.length}/); assert.match(page, /requestAnimationFrame\(\(\) => window\.print\(\)\)/);
   assert.match(css, /\.journal-details-page \* \{ visibility: visible; \}/); assert.match(css, /thead \{ display: table-header-group; \}/); assert.match(css, /@page[\s\S]*A4 portrait/);
+});
+
+test("shared financial statement presents all required report hierarchies and print data", async () => {
+  const [page, css, reportBase] = await Promise.all([readFile("src/pages/accounting/LiveAccountingPages.jsx", "utf8"), readFile("src/styles/liveReports.css", "utf8"), readFile("accounting-backend/apps/accounting/services/reports/base.py", "utf8")]);
+  for (const label of ["Income", "Cost of Sales", "Gross Profit", "Operating Expenses", "Net Profit", "Current Assets", "Non-current Assets", "Total Liabilities and Equity", "Cash Flows from Operating Activities", "Opening Cash Balance", "Closing Cash Balance"]) assert.match(page, new RegExp(label));
+  assert.match(page, /Currency: \{currency\}/); assert.match(page, /financial-statement-table/); assert.match(page, /financial-statement-grand-total/);
+  assert.match(css, /financial-statement-table thead \{ display: table-header-group; \}/); assert.match(css, /body \* \{ visibility: hidden; \}/); assert.match(css, /\.financial-statement, \.financial-statement \* \{ visibility: visible; \}/);
+  assert.match(reportBase, /LEDGER_EFFECTIVE_JOURNAL_STATUSES/); assert.match(reportBase, /journal_entry__organisation=self\.organisation/);
+});
+
+test("Cash Flow drill-down exposes backend audit fields without recalculating amounts", async () => {
+  const page = await readFile("src/pages/accounting/CashFlowBreakdownPage.jsx", "utf8");
+  for (const field of ["journal_status", "reversal_of", "reversal_entry", "cash_accounts", "cash_flow_category", "row.amount"]) assert.match(page, new RegExp(field.replace(".", "\\.")));
+  assert.match(page, /Cash or bank account/); assert.match(page, /Counterpart account/); assert.match(page, /Status \/ reversal/);
 });

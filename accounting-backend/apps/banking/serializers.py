@@ -1,6 +1,7 @@
 """Validate bank inputs and keep reconciliation audit fields controlled by services."""
 
 from rest_framework import serializers
+from apps.date_fields import accounting_date
 from django.db.models import Sum
 
 from apps.accounting.models import Account, LEDGER_EFFECTIVE_JOURNAL_STATUSES
@@ -249,7 +250,7 @@ class AcceptReconciliationSuggestionSerializer(serializers.Serializer):
 
 
 class UnreconcileBankTransactionSerializer(serializers.Serializer):
-    reversal_date = serializers.DateField(required=False)
+    reversal_date = accounting_date("reversal date", required=False)
     reason = serializers.CharField(
         required=False,
         allow_blank=True,
@@ -258,7 +259,7 @@ class UnreconcileBankTransactionSerializer(serializers.Serializer):
 
 
 class ReconciliationSummaryQuerySerializer(serializers.Serializer):
-    reconciliation_date = serializers.DateField()
+    reconciliation_date = accounting_date("reconciliation date")
 
 
 class BankReconciliationHistorySerializer(serializers.ModelSerializer):

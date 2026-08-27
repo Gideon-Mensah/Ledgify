@@ -427,7 +427,9 @@ function BillDetailsPage() {
 
         try {
             const duplicatedBill =
-                await purchasesApiService.duplicate(bill.id);
+                await purchasesApiService.duplicate(bill.id, {
+                    timezone: auth.selectedOrganisation?.timezone,
+                });
 
             navigate(
                 `/purchases/bills/${duplicatedBill.id}/edit`

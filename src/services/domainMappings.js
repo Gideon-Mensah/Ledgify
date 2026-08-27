@@ -1,5 +1,7 @@
 // Translate backend field names into the stable shapes used by existing frontend screens.
 
+import { formatDisplayDate, toApiDate } from "../utils/dateUtils.js";
+
 const paymentTermsToApi = {
   "Due immediately": "immediate",
   "7 days": "7_days",
@@ -13,21 +15,11 @@ const paymentTermsFromApi = Object.fromEntries(
 );
 
 export function toDateInput(value) {
-  if (!value) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-  const match = String(value).match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/);
-  if (!match) return value;
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const month = months.indexOf(match[2]) + 1;
-  return `${match[3]}-${String(month).padStart(2, "0")}-${match[1].padStart(2, "0")}`;
+  return value ? toApiDate(value) : "";
 }
 
-export function toDisplayDate(value) {
-  if (!value) return "";
-  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) return value;
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${Number(match[3])} ${months[Number(match[2]) - 1]} ${match[1]}`;
+export function toDisplayDate(value, locale = "en-GB") {
+  return value ? formatDisplayDate(value, locale) : "";
 }
 
 export function mapContact(contact) {
