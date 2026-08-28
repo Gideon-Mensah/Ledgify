@@ -50,12 +50,8 @@ def create_bill(
             "Due date cannot be earlier than issue date."
         )
 
-    currency = currency.upper().strip()
-
-    if len(currency) != 3:
-        raise BusinessRuleError(
-            "Currency must be a 3-letter currency code."
-        )
+    from common.currencies import require_currency_code
+    currency = require_currency_code(currency)
 
     if not lines:
         raise BusinessRuleError(

@@ -41,7 +41,8 @@ def create_customer_payment(*, organisation, customer, bank_account, payment_dat
         raise BusinessRuleError("Payment amount is invalid.") from error
     if amount <= 0:
         raise BusinessRuleError("Payment amount must be greater than zero.")
-    currency = str(currency).upper().strip()
+    from common.currencies import require_currency_code
+    currency = require_currency_code(currency)
     if len(currency) != 3 or currency != bank_account.currency:
         raise BusinessRuleError(
             "Payment currency must match the bank account currency."

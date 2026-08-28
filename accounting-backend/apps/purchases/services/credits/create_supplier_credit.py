@@ -18,7 +18,8 @@ def create_supplier_credit(*, organisation, supplier, credit_number, issue_date,
     if supplier.organisation_id != organisation.id or not supplier.is_supplier:
         raise BusinessRuleError("The selected supplier is invalid.")
     if supplier.status != "active": raise BusinessRuleError("The selected supplier is not active.")
-    currency = str(currency).upper().strip()
+    from common.currencies import require_currency_code
+    currency = require_currency_code(currency)
     if len(currency) != 3: raise BusinessRuleError("Currency must be a 3-letter currency code.")
     if bill:
         if bill.organisation_id != organisation.id or bill.supplier_id != supplier.id:

@@ -4,6 +4,9 @@ from .models import Contact
 
 
 class ContactSerializer(serializers.ModelSerializer):
+    def validate_currency(self, value):
+        from common.currencies import validate_currency_code
+        return validate_currency_code(value)
     class Meta:
         model = Contact
         fields = [

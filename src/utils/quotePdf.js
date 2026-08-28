@@ -1,15 +1,13 @@
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
+import { formatCurrency as safeFormatCurrency } from "./currency";
 
 // Formats currency.
 const formatCurrency = (
   amount,
   currency = "GBP"
 ) =>
-  new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-  }).format(Number(amount) || 0);
+  safeFormatCurrency(amount, currency, { locale: "en-GB" });
 
 // Calculates quote totals.
 const calculateQuoteTotals = (quote) =>

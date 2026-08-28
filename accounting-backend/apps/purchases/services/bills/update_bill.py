@@ -29,9 +29,8 @@ def update_bill(*, bill, organisation, supplier, lines, **values):
     due_date = values["due_date"]
     if due_date < issue_date:
         raise BusinessRuleError("Due date cannot be earlier than issue date.")
-    currency = values["currency"].upper().strip()
-    if len(currency) != 3:
-        raise BusinessRuleError("Currency must be a 3-letter currency code.")
+    from common.currencies import require_currency_code
+    currency = require_currency_code(values["currency"])
     if not lines:
         raise BusinessRuleError("A bill must contain at least one line.")
 

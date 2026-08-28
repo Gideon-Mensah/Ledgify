@@ -35,6 +35,10 @@ class AccountSerializer(serializers.ModelSerializer):
             return None
         return {"id": str(profile.id), "name": profile.name, "status": profile.status}
 
+    def validate_currency(self, value):
+        from common.currencies import validate_currency_code
+        return validate_currency_code(value, allow_blank=True)
+
         read_only_fields = [
             "id",
             "is_system_account",

@@ -1,6 +1,7 @@
 // Send authenticated API requests for the selected organisation and refresh expired access tokens once.
 
 import { clearAuthStorage, loadAuthStorage, saveAuthStorage } from "./authStorage";
+import { normaliseCurrencyCode } from "../utils/currency";
 
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL
   || "http://127.0.0.1:8000/api/v1").replace(/\/$/, "");
@@ -15,7 +16,17 @@ export function setAuthFailureHandler(handler) {
 async function parseResponse(response) {
   if (response.status === 204) return null;
   const type = response.headers.get("content-type") || "";
-  return type.includes("application/json") ? response.json() : response.text();
+  if (!type.includes("application/json")) return response.text();
+  const data = await response.json();
+  const normaliseLegacyCurrencyValues = (value) => {
+    if (Array.isArray(value)) return value.map(normaliseLegacyCurrencyValues);
+    if (!value || typeof value !== "object") return value;
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => {
+      if (["currency", "base_currency", "reporting_currency", "tax_reporting_currency", "transaction_currency"].includes(key) && item) return [key, normaliseCurrencyCode(item)];
+      return [key, normaliseLegacyCurrencyValues(item)];
+    }));
+  };
+  return normaliseLegacyCurrencyValues(data);
 }
 
 async function refreshAccessToken() {

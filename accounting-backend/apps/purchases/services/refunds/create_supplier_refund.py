@@ -48,7 +48,8 @@ def create_supplier_refund(*, organisation, supplier, supplier_credit,
     if amount > supplier_credit.available_credit:
         raise BusinessRuleError("Refund exceeds the available supplier credit.")
 
-    currency = str(currency).upper().strip()
+    from common.currencies import require_currency_code
+    currency = require_currency_code(currency)
     if currency != supplier_credit.currency:
         raise BusinessRuleError("Refund currency must match the supplier credit.")
     if bank_account.organisation_id != organisation.id:

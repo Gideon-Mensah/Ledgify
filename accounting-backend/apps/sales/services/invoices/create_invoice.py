@@ -50,7 +50,8 @@ def create_invoice(
             "Due date cannot be earlier than issue date."
         )
 
-    currency = str(currency).upper().strip()
+    from common.currencies import require_currency_code
+    currency = require_currency_code(currency)
 
     if len(currency) != 3:
         raise BusinessRuleError(

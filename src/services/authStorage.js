@@ -1,4 +1,5 @@
 // Store only the session details needed to restore authentication and organisation context.
+import { normaliseCurrencyCode } from "../utils/currency";
 
 const STORAGE_KEY = "ledgify.auth";
 
@@ -14,7 +15,9 @@ const emptyState = {
 export function loadAuthStorage() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return stored ? { ...emptyState, ...stored } : { ...emptyState };
+    if (!stored) return { ...emptyState };
+    const safeOrganisation = (organisation) => organisation ? { ...organisation, base_currency: normaliseCurrencyCode(organisation.base_currency) } : null;
+    return { ...emptyState, ...stored, organisations: (stored.organisations || []).map(safeOrganisation), selectedOrganisation: safeOrganisation(stored.selectedOrganisation) };
   } catch {
     return { ...emptyState };
   }

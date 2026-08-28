@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from common.currencies import validate_currency_code, validate_optional_currency_code
 
 
 class Organisation(models.Model):
@@ -32,7 +33,7 @@ class Organisation(models.Model):
     tax_registered = models.BooleanField(default=False)
     tax_registration_number = models.CharField(max_length=100, blank=True)
     tax_scheme = models.CharField(max_length=50, blank=True)
-    tax_reporting_currency = models.CharField(max_length=3, blank=True)
+    tax_reporting_currency = models.CharField(max_length=3, blank=True, validators=[validate_optional_currency_code])
     tax_period_frequency = models.CharField(
         max_length=20,
         choices=(("monthly", "Monthly"), ("quarterly", "Quarterly"), ("annual", "Annual")),
@@ -48,8 +49,9 @@ class Organisation(models.Model):
     base_currency = models.CharField(
         max_length=3,
         default="GBP",
+        validators=[validate_currency_code],
     )
-    reporting_currency = models.CharField(max_length=3, blank=True)
+    reporting_currency = models.CharField(max_length=3, blank=True, validators=[validate_optional_currency_code])
     fx_gain_account = models.ForeignKey("accounting.Account", on_delete=models.PROTECT, null=True, blank=True, related_name="organisations_fx_gain")
     fx_loss_account = models.ForeignKey("accounting.Account", on_delete=models.PROTECT, null=True, blank=True, related_name="organisations_fx_loss")
 
@@ -127,8 +129,9 @@ class Organisation(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        self.base_currency = self.base_currency.upper().strip()
-        self.reporting_currency = self.reporting_currency.upper().strip()
+        self.base_currency = validate_currency_code(self.base_currency)
+        self.reporting_currency = validate_currency_code(self.reporting_currency, allow_blank=True)
+        self.tax_reporting_currency = validate_currency_code(self.tax_reporting_currency, allow_blank=True)
         if self.pk:
             previous = Organisation.objects.filter(pk=self.pk).values_list("base_currency", flat=True).first()
             if previous and previous != self.base_currency and self.journal_entries.exists():

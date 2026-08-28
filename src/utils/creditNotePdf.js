@@ -5,19 +5,14 @@ import {
 import {
   calculateDocumentTotals,
 } from "./creditNoteCalculations";
+import { formatCurrency as safeFormatCurrency } from "./currency";
 
 // Formats currency.
 const formatCurrency = (
   amount,
   currency = "GBP"
 ) =>
-  new Intl.NumberFormat(
-    "en-GB",
-    {
-      style: "currency",
-      currency,
-    }
-  ).format(Number(amount) || 0);
+  safeFormatCurrency(amount, currency, { locale: "en-GB" });
 
 // Downloads credit note pdf.
 export const downloadCreditNotePdf = (

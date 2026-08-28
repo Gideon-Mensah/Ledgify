@@ -37,7 +37,8 @@ def create_supplier_payment(*, organisation, supplier, bank_account, payment_dat
     except (ValueError, TypeError, ArithmeticError) as error:
         raise BusinessRuleError("Payment amount is invalid.") from error
     if amount <= 0: raise BusinessRuleError("Payment amount must be greater than zero.")
-    currency = str(currency).upper().strip()
+    from common.currencies import require_currency_code
+    currency = require_currency_code(currency)
     if len(currency) != 3 or currency != bank_account.currency:
         raise BusinessRuleError(
             "Payment currency must match the bank account currency."

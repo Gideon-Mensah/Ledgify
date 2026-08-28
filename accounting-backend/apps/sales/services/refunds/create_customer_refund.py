@@ -34,7 +34,8 @@ def create_customer_refund(*, organisation, customer, bank_account, refund_date,
         raise BusinessRuleError("Refund amount is invalid.") from error
     if amount <= Decimal("0.00"):
         raise BusinessRuleError("Refund amount must be greater than zero.")
-    currency = str(currency).upper().strip()
+    from common.currencies import require_currency_code
+    currency = require_currency_code(currency)
     if currency != bank_account.currency:
         raise BusinessRuleError("Refund currency must match the bank account currency.")
     if credit_note is not None:

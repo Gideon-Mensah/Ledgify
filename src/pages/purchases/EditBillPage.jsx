@@ -10,10 +10,11 @@ import { contactApiService } from "../../services/contactApiService";
 import { normaliseApiError } from "../../services/apiError";
 import { purchasesApiService } from "../../services/purchasesApiService";
 import { taxApiService } from "../../services/taxApiService";
+import { formatCurrency } from "../../utils/currency";
 import "../../styles/editBill.css";
 
 const newLine = () => ({ id: crypto.randomUUID(), description: "", quantity: "1", unitPrice: "0", discountAmount: "0", vatRate: "0", taxRateId: "", expenseAccountId: "" });
-const money = (value, currency = "GBP") => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
+const money = (value, currency = "GBP") => formatCurrency(value, currency, { locale: "en-GB" });
 
 export default function EditBillPage() {
   const { billId } = useParams(); const navigate = useNavigate();

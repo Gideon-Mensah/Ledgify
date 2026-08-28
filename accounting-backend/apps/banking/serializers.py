@@ -14,6 +14,9 @@ from .services.transactions import (
 
 
 class BankAccountSerializer(serializers.ModelSerializer):
+    def validate_currency(self, value):
+        from common.currencies import validate_currency_code
+        return validate_currency_code(value)
     ledger_account_id = serializers.PrimaryKeyRelatedField(
         source="ledger_account",
         queryset=Account.objects.all(),
