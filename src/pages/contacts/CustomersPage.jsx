@@ -1,5 +1,6 @@
 import {
   Mail,
+  FileUp,
   Plus,
   Search,
   UserCheck,
@@ -18,8 +19,10 @@ import {
 } from "react-router-dom";
 
 import PageHeader from "../../components/layout/PageHeader";
+import ContactImportModal from "../../components/contacts/ContactImportModal";
 import { contactApiService } from "../../services/contactApiService";
 import { normaliseApiError } from "../../services/apiError";
+import { useAuth } from "../../store/AuthContext";
 
 // Normalizes text.
 const normaliseText = (value) =>
@@ -49,6 +52,8 @@ const getCustomerInitials = (name) => {
 // Renders the customers page component.
 function CustomersPage() {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const [importing,setImporting]=useState(false);
 
   const [customers, setCustomers] = useState([]);
   const [loadError, setLoadError] = useState("");
@@ -160,15 +165,14 @@ function CustomersPage() {
         eyebrow="Contacts"
         title="Customers"
         description="Manage customer details, account information and sales activity."
-        action={
+        action={<div className="chart-accounts-header-actions">{auth.hasPermission("import_customers")&&<button className="invoice-secondary-button" onClick={()=>setImporting(true)}><FileUp size={18}/>Import Customers</button>}
           <Link
             to="/contacts/customers/new"
             className="page-primary-button"
           >
             <Plus size={18} />
             Add Customer
-          </Link>
-        }
+          </Link></div>}
       />
 
       <div className="customers-summary-grid">
@@ -390,7 +394,7 @@ function CustomersPage() {
           </div>
         )}
       </section>
-    </div>
+      {importing&&<ContactImportModal type="customer" onClose={()=>setImporting(false)} onCompleted={async()=>setCustomers(await contactApiService.customers())}/>}</div>
   );
 }
 

@@ -173,3 +173,30 @@ class Contact(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ContactImportBatch(models.Model):
+    class ImportType(models.TextChoices):
+        CUSTOMER="customer","Customer"
+        SUPPLIER="supplier","Supplier"
+    class Status(models.TextChoices):
+        READY="ready","Ready"
+        COMPLETED="completed","Completed"
+        FAILED="failed","Failed"
+        CANCELLED="cancelled","Cancelled"
+        EXPIRED="expired","Expired"
+    id=models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    organisation=models.ForeignKey(Organisation,on_delete=models.CASCADE,related_name="contact_import_batches")
+    import_type=models.CharField(max_length=20,choices=ImportType.choices)
+    uploaded_by=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,related_name="contact_imports_uploaded")
+    confirmed_by=models.ForeignKey(settings.AUTH_USER_MODEL,null=True,blank=True,on_delete=models.PROTECT,related_name="contact_imports_confirmed")
+    original_filename=models.CharField(max_length=255)
+    checksum=models.CharField(max_length=64)
+    template_version=models.CharField(max_length=20,default="1")
+    import_mode=models.CharField(max_length=30,default="stop_on_existing")
+    rows=models.JSONField(default=list)
+    total_rows=models.PositiveIntegerField(default=0);valid_rows=models.PositiveIntegerField(default=0);warning_rows=models.PositiveIntegerField(default=0);error_rows=models.PositiveIntegerField(default=0);duplicate_rows=models.PositiveIntegerField(default=0)
+    created_record_ids=models.JSONField(default=list);skipped_rows=models.PositiveIntegerField(default=0)
+    status=models.CharField(max_length=20,choices=Status.choices,default=Status.READY)
+    failure_reason=models.TextField(blank=True);uploaded_at=models.DateTimeField(auto_now_add=True);confirmed_at=models.DateTimeField(null=True,blank=True);expires_at=models.DateTimeField()
+    class Meta: ordering=["-uploaded_at"]

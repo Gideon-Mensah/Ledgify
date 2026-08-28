@@ -74,7 +74,7 @@ def _canonical(value, choices):
         if text in {key.casefold().replace("_"," "), label.casefold().replace("-"," ")} : return key
     return None
 
-def _parse_xlsx(content):
+def _parse_xlsx(content, sheet_name=SHEET):
     if len(content)>MAX_FILE_SIZE: raise ValidationError("The workbook exceeds the 5 MB file limit.")
     if not content.startswith(b"PK\x03\x04"): raise ValidationError("The uploaded file is not a valid .xlsx workbook.")
     try:
@@ -86,8 +86,8 @@ def _parse_xlsx(content):
         workbook=ET.fromstring(archive.read("xl/workbook.xml")); rels=ET.fromstring(archive.read("xl/_rels/workbook.xml.rels")); targets={node.attrib["Id"]:node.attrib["Target"] for node in rels}
         version=workbook.find('.//m:definedName[@name="_LedgifyTemplateVersion"]',ns)
         if version is None or (version.text or "").strip('"') != TEMPLATE_VERSION: raise ValidationError("This import template is no longer supported. Download the latest template and try again.")
-        sheet=next((node for node in workbook.findall(".//m:sheet",ns) if node.attrib.get("name")==SHEET),None)
-        if sheet is None: raise ValidationError(f'The workbook must contain a worksheet named "{SHEET}".')
+        sheet=next((node for node in workbook.findall(".//m:sheet",ns) if node.attrib.get("name")==sheet_name),None)
+        if sheet is None: raise ValidationError(f'The workbook must contain a worksheet named "{sheet_name}".')
         target=targets[sheet.attrib["{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"]].lstrip("/");path=target if target.startswith("xl/") else "xl/"+target
         shared=[]
         if "xl/sharedStrings.xml" in names:

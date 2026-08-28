@@ -5,6 +5,7 @@ import {
 } from "react";
 import {
   Download,
+  FileUp,
   Plus,
   Search,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import {
 } from "react-router-dom";
 
 import PageHeader from "../layout/PageHeader";
+import ContactImportModal from "../contacts/ContactImportModal";
 import { useAuth } from "../../store/AuthContext";
 
 import { purchasesApiService } from "../../services/purchasesApiService";
@@ -45,6 +47,7 @@ function SupplierDirectory({
     "/purchases/suppliers",
 }) {
   const auth = useAuth();
+  const [importing,setImporting]=useState(false);
   const [
     suppliers,
     setSuppliers,
@@ -358,7 +361,7 @@ function SupplierDirectory({
         eyebrow={eyebrow}
         title="Suppliers"
         description={description}
-        action={auth.hasPermission("manage_contacts") ? (
+        action={<div className="chart-accounts-header-actions">{auth.hasPermission("import_suppliers")&&<button className="invoice-secondary-button" onClick={()=>setImporting(true)}><FileUp size={18}/>Import Suppliers</button>}{auth.hasPermission("manage_contacts") ? (
           <Link
             to={newSupplierPath}
             className="page-primary-button"
@@ -366,7 +369,7 @@ function SupplierDirectory({
             <Plus size={18} />
             Create supplier
           </Link>
-        ) : null}
+        ) : null}</div>}
       />
 
       <section className="invoice-summary-grid">
@@ -704,6 +707,7 @@ function SupplierDirectory({
           </div>
         </div>
       </section>
+      {importing&&<ContactImportModal type="supplier" onClose={()=>setImporting(false)} onCompleted={loadData}/>}
     </div>
   );
 }
