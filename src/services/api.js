@@ -43,7 +43,7 @@ async function refreshAccessToken() {
 }
 
 export async function apiRequest(path, options = {}) {
-  const { skipAuth = false, retry = true, headers = {}, ...requestOptions } = options;
+  const { skipAuth = false, retry = true, headers = {}, responseType, ...requestOptions } = options;
   const stored = loadAuthStorage();
   const requestHeaders = { Accept: "application/json", ...headers };
   if (requestOptions.body && !(requestOptions.body instanceof FormData)) {
@@ -68,7 +68,7 @@ export async function apiRequest(path, options = {}) {
       throw error;
     }
   }
-  const data = await parseResponse(response);
+  const data = responseType === "blob" ? await response.blob() : await parseResponse(response);
   if (!response.ok) {
     throw Object.assign(new Error(`Request failed with status ${response.status}`), {
       status: response.status, data,
@@ -82,6 +82,8 @@ export const api = {
   post: (path, body, options) => apiRequest(path, {
     ...options, method: "POST", body: JSON.stringify(body),
   }),
+  postForm: (path, body, options) => apiRequest(path, { ...options, method: "POST", body }),
+  download: (path, options) => apiRequest(path, { ...options, method: "GET", responseType: "blob" }),
   patch: (path, body, options) => apiRequest(path, {
     ...options, method: "PATCH", body: JSON.stringify(body),
   }),

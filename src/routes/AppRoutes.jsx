@@ -42,6 +42,7 @@ import {
   LiveStatementPage,
 } from "../pages/accounting/LiveAccountingPages";
 import GeneralJournalPage from "../pages/accounting/GeneralJournalPage";
+import OpeningBalancesPage from "../pages/accounting/OpeningBalancesPage";
 import { LiveDepreciationPage, LiveFixedAssetDetailPage, LiveFixedAssetsPage } from "../pages/accounting/LiveFixedAssetPages";
 
 import ReportsPage from "../pages/reports/ReportsPage";
@@ -291,6 +292,7 @@ function AppRoutes() {
                         element={<GeneralJournalPage />} />
                     <Route path="accounting/journals/new" element={<NewJournalPage />} />
                     <Route path="accounting/journals/:journalId" element={<JournalDetailsPage />} />
+                    <Route path="accounting/opening-balances" element={<OpeningBalancesPage />} />
 
                     <Route
                         path="/accounting/general-ledger"

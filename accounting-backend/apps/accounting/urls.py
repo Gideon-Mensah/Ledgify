@@ -6,6 +6,7 @@ from .views import (
     AccountingReportViewSet,
     FinancialYearViewSet,
     JournalEntryViewSet,
+    OpeningBalanceViewSet,
 )
 
 
@@ -16,6 +17,7 @@ router.register(
     AccountingPeriodViewSet,
     basename="accounting-period",
 )
+router.register("opening-balances",OpeningBalanceViewSet,basename="opening-balance")
 
 router.register(
     "accounts",

@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 from django.db.models import Q, Sum
 
-from apps.accounting.models import Account
+from apps.accounting.models import Account, JournalEntry
 
 from .base import ReportQuery, ZERO
 
@@ -179,6 +179,10 @@ class CashFlowReport(ReportQuery):
             journal_groups.setdefault(line.journal_entry_id, []).append(line)
 
         for lines in journal_groups.values():
+            # Conversion cash is a brought-forward balance, never a current
+            # operating, investing, or financing cash movement.
+            if lines[0].journal_entry.source_type == JournalEntry.SourceType.OPENING_BALANCE:
+                continue
             cash_lines = [
                 line for line in lines
                 if self._is_cash_account(line.account)

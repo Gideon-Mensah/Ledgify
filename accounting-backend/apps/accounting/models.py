@@ -146,6 +146,38 @@ class Account(models.Model):
     def __str__(self):
         return f"{self.code} - {self.name}"
 
+
+class AccountImportBatch(models.Model):
+    class Status(models.TextChoices):
+        READY = "ready", "Ready"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+        CANCELLED = "cancelled", "Cancelled"
+        EXPIRED = "expired", "Expired"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="account_import_batches")
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="account_imports_uploaded")
+    confirmed_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="account_imports_confirmed")
+    original_filename = models.CharField(max_length=255)
+    checksum = models.CharField(max_length=64)
+    template_version = models.CharField(max_length=20, default="1")
+    import_mode = models.CharField(max_length=30, default="stop_on_existing")
+    rows = models.JSONField(default=list)
+    total_rows = models.PositiveIntegerField(default=0)
+    valid_rows = models.PositiveIntegerField(default=0)
+    invalid_rows = models.PositiveIntegerField(default=0)
+    existing_rows = models.PositiveIntegerField(default=0)
+    created_account_ids = models.JSONField(default=list)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.READY)
+    failure_reason = models.TextField(blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
 class JournalEntry(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
@@ -183,6 +215,7 @@ class JournalEntry(models.Model):
         MANUFACTURING_COMPLETION = "manufacturing_completion", "Manufacturing completion"
         MANUFACTURING_COST = "manufacturing_cost", "Manufacturing cost"
         MANUFACTURING_VARIANCE = "manufacturing_variance", "Manufacturing variance"
+        OPENING_BALANCE = "opening_balance", "Opening Balance"
 
     id = models.UUIDField(
         primary_key=True,
@@ -677,3 +710,30 @@ class AccountingPeriodHistory(models.Model):
     class Meta:
         ordering = ["-performed_at", "-id"]
         indexes = [models.Index(fields=["organisation", "accounting_period"])]
+
+
+class OpeningBalance(models.Model):
+    class Status(models.TextChoices):
+        DRAFT="draft","Draft";SUBMITTED="submitted","Submitted for approval";POSTED="posted","Posted";REJECTED="rejected","Rejected";REVERSED="reversed","Reversed"
+    id=models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    organisation=models.ForeignKey(Organisation,on_delete=models.CASCADE,related_name="opening_balances")
+    opening_date=models.DateField();reference=models.CharField(max_length=100,blank=True);description=models.TextField(blank=True)
+    status=models.CharField(max_length=20,choices=Status.choices,default=Status.DRAFT)
+    journal=models.OneToOneField(JournalEntry,on_delete=models.PROTECT,null=True,blank=True,related_name="opening_balance_record")
+    reversal_journal=models.OneToOneField(JournalEntry,on_delete=models.PROTECT,null=True,blank=True,related_name="opening_balance_reversal_record")
+    created_by=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,related_name="opening_balances_created")
+    updated_by=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,related_name="opening_balances_updated")
+    posted_by=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,related_name="opening_balances_posted")
+    created_at=models.DateTimeField(auto_now_add=True);updated_at=models.DateTimeField(auto_now=True);posted_at=models.DateTimeField(null=True,blank=True)
+    class Meta:
+        ordering=["-opening_date","-created_at"];indexes=[models.Index(fields=["organisation","status"]),models.Index(fields=["organisation","opening_date"])]
+
+
+class OpeningBalanceLine(models.Model):
+    id=models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    opening_balance=models.ForeignKey(OpeningBalance,on_delete=models.CASCADE,related_name="lines")
+    account=models.ForeignKey(Account,on_delete=models.PROTECT,related_name="opening_balance_lines")
+    debit=models.DecimalField(max_digits=18,decimal_places=2,default=0);credit=models.DecimalField(max_digits=18,decimal_places=2,default=0)
+    unusual_side_confirmed=models.BooleanField(default=False)
+    class Meta:
+        ordering=["account__code"];constraints=[models.UniqueConstraint(fields=["opening_balance","account"],name="unique_opening_balance_account")]

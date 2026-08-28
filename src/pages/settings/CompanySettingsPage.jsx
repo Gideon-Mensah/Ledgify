@@ -15,6 +15,7 @@ const items = [
   { id: "organisation", group: "General", title: "Organisation profile", description: "Legal entity, address and contact information.", icon: Building2, permission: "manage_organisation_users" },
   { id: "financial", group: "Accounting", title: "Financial settings", description: "Base currency, reporting currency, year start and timezone.", icon: CircleDollarSign, permission: "view_accounting" },
   { id: "financial-years", group: "Accounting", title: "Financial years", description: "Create, close and reopen financial years.", icon: FileClock, path: "/accounting/financial-year", permission: "manage_financial_years" },
+  { id: "opening-balances", group: "Accounting", title: "Opening balances", description: "Bring verified account balances forward from a previous system.", icon: CircleDollarSign, path: "/accounting/opening-balances", permission: "view_accounting" },
   { id: "periods", group: "Accounting", title: "Accounting periods", description: "Review period locks and controlled reopening.", icon: Calculator, path: "/accounting/period-locks", permission: "view_accounting" },
   { id: "chart-of-accounts", group: "Accounting", title: "Chart of Accounts", description: "Manage ledger accounts and reporting classifications.", icon: Calculator, path: "/accounting/chart-of-accounts", permission: "view_accounting" },
   { id: "banking", group: "Operations", title: "Banking", description: "Bank accounts, imports and deterministic reconciliation rules.", icon: Landmark, path: "/banking/accounts", permission: "view_accounting" },

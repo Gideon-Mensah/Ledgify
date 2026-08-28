@@ -10,6 +10,47 @@
   color: #101828;
 }
 
+/* Current workflow surface; legacy selectors above remain available to avoid
+   regressing earlier Opening Balances presentation work. */
+.opening-balance-identity,
+.opening-balance-review {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #e4e7ec;
+  border-radius: 14px;
+  background: #fff;
+}
+.opening-balance-identity label { display: grid; gap: 7px; font-size: 12px; font-weight: 700; color: #475467; }
+.opening-balance-identity input { min-height: 42px; padding: 0 12px; border: 1px solid #d0d5dd; border-radius: 9px; font: inherit; }
+.opening-balance-identity small { font-weight: 400; line-height: 1.4; }
+.opening-balance-identity div { display: grid; align-content: center; gap: 5px; }
+.opening-balance-identity div span { color: #667085; font-size: 12px; }
+.opening-balance-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid #e4e7ec; }
+.opening-balance-tabs button { padding: 11px 14px; border: 0; border-bottom: 2px solid transparent; background: none; color: #667085; font: inherit; font-weight: 650; white-space: nowrap; cursor: pointer; }
+.opening-balance-tabs button.active { border-color: #7f56d9; color: #6941c6; }
+.opening-balance-panel { padding: 20px; border: 1px solid #e4e7ec; border-radius: 14px; background: #fff; }
+.opening-balance-panel > header { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.opening-balance-panel h2 { margin: 0 0 5px; }
+.opening-balance-panel p { color: #667085; line-height: 1.55; }
+.opening-search { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 11px; border: 1px solid #d0d5dd; border-radius: 9px; }
+.opening-search input { border: 0; outline: 0; }
+.opening-table-wrap { margin-top: 18px; overflow-x: auto; }
+.opening-table-wrap table { width: 100%; border-collapse: collapse; }
+.opening-table-wrap th, .opening-table-wrap td { padding: 10px 12px; border-bottom: 1px solid #eaecf0; text-align: left; }
+.opening-table-wrap th { color: #475467; background: #f9fafb; font-size: 12px; }
+.opening-table-wrap td input { width: 130px; padding: 8px 10px; border: 1px solid #d0d5dd; border-radius: 8px; text-align: right; }
+.opening-table-wrap td small { display: flex; gap: 4px; margin-top: 4px; color: #b54708; }
+.opening-balance-review article { display: grid; gap: 8px; padding: 16px; border-radius: 12px; background: #f9fafb; }
+.opening-balance-review article strong { font-size: 22px; }
+.opening-balance-review article.balanced { background: #ecfdf3; color: #067647; }
+.opening-balance-review article.unbalanced { background: #fffaeb; color: #b54708; }
+.opening-review-warning { grid-column: 1 / -1; padding: 16px; border-left: 4px solid #7f56d9; background: #f9f5ff; }
+.opening-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.opening-unavailable { text-align: center; }
+@media (max-width: 700px) { .opening-balance-identity, .opening-balance-review { grid-template-columns: 1fr; } }
+
 .opening-balances-header {
   display: flex;
   align-items: flex-start;

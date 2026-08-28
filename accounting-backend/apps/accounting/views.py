@@ -7,6 +7,8 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import ModelViewSet, ViewSet
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 
 from common.views import OrganisationScopedViewSetMixin
 from common.permissions import OrganisationActionPermission
@@ -14,9 +16,10 @@ from apps.organisations.permissions import (
     CLOSE_FINANCIAL_YEAR, CLOSE_PERIOD, CREATE_JOURNAL, MANAGE_ACCOUNTS,
     MANAGE_FINANCIAL_YEARS, POST_JOURNAL, REOPEN_FINANCIAL_YEAR,
     REOPEN_PERIOD, REVERSE_JOURNAL, VIEW_ACCOUNTING,
+    MANAGE_OPENING_BALANCES, APPROVE_OPENING_BALANCES,
 )
 
-from .models import Account, AccountingPeriod, FinancialYear, JournalEntry, JournalLine
+from .models import Account, AccountImportBatch, AccountingPeriod, FinancialYear, JournalEntry, JournalLine, OpeningBalance
 from .report_serializers import (
     BalanceSheetQuerySerializer,
     CashFlowQuerySerializer,
@@ -40,9 +43,11 @@ from .serializers import (
     JournalEntrySerializer,
     JournalReversalInputSerializer,
     ManualJournalInputSerializer,
+    OpeningBalanceSerializer, OpeningBalanceWriteSerializer, OpeningBalanceReverseSerializer,
     ReopenFinancialYearSerializer,
     ReopenAccountingPeriodSerializer,
 )
+from .services.opening_balances import save_draft,submit as submit_opening,post as post_opening,reverse as reverse_opening
 from .services.periods.year_end_close import (
     close_financial_year_with_retained_earnings,
     reopen_financial_year,
@@ -58,6 +63,7 @@ from .services.reports import (
     trial_balance,
 )
 from apps.finance.services import get_ratio_analysis, get_ratio_trend
+from .services.account_imports import batch_data, confirm as confirm_account_import, preview as preview_account_import, template_workbook
 
 
 class AccountViewSet(
@@ -68,7 +74,10 @@ class AccountViewSet(
     permission_classes = [IsAuthenticated, OrganisationActionPermission]
     action_permissions = {"list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING,
                           "create": MANAGE_ACCOUNTS, "update": MANAGE_ACCOUNTS,
-                          "partial_update": MANAGE_ACCOUNTS, "destroy": MANAGE_ACCOUNTS}
+                          "partial_update": MANAGE_ACCOUNTS, "destroy": MANAGE_ACCOUNTS,
+                          "import_template": MANAGE_ACCOUNTS, "import_preview": MANAGE_ACCOUNTS,
+                          "import_status": MANAGE_ACCOUNTS, "import_confirm": MANAGE_ACCOUNTS,
+                          "import_errors": MANAGE_ACCOUNTS}
 
     def get_queryset(self):
         organisation = self.get_organisation()
@@ -115,11 +124,66 @@ class AccountViewSet(
 
         return queryset
 
+    @action(detail=False, methods=["get"], url_path="import/template")
+    def import_template(self, request):
+        response = HttpResponse(template_workbook(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        response["Content-Disposition"] = 'attachment; filename="Ledgify_Chart_of_Accounts_Import_Template.xlsx"'
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
+
+    @action(detail=False, methods=["post"], url_path="import/preview")
+    def import_preview(self, request):
+        uploaded = request.FILES.get("file")
+        if not uploaded:
+            return Response({"file": ["Select an .xlsx workbook."]}, status=400)
+        batch = preview_account_import(organisation=self.get_organisation(), user=request.user, uploaded_file=uploaded, import_mode=request.data.get("import_mode", "stop_on_existing"))
+        return Response(batch_data(batch), status=201)
+
+    def _import_batch(self, batch_id):
+        return get_object_or_404(AccountImportBatch, id=batch_id, organisation=self.get_organisation())
+
+    @action(detail=False, methods=["get"], url_path=r"import/(?P<batch_id>[^/.]+)/status")
+    def import_status(self, request, batch_id=None):
+        return Response(batch_data(self._import_batch(batch_id)))
+
+    @action(detail=False, methods=["post"], url_path=r"import/(?P<batch_id>[^/.]+)/confirm")
+    def import_confirm(self, request, batch_id=None):
+        return Response(batch_data(confirm_account_import(batch=self._import_batch(batch_id), user=request.user)))
+
+    @action(detail=False, methods=["get"], url_path=r"import/(?P<batch_id>[^/.]+)/errors")
+    def import_errors(self, request, batch_id=None):
+        batch = self._import_batch(batch_id)
+        lines = ['"Row Number","Account Code","Account Name","Field","Error"']
+        for row in batch.rows:
+            for error in row["errors"]:
+                values = [row["row_number"], row["data"].get("code", ""), row["data"].get("name", ""), error["field"], error["message"]]
+                lines.append(",".join('"' + str(value).replace('"', '""') + '"' for value in values))
+        response = HttpResponse("\ufeff" + "\r\n".join(lines), content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="Ledgify_Account_Import_Errors_{batch.id}.csv"'
+        return response
+
     def perform_create(self, serializer):
         serializer.save(
             organisation=self.get_organisation(),
             created_by=self.request.user,
         )
+
+
+class OpeningBalanceViewSet(OrganisationScopedViewSetMixin, ModelViewSet):
+    serializer_class=OpeningBalanceSerializer;permission_classes=[IsAuthenticated,OrganisationActionPermission];http_method_names=["get","post","put","patch","head","options"]
+    action_permissions={"list":VIEW_ACCOUNTING,"retrieve":VIEW_ACCOUNTING,"create":MANAGE_OPENING_BALANCES,"update":MANAGE_OPENING_BALANCES,"partial_update":MANAGE_OPENING_BALANCES,"submit":MANAGE_OPENING_BALANCES,"post_balance":APPROVE_OPENING_BALANCES,"reverse_balance":APPROVE_OPENING_BALANCES}
+    def get_queryset(self):return OpeningBalance.objects.filter(organisation=self.get_organisation()).select_related("organisation","created_by","updated_by","posted_by","journal","reversal_journal").prefetch_related("lines__account","journal__lines__account","reversal_journal__lines__account")
+    def create(self,request):
+        query=OpeningBalanceWriteSerializer(data=request.data);query.is_valid(raise_exception=True);record=save_draft(record=None,organisation=self.get_organisation(),user=request.user,data=query.validated_data);return Response(self.get_serializer(record).data,status=201)
+    def update(self,request,*args,**kwargs):
+        record=self.get_object();query=OpeningBalanceWriteSerializer(data=request.data,partial=kwargs.get("partial",False));query.is_valid(raise_exception=True);data={"opening_date":query.validated_data.get("opening_date",record.opening_date),"reference":query.validated_data.get("reference",record.reference),"description":query.validated_data.get("description",record.description),"lines":query.validated_data.get("lines",[{"account_id":line.account_id,"debit":line.debit,"credit":line.credit,"unusual_side_confirmed":line.unusual_side_confirmed} for line in record.lines.all()])};record=save_draft(record=record,organisation=self.get_organisation(),user=request.user,data=data);return Response(self.get_serializer(record).data)
+    @action(detail=True,methods=["post"])
+    def submit(self,request,pk=None):return Response(self.get_serializer(submit_opening(self.get_object(),request.user)).data)
+    @action(detail=True,methods=["post"],url_path="post")
+    def post_balance(self,request,pk=None):return Response(self.get_serializer(post_opening(self.get_object(),request.user)).data)
+    @action(detail=True,methods=["post"],url_path="reverse")
+    def reverse_balance(self,request,pk=None):
+        query=OpeningBalanceReverseSerializer(data=request.data);query.is_valid(raise_exception=True);return Response(self.get_serializer(reverse_opening(self.get_object(),request.user,query.validated_data["reversal_date"])).data)
 
 
 class JournalEntryViewSet(

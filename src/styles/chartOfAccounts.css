@@ -632,3 +632,14 @@
     justify-content: center;
   }
 }
+.account-import-modal { width: min(1180px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
+.account-import-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.account-import-steps li { padding: 9px; border-radius: 8px; background: #f2f4f7; color: #667085; font-size: 12px; font-weight: 700; text-align: center; }
+.account-import-steps li.active { background: #f4ebff; color: #6941c6; }
+.account-import-dropzone { width: 100%; min-height: 150px; padding: 24px; display: grid; place-items: center; gap: 8px; border: 2px dashed #d0d5dd; border-radius: 12px; background: #f9fafb; color: #475467; cursor: pointer; }
+.account-import-dropzone:hover { border-color: #9e77ed; background: #f9f5ff; }
+.account-import-summary { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.account-import-summary article { display: grid; gap: 5px; padding: 14px; border: 1px solid #eaecf0; border-radius: 10px; }
+.account-import-summary span { color: #667085; font-size: 12px; }
+.account-import-summary strong { font-size: 22px; }
+@media (max-width: 800px) { .account-import-steps, .account-import-summary { grid-template-columns: 1fr 1fr; } }

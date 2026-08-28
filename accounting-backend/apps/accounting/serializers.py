@@ -4,7 +4,7 @@ from rest_framework import serializers
 from apps.date_fields import accounting_date
 
 
-from .models import Account, AccountingPeriod, FinancialYear, JournalEntry, JournalLine
+from .models import Account, AccountingPeriod, FinancialYear, JournalEntry, JournalLine, OpeningBalance, OpeningBalanceLine
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -121,6 +121,30 @@ class JournalEntrySerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+
+class OpeningBalanceLineInputSerializer(serializers.Serializer):
+    account_id=serializers.UUIDField();debit=serializers.DecimalField(max_digits=18,decimal_places=2,min_value=0,required=False,default=0);credit=serializers.DecimalField(max_digits=18,decimal_places=2,min_value=0,required=False,default=0);unusual_side_confirmed=serializers.BooleanField(required=False,default=False)
+    def validate(self,attrs):
+        if attrs["debit"] and attrs["credit"]:raise serializers.ValidationError("Enter an amount in Debit or Credit, not both.")
+        return attrs
+
+class OpeningBalanceWriteSerializer(serializers.Serializer):
+    opening_date=accounting_date("opening balance date");reference=serializers.CharField(max_length=100,required=False,allow_blank=True);description=serializers.CharField(required=False,allow_blank=True);lines=OpeningBalanceLineInputSerializer(many=True,required=False,default=list)
+
+class OpeningBalanceSerializer(serializers.ModelSerializer):
+    lines=serializers.SerializerMethodField();totals=serializers.SerializerMethodField();created_by=serializers.SerializerMethodField();updated_by=serializers.SerializerMethodField();posted_by=serializers.SerializerMethodField();journal=JournalEntrySerializer(read_only=True);reversal_journal=JournalEntrySerializer(read_only=True)
+    class Meta:model=OpeningBalance;exclude=["organisation"]
+    def get_lines(self,obj):return [{"id":str(line.id),"account":{"id":str(line.account_id),"code":line.account.code,"name":line.account.name,"account_type":line.account.account_type,"account_class":line.account.account_class},"debit":line.debit,"credit":line.credit,"unusual_side_confirmed":line.unusual_side_confirmed} for line in obj.lines.all()]
+    def get_totals(self,obj):
+        from .services.opening_balances import totals
+        return totals(obj)
+    def _user(self,user):return {"id":str(user.id),"name":user.get_full_name() or user.get_username()} if user else None
+    def get_created_by(self,obj):return self._user(obj.created_by)
+    def get_updated_by(self,obj):return self._user(obj.updated_by)
+    def get_posted_by(self,obj):return self._user(obj.posted_by)
+
+class OpeningBalanceReverseSerializer(serializers.Serializer):
+    reversal_date=accounting_date("reversal date")
 
 class ManualJournalLineInputSerializer(serializers.Serializer):
     account_id = serializers.UUIDField()
