@@ -15,6 +15,7 @@ import { purchasesApiService } from "../../services/purchasesApiService";
 import { reportService } from "../../services/reportService";
 import { salesApiService } from "../../services/salesApiService";
 import { useAuth } from "../../store/AuthContext";
+import { AI_ENABLED } from "../../config/featureFlags";
 
 import "../../styles/dashboard.css";
 
@@ -77,7 +78,7 @@ function DashboardPage() {
     { title: "Net profit", value: currency(data.profitLoss.net_profit, auth.selectedOrganisation?.base_currency), change: `${displayDate(dates.start)} to ${displayDate(dates.end)} · Revenue ${currency(data.profitLoss.total_income, auth.selectedOrganisation?.base_currency)} · Expenses ${currency(data.profitLoss.total_expenses, auth.selectedOrganisation?.base_currency)}`, changeType: Number(data.profitLoss.net_profit) < 0 ? "negative" : "positive", icon: TrendingUp },
   ] : [];
 
-  return <div className="dashboard-page"><PageHeader eyebrow="Overview" title="Dashboard" description={`Financial overview for ${auth.selectedOrganisation?.name || "your organisation"}.`} action={auth.hasPermission("use_ai_assistant") ? <AskAIButton prompt="Explain the key trends and risks on my dashboard." /> : null} />
+  return <div className="dashboard-page"><PageHeader eyebrow="Overview" title="Dashboard" description={`Financial overview for ${auth.selectedOrganisation?.name || "your organisation"}.`} action={AI_ENABLED && auth.hasPermission("use_ai_assistant") ? <AskAIButton prompt="Explain the key trends and risks on my dashboard." /> : null} />
     {state.loading && <div className="dashboard-panel dashboard-state">Loading your financial overview…</div>}
     {state.error && <div className="invoice-form-alert dashboard-state">{state.error}</div>}
     {data && <><div className="summary-card-grid">{cards.map((card) => <SummaryCard key={card.title} {...card} />)}</div>

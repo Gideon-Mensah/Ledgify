@@ -1,10 +1,11 @@
 // Authenticate the user, then continue into organisation selection or the application.
 
 import { useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { normaliseApiError } from "../../services/apiError";
 import { useAuth } from "../../store/AuthContext";
 import "../../styles/auth.css";
+import "../../styles/authReset.css";
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -34,7 +35,8 @@ export default function LoginPage() {
     <h1>Welcome back</h1><p>Sign in to continue to your accounts.</p>
     {error && <div className="auth-error" role="alert">{error}</div>}
     <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" /></label>
-    <label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></label>
+    <div className="auth-label-row"><span>Password</span><Link to="/forgot-password">Forgot password?</Link></div>
+    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" aria-label="Password" />
     <button type="submit" disabled={submitting}>{submitting ? "Signing in…" : "Sign in"}</button>
   </form></main>;
 }

@@ -1,7 +1,10 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../store/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
+import { AIFeatureRoute } from "./FeatureRoute";
 import LoginPage from "../pages/auth/LoginPage";
+import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
 import OrganisationSelectionPage from "../pages/auth/OrganisationSelectionPage";
 
 import MainLayout from "../components/layout/MainLayout";
@@ -92,6 +95,8 @@ function AppRoutes() {
           <AuthProvider>
             <Routes>
                 <Route path="login" element={<LoginPage />} />
+                <Route path="forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="reset-password/:uid/:token" element={<ResetPasswordPage />} />
                 <Route path="select-organisation" element={<OrganisationSelectionPage />} />
                 <Route element={<ProtectedRoute />}>
                   <Route element={<MainLayout />}>
@@ -359,7 +364,7 @@ function AppRoutes() {
                     <Route path="payroll" element={<PayrollPage />} />
                     <Route path="accounting/fx" element={<FXPage />} />
                     <Route path="accounting/consolidation" element={<ConsolidationPage />} />
-                    <Route path="ai" element={<AIAssistantPage />} />
+                    <Route path="ai" element={<AIFeatureRoute><AIAssistantPage /></AIFeatureRoute>} />
                     <Route
                         path="settings/company"
                         element={<Navigate to="/settings" replace />}

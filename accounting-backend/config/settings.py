@@ -203,8 +203,11 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "webmaster@localhost")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+PASSWORD_RESET_TIMEOUT = int(os.environ.get("PASSWORD_RESET_TIMEOUT", "3600"))
 
-AI_ENABLED = env_bool("AI_ENABLED")
+# AI is temporarily production-disabled through this reversible feature flag.
+AI_ENABLED = env_bool("AI_ENABLED", False)
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "disabled")
 AI_MODEL = os.environ.get("AI_MODEL", "")
 AI_API_KEY = os.environ.get("AI_API_KEY", "")
@@ -236,6 +239,7 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("JWT_REFRESH_DAYS", "7"))),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
+    "CHECK_REVOKE_TOKEN": True,
 }
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -243,7 +247,7 @@ SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 
 REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = ["rest_framework.throttling.AnonRateThrottle", "rest_framework.throttling.UserRateThrottle"]
-REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {"anon": os.environ.get("DRF_ANON_RATE", "100/hour"), "user": os.environ.get("DRF_USER_RATE", "2000/hour"), "login": os.environ.get("DRF_LOGIN_RATE", "10/minute"), "ai": os.environ.get("DRF_AI_RATE", "30/hour")}
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {"anon": os.environ.get("DRF_ANON_RATE", "100/hour"), "user": os.environ.get("DRF_USER_RATE", "2000/hour"), "login": os.environ.get("DRF_LOGIN_RATE", "10/minute"), "password_reset": os.environ.get("DRF_PASSWORD_RESET_RATE", "5/hour"), "ai": os.environ.get("DRF_AI_RATE", "30/hour")}
 
 LOGGING = {"version": 1, "disable_existing_loggers": False, "formatters": {"json": {"()": "common.logging.JSONFormatter"}}, "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json"}}, "root": {"handlers": ["console"], "level": os.environ.get("LOG_LEVEL", "INFO")}}
 

@@ -11,10 +11,11 @@ from common.permissions import OrganisationActionPermission
 from common.views import OrganisationScopedViewSetMixin
 from apps.organisations.permissions import USE_AI_ASSISTANT,VIEW_AI_INSIGHTS,USE_AI_ACTIONS,APPROVE_AI_ACTIONS,MANAGE_AI_SETTINGS
 from .models import AIActionAudit,AIConversation,AISettings,FinancialAnomaly
+from .permissions import AIEnabledPermission
 from .serializers import *
 from .services import ask_assistant,detect_anomalies,execute_action,propose_journal
 
-class AIBase(OrganisationScopedViewSetMixin):permission_classes=[IsAuthenticated,OrganisationActionPermission]
+class AIBase(OrganisationScopedViewSetMixin):permission_classes=[AIEnabledPermission,IsAuthenticated,OrganisationActionPermission]
 class ConversationViewSet(AIBase,ModelViewSet):
  serializer_class=ConversationSerializer;action_permissions={"list":USE_AI_ASSISTANT,"retrieve":USE_AI_ASSISTANT,"create":USE_AI_ASSISTANT,"update":USE_AI_ASSISTANT,"partial_update":USE_AI_ASSISTANT}
  http_method_names=["get","post","patch","head","options"]

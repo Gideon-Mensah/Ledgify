@@ -12,6 +12,7 @@ import {
   Sparkles,
   Building2,
 } from "lucide-react";
+import { AI_ENABLED } from "../config/featureFlags";
 
 export const mainNavigation = [
   {
@@ -179,7 +180,7 @@ export const mainNavigation = [
       { label: "Financial Analysis", path: "/reports/financial-analysis" },
     ],
   },
-  { label: "AI Assistant", path: "/ai", icon: Sparkles, permission: "use_ai_assistant" },
+  ...(AI_ENABLED ? [{ label: "AI Assistant", path: "/ai", icon: Sparkles, permission: "use_ai_assistant" }] : []),
   {
     label: "Settings",
     path: "/settings",

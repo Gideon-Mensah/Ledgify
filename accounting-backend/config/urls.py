@@ -16,10 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework_simplejwt.views import TokenObtainPairView
+from apps.accounts.views import PasswordAwareTokenRefreshView
 from common.health import health,ready
 from common.throttles import LoginRateThrottle
 class ThrottledTokenObtainPairView(TokenObtainPairView):throttle_classes=[LoginRateThrottle]
@@ -46,7 +44,7 @@ urlpatterns = [
 
     path(
         "api/v1/auth/token/refresh/",
-        TokenRefreshView.as_view(),
+        PasswordAwareTokenRefreshView.as_view(),
         name="token_refresh",
     ),
 

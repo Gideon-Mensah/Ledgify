@@ -7,6 +7,12 @@ export const authService = {
   refreshAccessToken: (refresh) => api.post(
     "auth/token/refresh/", { refresh }, { skipAuth: true },
   ),
+  requestPasswordReset: (email) => api.post(
+    "auth/password-reset/request/", { email }, { skipAuth: true },
+  ),
+  confirmPasswordReset: (payload) => api.post(
+    "auth/password-reset/confirm/", payload, { skipAuth: true },
+  ),
   logout: () => Promise.resolve(),
   getCurrentUser: () => api.get("auth/me/"),
   getUserOrganisations: () => api.get("organisations/"),

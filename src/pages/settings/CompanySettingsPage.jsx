@@ -10,6 +10,7 @@ import { inventoryService } from "../../services/inventoryService";
 import { settingsService } from "../../services/settingsService";
 import { useAuth } from "../../store/AuthContext";
 import { CURRENCY_OPTIONS, normaliseCurrencyCode } from "../../utils/currency";
+import { AI_ENABLED } from "../../config/featureFlags";
 import "../../styles/settings.css";
 
 const items = [
@@ -27,7 +28,7 @@ const items = [
   { id: "currencies", group: "Advanced", title: "Currency & FX", description: "Dated exchange rates, exposure and revaluation.", icon: CircleDollarSign, path: "/accounting/fx", permission: "view_accounting" },
   { id: "manufacturing", group: "Advanced", title: "Manufacturing", description: "BOMs, production orders and configured WIP accounts.", icon: Factory, path: "/manufacturing", permission: "view_manufacturing" },
   { id: "consolidation", group: "Advanced", title: "Consolidation", description: "Groups, mappings, eliminations and group reports.", icon: Building2, path: "/accounting/consolidation", permission: "view_consolidation" },
-  { id: "ai", group: "Advanced", title: "AI settings", description: "Analysis, draft actions, anomalies and data sharing.", icon: Bot, permission: "manage_ai_settings" },
+  ...(AI_ENABLED ? [{ id: "ai", group: "Advanced", title: "AI settings", description: "Analysis, draft actions, anomalies and data sharing.", icon: Bot, permission: "manage_ai_settings" }] : []),
   { id: "users", group: "Security & Access", title: "Users", description: "Organisation membership, roles and active access.", icon: Users, permission: "manage_organisation_users" },
   { id: "roles", group: "Security & Access", title: "Roles & permissions", description: "Understand access provided by each Ledgify role.", icon: Shield, permission: "manage_organisation_users" },
   { id: "security", group: "Security & Access", title: "Security", description: "Current account and available security controls.", icon: Shield },
@@ -85,7 +86,7 @@ function UsersSettings() {
 
 function RolesSettings() { return <section className="settings-content-card"><h2>Roles &amp; permissions</h2><p>Backend role definitions remain authoritative.</p><div className="settings-role-grid">{roles.map(([value,label,description]) => <article key={value}><Shield size={18}/><div><strong>{label}</strong><p>{description}</p><span>{value}</span></div></article>)}</div></section>; }
 function SecuritySettings() { const auth = useAuth(); return <section className="settings-content-card"><h2>Security</h2><dl className="settings-definition"><div><dt>Signed-in user</dt><dd>{auth.user?.email || auth.user?.username || "Current user"}</dd></div><div><dt>Organisation role</dt><dd>{fieldLabel(auth.selectedOrganisation?.role || "member")}</dd></div><div><dt>Organisation isolation</dt><dd>Active</dd></div></dl><Notice>Password change and two-factor authentication workflows are not implemented in the current frontend/backend API. No unsupported controls are displayed.</Notice></section>; }
-function IntegrationsSettings() { return <section className="settings-content-card"><h2>Implemented integrations</h2><div className="settings-mini-grid"><article><strong>Bank statement import</strong><span>CSV import · Available</span></article><article><strong>AI provider</strong><span>Safe provider status is available in assistant metadata</span></article><article><strong>Email</strong><span>Server-managed; credentials are not exposed</span></article><article><strong>Object storage</strong><span>Server-managed configuration</span></article></div><Notice>Open Banking, marketplace connections and test-email actions are not implemented.</Notice></section>; }
+function IntegrationsSettings() { return <section className="settings-content-card"><h2>Implemented integrations</h2><div className="settings-mini-grid"><article><strong>Bank statement import</strong><span>CSV import · Available</span></article>{AI_ENABLED && <article><strong>AI provider</strong><span>Safe provider status is available in assistant metadata</span></article>}<article><strong>Email</strong><span>Server-managed; credentials are not exposed</span></article><article><strong>Object storage</strong><span>Server-managed configuration</span></article></div><Notice>Open Banking, marketplace connections and test-email actions are not implemented.</Notice></section>; }
 function SystemSettings() { return <section className="settings-content-card"><h2>System information</h2><dl className="settings-definition"><div><dt>Application</dt><dd>Ledgify</dd></div><div><dt>Frontend</dt><dd>React / Vite</dd></div><div><dt>API environment</dt><dd>{import.meta.env.MODE}</dd></div><div><dt>API status</dt><dd>Connected through authenticated organisation-scoped requests</dd></div></dl><Notice>Database, storage, email and provider credentials are intentionally not exposed to the browser.</Notice></section>; }
 
 function SettingsOverview({ available }) {
@@ -96,6 +97,7 @@ function SettingsOverview({ available }) {
 export default function CompanySettingsPage() {
   const auth = useAuth(); const { section = "overview" } = useParams();
   const available = useMemo(() => items.filter((item) => !item.permission || auth.hasPermission(item.permission)), [auth]); const selected = items.find((item) => item.id === section);
+  if (section === "ai" && !AI_ENABLED) return <Navigate to="/settings" replace/>;
   if (selected?.path) return <Navigate to={selected.path} replace/>;
   const content = { organisation: <OrganisationSettings/>, financial: <OrganisationSettings financial/>, inventory: <InventorySettings/>, "fixed-assets": <FixedAssetSettings/>, ai: <AISettings/>, users: <UsersSettings/>, roles: <RolesSettings/>, security: <SecuritySettings/>, integrations: <IntegrationsSettings/>, system: <SystemSettings/> }[section];
   if (section !== "overview" && (!selected || (selected.permission && !auth.hasPermission(selected.permission)))) return <Navigate to="/settings" replace/>;

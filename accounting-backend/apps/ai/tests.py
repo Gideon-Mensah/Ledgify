@@ -2,6 +2,9 @@ from datetime import date
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.test import override_settings
+from django.urls import reverse
+from rest_framework.test import APIClient
 from common.exceptions import BusinessRuleError
 from apps.accounting.models import Account,JournalEntry,JournalLine
 from apps.ai.models import AIConversation,AISettings
@@ -39,3 +42,36 @@ class AISafetyTests(TestCase):
   provider=get_provider.return_value;provider.generate.side_effect=ProviderUnavailable("timeout");message=ask_assistant(conversation=self.conversation,question="How do I enter a supplier bill?");self.assertIn("Purchases",message.content);self.assertFalse(message.metadata["provider"]["available"]);self.assertNotIn("secret",str(message.metadata))
  def test_capital_request_asks_for_ambiguities_and_never_creates_a_record(self):
   message=ask_assistant(conversation=self.conversation,question="Draft a journal for 1,000,000 introduced by the owner into the business bank account.");self.assertIn("specific active bank account",message.content);self.assertIn("Owner’s Capital",message.content);self.assertEqual(JournalEntry.objects.count(),0);self.assertEqual(__import__("apps.ai.models",fromlist=["AIActionAudit"]).AIActionAudit.objects.count(),0)
+
+
+@override_settings(AI_ENABLED=False,AI_API_KEY="",AI_MODEL="",AI_PROVIDER="openai")
+class AIFeatureFlagTests(TestCase):
+ def setUp(self):
+  self.user=get_user_model().objects.create_user(username="flag",email="flag@example.com",password="x",first_name="Feature",last_name="Flag")
+  self.org=Organisation.objects.create(name="Flag Org",base_currency="GBP",created_by=self.user)
+  OrganisationMember.objects.create(organisation=self.org,user=self.user,role="owner")
+  self.conversation=AIConversation.objects.create(organisation=self.org,user=self.user,title="Preserve me")
+  self.client=APIClient();self.client.force_authenticate(self.user)
+  self.client.credentials(HTTP_X_ORGANISATION_ID=str(self.org.id))
+
+ @patch("apps.ai.services.provider.OpenAIResponsesProvider")
+ def test_disabled_flag_rejects_every_ai_endpoint_without_provider_or_data_changes(self,provider):
+  before=AIConversation.objects.count()
+  endpoints=[
+   reverse("ai-chat-list"),reverse("ai-conversation-list"),reverse("ai-action-list"),
+   reverse("ai-insight-list"),reverse("ai-anomaly-list"),reverse("ai-settings-list"),
+  ]
+  for endpoint in endpoints:
+   response=self.client.get(endpoint)
+   self.assertEqual(response.status_code,404)
+   self.assertEqual(response.data["detail"],"The AI Assistant is currently unavailable.")
+  provider.assert_not_called()
+  self.assertEqual(AIConversation.objects.count(),before)
+  self.assertTrue(AIConversation.objects.filter(pk=self.conversation.pk).exists())
+
+ @override_settings(AI_ENABLED=True)
+ def test_enabled_flag_restores_existing_endpoint_without_code_changes(self):
+  response=self.client.get(reverse("ai-conversation-list"))
+  self.assertEqual(response.status_code,200)
+  rows=response.data if isinstance(response.data,list) else response.data["results"]
+  self.assertEqual(rows[0]["id"],str(self.conversation.id))
