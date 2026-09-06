@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Show the backend-authoritative bill balance, payments, sources, and journal links.
 
 import {
@@ -132,29 +134,7 @@ const findBillSupplier = (
 };
 
 // Formats currency.
-const formatCurrency = (
-    amount,
-    currency = "GBP"
-) => {
-    try {
-        return new Intl.NumberFormat(
-            "en-GB",
-            {
-                style: "currency",
-                currency:
-                    currency || "GBP",
-            }
-        ).format(Number(amount) || 0);
-    } catch {
-        return new Intl.NumberFormat(
-            "en-GB",
-            {
-                style: "currency",
-                currency: "GBP",
-            }
-        ).format(Number(amount) || 0);
-    }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Gets status class name.
 const getStatusClassName = (
@@ -1135,7 +1115,7 @@ function BillDetailsPage() {
                                 <span>Currency</span>
 
                                 <strong>
-                                    {bill.currency || "GBP"}
+                                    {bill.currency || getOrganisationCurrency()}
                                 </strong>
                             </div>
                         </div>

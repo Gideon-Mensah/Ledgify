@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   useEffect,
   useMemo,
@@ -21,29 +23,7 @@ import {
 } from "../../services/bankAccountService";
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Parses date value.
 const parseDateValue = (
@@ -264,7 +244,7 @@ function RecentTransactions() {
             currency:
               account?.currency ||
               transaction.currency ||
-              "GBP",
+              getOrganisationCurrency(),
 
             isMoneyIn:
               transactionType ===

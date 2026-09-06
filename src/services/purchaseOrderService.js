@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   purchaseOrders as defaultPurchaseOrders,
 } from "../data/purchaseOrders";
@@ -376,7 +377,7 @@ export const createPurchaseOrder = (
 
     currency:
       purchaseOrderData.currency ||
-      "GBP",
+      getOrganisationCurrency(),
 
     pricingMode:
       purchaseOrderData.pricingMode ||
@@ -513,7 +514,7 @@ export const duplicatePurchaseOrder = (
 
     currency:
       originalOrder.currency ||
-      "GBP",
+      getOrganisationCurrency(),
 
     pricingMode:
       originalOrder.pricingMode ||

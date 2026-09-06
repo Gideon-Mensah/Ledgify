@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   useCallback,
   useEffect,
@@ -30,9 +32,8 @@ import {
 import { purchasesApiService } from "../../services/purchasesApiService";
 import { contactApiService } from "../../services/contactApiService";
 
-import {
-  getPurchaseOrders,
-} from "../../services/purchaseOrderService";
+import { commercialService } from "../../services/commercialService";
+import { statusLabel, toDisplayDate } from "../../services/domainMappings";
 
 import { normaliseApiError } from "../../services/apiError";
 
@@ -87,18 +88,7 @@ const normaliseText = (value) =>
     .toLowerCase();
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  return new Intl.NumberFormat(
-    "en-GB",
-    {
-      style: "currency",
-      currency,
-    }
-  ).format(Number(amount) || 0);
-};
+const formatCurrency = centralFormatCurrency;
 
 // Formats date.
 const formatDate = (dateValue) => {
@@ -164,8 +154,8 @@ const purchaseOrderBelongsToSupplier = (
 
   if (hasSupplierId) {
     return (
-      Number(purchaseOrder.supplierId) ===
-      Number(supplier.id)
+      String(purchaseOrder.supplierId) ===
+      String(supplier.id)
     );
   }
 
@@ -199,13 +189,19 @@ function SupplierDetailsPage() {
 
   // Loads data.
   const loadData = useCallback(async () => {
-    const [nextSupplier, nextBills] = await Promise.all([
+    const [nextSupplier, nextBills, nextOrders] = await Promise.all([
       contactApiService.get(supplierId),
       purchasesApiService.list(`supplier=${supplierId}`),
+      commercialService.purchaseOrders(),
     ]);
     setSupplier(nextSupplier);
     setBills(nextBills);
-    setPurchaseOrders(getPurchaseOrders());
+    setPurchaseOrders(nextOrders.map(order => ({
+      id: order.id, supplierId: order.supplier?.id, supplierName: order.supplier?.name,
+      orderNumber: order.purchase_order_number, supplierReference: order.supplier_reference,
+      orderDate: toDisplayDate(order.order_date), expectedDeliveryDate: toDisplayDate(order.expected_delivery_date),
+      createdAt: order.created_at, status: statusLabel(order.status), total: order.total, currency: order.currency,
+    })));
   }, [supplierId]);
 
   // Keeps this part of the page in sync when its inputs change.
@@ -1084,7 +1080,7 @@ function SupplierDetailsPage() {
 
                 <strong>
                   {supplier.currency ||
-                    "GBP"}
+                    getOrganisationCurrency()}
                 </strong>
               </div>
 

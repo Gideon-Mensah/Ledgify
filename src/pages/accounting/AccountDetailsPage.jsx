@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 // Explain an account balance with posted transactions and source-document drill-downs.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -28,8 +30,8 @@ export default function AccountDetailsPage() {
   useEffect(() => { const frame = window.requestAnimationFrame(() => void load()); return () => window.cancelAnimationFrame(frame); }, [load]);
   const transactions = useMemo(() => ledger?.transactions || [], [ledger]);
   const pagination = useTablePagination(transactions);
-  const currency = account?.currency || auth.selectedOrganisation?.base_currency || "GBP";
-  const money = (value) => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
+  const currency = auth.selectedOrganisation?.base_currency || getOrganisationCurrency();
+  const money = (value) => centralFormatCurrency(value, currency);
   const balanceLabel = (debit, credit, side) => `${money(side === "credit" ? credit : debit)} ${side === "credit" ? "CR" : side === "debit" ? "DR" : ""}`.trim();
   const openingSide = ledger?.opening_balance_side;
   const sourceLabels = { "trial-balance": "Trial Balance", "profit-loss": "Profit & Loss", "balance-sheet": "Balance Sheet", "general-ledger": "General Ledger", "chart-of-accounts": "Chart of Accounts" };

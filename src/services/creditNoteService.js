@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../utils/currency.js";
 import {
   creditNotes as defaultCreditNotes,
 } from "../data/creditNotes";
@@ -222,7 +224,7 @@ export const createCreditNote = (
     reason: creditNoteData.reason || "",
     status,
     currency:
-      creditNoteData.currency || "GBP",
+      creditNoteData.currency || getOrganisationCurrency(),
     pricingMode:
       creditNoteData.pricingMode ||
       "exclusive",
@@ -408,15 +410,7 @@ export const applyCreditNote = (
       nextStatus === "Applied"
         ? "Credit applied"
         : "Credit partially applied",
-    description: `${new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          creditNote.currency ||
-          "GBP",
-      }
-    ).format(amount)} was applied to invoice ${
+    description: `${centralFormatCurrency(amount, creditNote.currency || getOrganisationCurrency())} was applied to invoice ${
       applicationData.invoiceNumber
     }.`,
     date: now.toLocaleString(

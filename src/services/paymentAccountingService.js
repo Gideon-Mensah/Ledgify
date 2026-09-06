@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   getAccounts,
 } from "./accountService";
@@ -167,7 +168,7 @@ const validatePayment = (
     String(
       documentCurrency ||
         payment.accountCurrency ||
-        "GBP"
+        getOrganisationCurrency()
     ).toUpperCase();
 
   if (currency !== "GBP") {
@@ -199,7 +200,7 @@ const validatePayment = (
   if (
     String(
       bankAccount.currency ||
-        "GBP"
+        getOrganisationCurrency()
     ).toUpperCase() !==
     currency
   ) {

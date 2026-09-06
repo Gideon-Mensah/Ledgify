@@ -3,6 +3,7 @@
 from decimal import Decimal
 
 from rest_framework import serializers
+from common.currency_serializers import CurrencySerializerMixin
 
 from apps.accounting.models import Account
 from apps.tax.models import TaxRate
@@ -44,7 +45,7 @@ class PurchaseOrderLineSerializer(serializers.Serializer):
     expense_account_id = serializers.PrimaryKeyRelatedField(source="expense_account", queryset=Account.objects.all(), required=False, allow_null=True)
 
 
-class PurchaseOrderSerializer(serializers.ModelSerializer):
+class PurchaseOrderSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     order_date = accounting_date("purchase order date")
     expected_delivery_date = accounting_date("expected delivery date", required=False, allow_null=True)
     supplier_id = serializers.PrimaryKeyRelatedField(source="supplier", queryset=Contact.objects.all())
@@ -73,7 +74,7 @@ class ConvertPurchaseOrderSerializer(serializers.Serializer):
     issue_date = accounting_date("bill date"); due_date = accounting_date("bill due date")
 
 
-class BillLineSerializer(serializers.ModelSerializer):
+class BillLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     tax_inclusive = serializers.BooleanField(write_only=True, required=False, default=False)
     tax_rate_id = serializers.PrimaryKeyRelatedField(
         source="tax_rate_config", queryset=TaxRate.objects.all(), required=False, allow_null=True,
@@ -129,7 +130,7 @@ class BillLineSerializer(serializers.ModelSerializer):
         }
 
 
-class BillSerializer(serializers.ModelSerializer):
+class BillSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     issue_date = accounting_date("bill date")
     due_date = accounting_date("bill due date")
     supplier_id = serializers.PrimaryKeyRelatedField(
@@ -277,7 +278,7 @@ class BillSerializer(serializers.ModelSerializer):
         return update_bill(bill=instance, organisation=organisation, supplier=supplier, lines=lines, **values)
         
         
-class SupplierPaymentSerializer(serializers.ModelSerializer):
+class SupplierPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     payment_date = accounting_date("payment date")
     supplier_id = serializers.PrimaryKeyRelatedField(
         source="supplier", queryset=Contact.objects.all(), write_only=True
@@ -405,7 +406,7 @@ class SupplierPaymentSerializer(serializers.ModelSerializer):
         ]
 
 
-class SupplierCreditLineSerializer(serializers.ModelSerializer):
+class SupplierCreditLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     source_line_id = serializers.UUIDField(write_only=True, required=False)
     tax_inclusive = serializers.BooleanField(write_only=True, required=False, default=False)
     tax_rate_id = serializers.PrimaryKeyRelatedField(
@@ -422,7 +423,7 @@ class SupplierCreditLineSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "tax_amount", "line_total"]
 
 
-class SupplierCreditSerializer(serializers.ModelSerializer):
+class SupplierCreditSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     supplier_id = serializers.PrimaryKeyRelatedField(
         source="supplier", queryset=Contact.objects.all(), write_only=True
     )
@@ -463,7 +464,7 @@ class SupplierCreditSerializer(serializers.ModelSerializer):
         )
 
 
-class SupplierCreditAllocationSerializer(serializers.ModelSerializer):
+class SupplierCreditAllocationSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = SupplierCreditAllocation
         fields = ["id", "bill", "amount", "applied_at", "applied_by"]
@@ -480,7 +481,7 @@ class SupplierPaymentAllocationRequestSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=18, decimal_places=2)
 
 
-class SupplierRefundSerializer(serializers.ModelSerializer):
+class SupplierRefundSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     supplier_id = serializers.PrimaryKeyRelatedField(
         source="supplier", queryset=Contact.objects.all(), write_only=True
     )

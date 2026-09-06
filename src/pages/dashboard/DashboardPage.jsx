@@ -1,7 +1,9 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 // Summarise the selected organisation's live financial and operational activity.
 
 import { useEffect, useMemo, useState } from "react";
-import { CirclePoundSterling, Landmark, ReceiptText, TrendingUp } from "lucide-react";
+import { Wallet, Landmark, ReceiptText, TrendingUp } from "lucide-react";
 
 import SummaryCard from "../../components/dashboard/SummaryCard";
 import PageHeader from "../../components/layout/PageHeader";
@@ -20,9 +22,7 @@ import { AI_ENABLED } from "../../config/featureFlags";
 import "../../styles/dashboard.css";
 
 const isoDate = (date) => date.toISOString().slice(0, 10);
-const currency = (value, code) => new Intl.NumberFormat("en-GB", {
-  style: "currency", currency: code || "GBP",
-}).format(Number(value) || 0);
+const currency = (value, code) => centralFormatCurrency(value, code || getOrganisationCurrency());
 const displayDate = (value) => value ? new Intl.DateTimeFormat("en-GB", {
   day: "2-digit", month: "short", year: "numeric",
 }).format(new Date(`${String(value).slice(0, 10)}T00:00:00`)) : "—";
@@ -73,7 +73,7 @@ function DashboardPage() {
   const activityPagination = useTablePagination(activity);
   const cards = data ? [
     { title: "Cash balance", value: currency(cashBalance, auth.selectedOrganisation?.base_currency), change: `As at ${displayDate(dates.end)}`, icon: Landmark },
-    { title: "Outstanding receivables", value: currency(data.receivables.total_outstanding, auth.selectedOrganisation?.base_currency), change: `${overdueInvoices} overdue invoice${overdueInvoices === 1 ? "" : "s"}`, changeType: overdueInvoices ? "negative" : "positive", icon: CirclePoundSterling },
+    { title: "Outstanding receivables", value: currency(data.receivables.total_outstanding, auth.selectedOrganisation?.base_currency), change: `${overdueInvoices} overdue invoice${overdueInvoices === 1 ? "" : "s"}`, changeType: overdueInvoices ? "negative" : "positive", icon: Wallet },
     { title: "Outstanding payables", value: currency(data.payables.total_outstanding, auth.selectedOrganisation?.base_currency), change: `${overdueBills} overdue bill${overdueBills === 1 ? "" : "s"}`, changeType: overdueBills ? "negative" : "positive", icon: ReceiptText },
     { title: "Net profit", value: currency(data.profitLoss.net_profit, auth.selectedOrganisation?.base_currency), change: `${displayDate(dates.start)} to ${displayDate(dates.end)} · Revenue ${currency(data.profitLoss.total_income, auth.selectedOrganisation?.base_currency)} · Expenses ${currency(data.profitLoss.total_expenses, auth.selectedOrganisation?.base_currency)}`, changeType: Number(data.profitLoss.net_profit) < 0 ? "negative" : "positive", icon: TrendingUp },
   ] : [];

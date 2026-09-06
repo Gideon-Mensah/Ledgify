@@ -1,18 +1,19 @@
 """Validate asset values and dates while keeping depreciation results read-only."""
 
 from rest_framework import serializers
+from common.currency_serializers import CurrencySerializerMixin
 from apps.accounting.models import Account
 from apps.fixed_assets.models import DepreciationSchedule, FixedAsset, FixedAssetCategory, FixedAssetDisposal
 
 
-class FixedAssetCategorySerializer(serializers.ModelSerializer):
+class FixedAssetCategorySerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:
         model=FixedAssetCategory
         exclude=["organisation","created_by"]
         read_only_fields=["id","created_at","updated_at"]
 
 
-class FixedAssetSerializer(serializers.ModelSerializer):
+class FixedAssetSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     accumulated_depreciation=serializers.DecimalField(max_digits=18,decimal_places=2,read_only=True)
     net_book_value=serializers.DecimalField(max_digits=18,decimal_places=2,read_only=True)
     class Meta:
@@ -28,7 +29,7 @@ class FixedAssetSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class DepreciationScheduleSerializer(serializers.ModelSerializer):
+class DepreciationScheduleSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     asset_name=serializers.CharField(source="asset.asset_name",read_only=True)
     class Meta:
         model=DepreciationSchedule
@@ -36,7 +37,7 @@ class DepreciationScheduleSerializer(serializers.ModelSerializer):
         read_only_fields=fields
 
 
-class FixedAssetDisposalSerializer(serializers.ModelSerializer):
+class FixedAssetDisposalSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:
         model=FixedAssetDisposal
         fields=["id","asset","disposal_date","disposal_type","proceeds","accumulated_depreciation",

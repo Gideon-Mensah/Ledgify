@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Present employee and pay-run workflows without reproducing payroll calculations locally.
 
 import {useEffect,useMemo,useState} from "react";
@@ -20,7 +21,7 @@ const reportOptions=[
 ];
 const displayDate=(value)=>value?new Intl.DateTimeFormat("en-GB",{day:"2-digit",month:"short",year:"numeric"}).format(new Date(`${value}T00:00:00`)):"—";
 function PayrollReports(){
- const {selectedOrganisation}=useAuth();const currency=selectedOrganisation?.base_currency||"GBP";const yearNow=Number(today().slice(0,4));
+ const {selectedOrganisation}=useAuth();const currency=selectedOrganisation?.base_currency||getOrganisationCurrency();const yearNow=Number(today().slice(0,4));
  const [report,setReport]=useState("summary");const [filters,setFilters]=useState({start_date:`${yearNow}-01-01`,end_date:today(),year:yearNow});const [applied,setApplied]=useState({start_date:`${yearNow}-01-01`,end_date:today(),year:yearNow});const [data,setData]=useState(null);const [state,setState]=useState({loading:true,error:""});
  useEffect(()=>{let active=true;const request=report==="yearToDate"?payrollApiService.yearToDate(applied.year):payrollApiService[report]({start_date:applied.start_date,end_date:applied.end_date});request.then(value=>{if(active){setData(value);setState({loading:false,error:""});}}).catch(error=>{if(active)setState({loading:false,error:normaliseApiError(error,"Payroll report could not be loaded.")});});return()=>{active=false;};},[applied,report]);
  const rows=useMemo(()=>Array.isArray(data)?data:[],[data]);const totals=useMemo(()=>rows.reduce((result,row)=>({gross:Number(result.gross)+Number(row.gross_pay||0),deductions:Number(result.deductions)+Number(row.deductions||0),net:Number(result.net)+Number(row.net_pay||0)}),{gross:0,deductions:0,net:0}),[rows]);
@@ -39,7 +40,7 @@ function PayrollReports(){
 }
 export default function PayrollPage(){
  const {hasPermission}=useAuth();const [tab,setTab]=useState("runs");const [employees,setEmployees]=useState([]);const [components,setComponents]=useState([]);const [runs,setRuns]=useState([]);const [payslips,setPayslips]=useState([]);const [accounts,setAccounts]=useState([]);const [error,setError]=useState("");
- const [employee,setEmployee]=useState({employee_number:"",first_name:"",last_name:"",email:"",phone:"",department:"",job_title:"",hire_date:today(),employment_status:"active",pay_frequency:"monthly",payment_method:"bank",bank_account_details:{},currency:"GBP"});
+ const [employee,setEmployee]=useState({employee_number:"",first_name:"",last_name:"",email:"",phone:"",department:"",job_title:"",hire_date:today(),employment_status:"active",pay_frequency:"monthly",payment_method:"bank",bank_account_details:{},currency:getOrganisationCurrency()});
  const [component,setComponent]=useState({name:"",component_type:"earning",calculation_method:"fixed",default_account:"",liability_account:null,taxable:false,pensionable:false,active:true});
  const [run,setRun]=useState({pay_period_start:today().slice(0,8)+"01",pay_period_end:today(),payment_date:today(),payroll_liability_account:""});
  const load=async()=>{const [e,c,r,p,a]=await Promise.all([payrollApiService.employees(),payrollApiService.components(),payrollApiService.runs(),payrollApiService.payslips(),accountingApiService.accounts({status:"active"})]);setEmployees(list(e));setComponents(list(c));setRuns(list(r));setPayslips(list(p));setAccounts(list(a));};

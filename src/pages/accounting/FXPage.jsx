@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 // Display dated exchange rates, exposures, and controlled backend revaluations.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -16,7 +18,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const humanise = (value) => String(value || "—").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const formatDate = (value) => value ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)) : "—";
 const formatNumber = (value, maximumFractionDigits = 10) => new Intl.NumberFormat("en-GB", { maximumFractionDigits }).format(Number(value || 0));
-const formatMoney = (value, currency) => new Intl.NumberFormat("en-GB", { style: "currency", currency: currency || "GBP" }).format(Number(value || 0));
+const formatMoney = (value, currency) => centralFormatCurrency(value, currency || getOrganisationCurrency());
 
 export default function FXPage() {
   const [currencies, setCurrencies] = useState([]);

@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   Building2,
   CreditCard,
@@ -16,15 +18,7 @@ const displayValue = (value) => {
 };
 
 // Formats currency.
-const formatCurrency = (
-  value,
-  currency = "GBP"
-) => {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-  }).format(Number(value) || 0);
-};
+const formatCurrency = centralFormatCurrency;
 
 // Gets full address.
 const getFullAddress = (address = {}) => {
@@ -71,7 +65,7 @@ function CustomerInformationCards({
   customer,
 }) {
   const currency =
-    customer.currency || "GBP";
+    customer.currency || getOrganisationCurrency();
 
   return (
     <section className="customer-information-grid">

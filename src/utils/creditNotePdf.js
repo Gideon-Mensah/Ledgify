@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "./organisationCurrency.js";
 import { jsPDF } from "jspdf";
 import {
   autoTable,
@@ -10,9 +11,9 @@ import { formatCurrency as safeFormatCurrency } from "./currency";
 // Formats currency.
 const formatCurrency = (
   amount,
-  currency = "GBP"
+  currency = getOrganisationCurrency()
 ) =>
-  safeFormatCurrency(amount, currency, { locale: "en-GB" });
+  safeFormatCurrency(amount, currency, { format: { currencyDisplay: "code" } });
 
 // Downloads credit note pdf.
 export const downloadCreditNotePdf = (
@@ -36,7 +37,7 @@ export const downloadCreditNotePdf = (
     );
 
   const currency =
-    creditNote.currency || "GBP";
+    creditNote.currency || getOrganisationCurrency();
 
   const amountApplied =
     Math.min(

@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
     getAccounts,
 } from "./accountService";
@@ -119,7 +120,7 @@ export const hasBillFinancialChanges = (
 
         currency:
             currentBill?.currency ||
-            "GBP",
+            getOrganisationCurrency(),
 
         pricingMode:
             currentBill?.pricingMode ||
@@ -148,7 +149,7 @@ export const hasBillFinancialChanges = (
 
         currency:
             nextBill?.currency ||
-            "GBP",
+            getOrganisationCurrency(),
 
         pricingMode:
             nextBill?.pricingMode ||
@@ -640,7 +641,7 @@ export const postBillAccounting = (
 ) => {
     if (
         String(
-            bill.currency || "GBP"
+            bill.currency || getOrganisationCurrency()
         ).toUpperCase() !== "GBP"
     ) {
         throw new Error(
@@ -675,7 +676,7 @@ export const postBillAccounting = (
                 `Supplier bill ${bill.billNumber} from ${bill.supplier}.`,
 
             currency:
-                bill.currency || "GBP",
+                bill.currency || getOrganisationCurrency(),
 
             lines:
                 buildBillJournalLines(

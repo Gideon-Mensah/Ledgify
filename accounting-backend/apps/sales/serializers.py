@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from django.db import transaction
 from rest_framework import serializers
+from common.currency_serializers import CurrencySerializerMixin
 
 from apps.accounting.models import Account
 from apps.tax.models import TaxRate
@@ -30,7 +31,7 @@ from .services.commercial import create_quote, create_sales_order
 from apps.inventory.models import Product
 from apps.sales.services.invoices.helpers import money
 from apps.tax.services.calculation_service import calculate_tax
-from apps.fx.services import convert_amount
+from apps.fx.services import convert_amount, get_effective_rate
 from apps.date_fields import accounting_date
 
 
@@ -47,7 +48,7 @@ class CommercialSalesLineSerializer(serializers.Serializer):
     revenue_account_id = serializers.PrimaryKeyRelatedField(source="revenue_account", queryset=Account.objects.all())
 
 
-class QuoteSerializer(serializers.ModelSerializer):
+class QuoteSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     issue_date = accounting_date("quote date")
     expiry_date = accounting_date("quote expiry date")
     customer_id = serializers.PrimaryKeyRelatedField(source="customer", queryset=Contact.objects.all())
@@ -64,7 +65,7 @@ class QuoteSerializer(serializers.ModelSerializer):
                             lines=validated_data.pop("lines"), **validated_data)
 
 
-class SalesOrderSerializer(serializers.ModelSerializer):
+class SalesOrderSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     order_date = accounting_date("sales order date")
     expected_delivery_date = accounting_date("expected delivery date", required=False, allow_null=True)
     customer_id = serializers.PrimaryKeyRelatedField(source="customer", queryset=Contact.objects.all())
@@ -95,7 +96,7 @@ class FulfilSalesOrderSerializer(serializers.Serializer):
     transaction_date = accounting_date("fulfilment date")
 
 
-class InvoiceLineSerializer(serializers.ModelSerializer):
+class InvoiceLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     tax_inclusive = serializers.BooleanField(write_only=True, required=False, default=False)
     tax_rate_id = serializers.PrimaryKeyRelatedField(
         source="tax_rate_config", queryset=TaxRate.objects.all(), required=False, allow_null=True,
@@ -141,7 +142,7 @@ class InvoiceLineSerializer(serializers.ModelSerializer):
         }
 
 
-class InvoiceSerializer(serializers.ModelSerializer):
+class InvoiceSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     issue_date = accounting_date("invoice date")
     due_date = accounting_date("invoice due date")
     customer_id = serializers.PrimaryKeyRelatedField(
@@ -273,6 +274,9 @@ class InvoiceSerializer(serializers.ModelSerializer):
         for field, value in validated_data.items():
             setattr(instance, field, value)
         instance.customer = customer
+        instance.exchange_rate = get_effective_rate(organisation=organisation, base_currency=instance.currency,
+                                                   target_currency=organisation.base_currency, date=instance.issue_date)
+        instance.base_currency_amount = convert_amount(amount=instance.total, rate=instance.exchange_rate)
         instance.save()
         if lines is not None:
             instance.lines.all().delete()
@@ -304,7 +308,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         instance.refresh_from_db()
         return instance
         
-class CustomerPaymentSerializer(serializers.ModelSerializer):
+class CustomerPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     payment_date = accounting_date("payment date")
     customer_id = serializers.PrimaryKeyRelatedField(
         source="customer", queryset=Contact.objects.all(), write_only=True
@@ -432,7 +436,7 @@ class CustomerPaymentSerializer(serializers.ModelSerializer):
         ]
 
 
-class CustomerCreditNoteLineSerializer(serializers.ModelSerializer):
+class CustomerCreditNoteLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     source_line_id = serializers.UUIDField(write_only=True, required=False)
     tax_inclusive = serializers.BooleanField(write_only=True, required=False, default=False)
     tax_rate_id = serializers.PrimaryKeyRelatedField(
@@ -449,7 +453,7 @@ class CustomerCreditNoteLineSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "tax_amount", "line_total"]
 
 
-class CustomerCreditNoteSerializer(serializers.ModelSerializer):
+class CustomerCreditNoteSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     customer_id = serializers.PrimaryKeyRelatedField(
         source="customer", queryset=Contact.objects.all(), write_only=True
     )
@@ -491,7 +495,7 @@ class CustomerCreditNoteSerializer(serializers.ModelSerializer):
         )
 
 
-class CustomerCreditAllocationSerializer(serializers.ModelSerializer):
+class CustomerCreditAllocationSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = CustomerCreditAllocation
         fields = ["id", "invoice", "amount", "applied_at", "applied_by"]
@@ -508,7 +512,7 @@ class CustomerPaymentAllocationRequestSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=18, decimal_places=2)
 
 
-class CustomerRefundSerializer(serializers.ModelSerializer):
+class CustomerRefundSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     customer_id = serializers.PrimaryKeyRelatedField(
         source="customer", queryset=Contact.objects.all(), write_only=True
     )
@@ -534,7 +538,7 @@ class CustomerRefundSerializer(serializers.ModelSerializer):
         )
 
 
-class BadDebtWriteOffSerializer(serializers.ModelSerializer):
+class BadDebtWriteOffSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     invoice_id = serializers.PrimaryKeyRelatedField(
         source="invoice", queryset=Invoice.objects.all(), write_only=True
     )

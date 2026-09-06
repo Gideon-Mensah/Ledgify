@@ -4,6 +4,12 @@ from .models import Organisation, OrganisationMember
 
 
 class OrganisationSerializer(serializers.ModelSerializer):
+    base_currency = serializers.CharField(required=True)
+
+    def validate_base_currency(self, value):
+        from common.currencies import validate_currency_code
+        return validate_currency_code(value)
+
     role = serializers.SerializerMethodField()
 
     class Meta:

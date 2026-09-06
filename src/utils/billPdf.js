@@ -1,19 +1,20 @@
+import { getOrganisationCurrency } from "./organisationCurrency.js";
 // Build a printable supplier bill from backend-authoritative lines and totals.
 
 import { jsPDF } from "jspdf";
 import {
   autoTable,
 } from "jspdf-autotable";
-import { formatCurrency as safeFormatCurrency } from "./currency";
+import { formatCurrency as safeFormatCurrency } from "./currency.js";
 // Formats currency.
 const formatCurrency = (
   amount,
-  currency = "GBP"
+  currency = getOrganisationCurrency()
 ) =>
-  safeFormatCurrency(amount, currency, { locale: "en-GB" });
+  safeFormatCurrency(amount, currency, { format: { currencyDisplay: "code" } });
 
 // Downloads bill pdf.
-export const downloadBillPdf = (
+export const createBillPdf = (
   bill
 ) => {
   if (!bill) {
@@ -29,7 +30,7 @@ export const downloadBillPdf = (
   });
 
   const currency =
-    bill.currency || "GBP";
+    bill.currency || getOrganisationCurrency();
 
   document.setFillColor(
     14,
@@ -464,7 +465,11 @@ export const downloadBillPdf = (
     }
   );
 
-  document.save(
-    `${String(bill.billNumber || "bill").replace(/[^a-z0-9._-]+/gi, "-")}.pdf`
-  );
+  return document;
+};
+
+export const downloadBillPdf = (...args) => {
+  const document = createBillPdf(...args);
+  const filename = String(args[0]?.billNumber || "bill").replace(/[^a-z0-9._-]+/gi, "-");
+  document.save(`${filename}.pdf`);
 };

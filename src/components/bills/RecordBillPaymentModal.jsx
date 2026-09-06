@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   useEffect,
   useMemo,
@@ -15,29 +17,7 @@ import { useAuth } from "../../store/AuthContext";
 import { getOrganisationToday } from "../../utils/dateUtils";
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 const decimalToMinorUnits = (value) => {
   const match = String(value ?? "").trim().match(/^(\d+)(?:\.(\d{0,2}))?$/);
@@ -80,7 +60,7 @@ function RecordBillPaymentModal({
   ] = useState(false);
 
   const billCurrency = String(
-    bill?.currency || "GBP"
+    bill?.currency || getOrganisationCurrency()
   ).toUpperCase();
 
   const compatibleAccounts =
@@ -92,7 +72,7 @@ function RecordBillPaymentModal({
             "Archived" &&
           String(
             account.currency ||
-              "GBP"
+              getOrganisationCurrency()
           ).toUpperCase() ===
             billCurrency
       );
@@ -150,7 +130,7 @@ function RecordBillPaymentModal({
             "Archived" &&
           String(
             account.currency ||
-              "GBP"
+              getOrganisationCurrency()
           ).toUpperCase() ===
             billCurrency
       );
@@ -271,7 +251,7 @@ function RecordBillPaymentModal({
     } else if (
       String(
         selectedAccount.currency ||
-          "GBP"
+          getOrganisationCurrency()
       ).toUpperCase() !==
       billCurrency
     ) {
@@ -410,7 +390,7 @@ function RecordBillPaymentModal({
 
         <div className="invoice-form-field">
           <label htmlFor="billPaymentAmount">
-            Payment amount
+            Payment amount ({billCurrency})
           </label>
 
           <input

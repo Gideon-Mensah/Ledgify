@@ -1,3 +1,5 @@
+import { formatCurrency } from "../../utils/currency.js";
+import { isMonetaryField } from "../../utils/monetaryFields.js";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import PageHeader from "../../components/layout/PageHeader";
@@ -17,11 +19,11 @@ const definitions = {
   "supplier-credits": { title: "Supplier credits", list: "supplierCredits", detail: "supplierCredit", base: "/purchases/supplier-credits" },
 };
 const show = (value) => value == null || value === "" ? "—" : Array.isArray(value) ? `${value.length} lines` : typeof value === "object" ? value.name || value.code || value.id || "—" : String(value);
-function Table({ rows, base, links=true }) {
+function Table({ rows, base, links=true, currency }) {
   const pagination = useTablePagination(rows);
   if (!rows.length) return <div className="invoice-form-card">No documents found.</div>;
   const columns=Object.keys(rows[0]).filter((key) => !["id", "created_at", "updated_at", "notes"].includes(key)).slice(0, 8);
-  return <><div className="chart-accounts-table-wrapper"><table className="chart-accounts-table"><thead><tr>{columns.map((key) => <th key={key}>{key.replaceAll("_", " ")}</th>)}{links && <th>Action</th>}</tr></thead><tbody>{pagination.pageRows.map((row, index) => <tr key={row.id || index}>{columns.map((key) => <td key={key}>{show(row[key])}</td>)}{links && <td><Link className="invoice-secondary-button" to={`${base}/${row.id}`}>View</Link></td>}</tr>)}</tbody></table></div><TablePagination {...pagination}/></>;
+  return <><div className="chart-accounts-table-wrapper"><table className="chart-accounts-table"><thead><tr>{columns.map((key) => <th key={key}>{key.replaceAll("_", " ")}</th>)}{links && <th>Action</th>}</tr></thead><tbody>{pagination.pageRows.map((row, index) => <tr key={row.id || index}>{columns.map((key) => <td key={key}>{isMonetaryField(key) ? formatCurrency(row[key], row.currency || currency) : show(row[key])}</td>)}{links && <td><Link className="invoice-secondary-button" to={`${base}/${row.id}`}>View</Link></td>}</tr>)}</tbody></table></div><TablePagination {...pagination}/></>;
 }
 function GenericCommercialListPage({ type }) {
   const definition=definitions[type]; const [rows,setRows]=useState([]); const [error,setError]=useState(""); const [loading,setLoading]=useState(true);
@@ -32,7 +34,7 @@ function GenericCommercialListPage({ type }) {
 function GenericCommercialDetailPage({ type }) {
   const params=useParams(); const id=params.quoteId||params.salesOrderId||params.purchaseOrderId||params.creditNoteId; const definition=definitions[type]; const [document,setDocument]=useState(null); const [error,setError]=useState("");
   useEffect(()=>{let active=true;commercialService[definition.detail](id).then((data)=>active&&setDocument(data)).catch((requestError)=>active&&setError(normaliseApiError(requestError)));return()=>{active=false;};},[definition,id]);
-  return <div className="products-page"><PageHeader eyebrow="Commercial workflows" title={document?.quote_number||document?.order_number||document?.purchase_order_number||definition.title} description="Live backend document and lifecycle status." action={<Link className="invoice-secondary-button" to={definition.base}>Back</Link>}/>{error&&<div className="invoice-form-alert">{error}</div>}{document&&<><section className="invoice-form-card"><Table rows={[document]} base={definition.base} links={false}/></section><section className="invoice-form-card"><h2>Lines</h2><Table rows={document.lines||[]} base={definition.base} links={false}/></section></>}</div>;
+  return <div className="products-page"><PageHeader eyebrow="Commercial workflows" title={document?.quote_number||document?.order_number||document?.purchase_order_number||definition.title} description="Live backend document and lifecycle status." action={<Link className="invoice-secondary-button" to={definition.base}>Back</Link>}/>{error&&<div className="invoice-form-alert">{error}</div>}{document&&<><section className="invoice-form-card"><Table rows={[document]} base={definition.base} links={false}/></section><section className="invoice-form-card"><h2>Lines</h2><Table rows={document.lines||[]} base={definition.base} links={false} currency={document.currency}/></section></>}</div>;
 }
 
 export function LiveCommercialListPage({ type }) {

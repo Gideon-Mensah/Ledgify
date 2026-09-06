@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   ArrowLeft,
   FileText,
@@ -27,14 +29,7 @@ const normaliseText = (value) =>
     .toLowerCase();
 
 // Formats currency.
-const formatCurrency = (
-  value,
-  currency = "GBP"
-) =>
-  new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-  }).format(Number(value) || 0);
+const formatCurrency = centralFormatCurrency;
 
 // Formats date.
 const formatDate = (value) => {
@@ -359,7 +354,7 @@ function CustomerStatementPage() {
   }
 
   const currency =
-    customer.currency || "GBP";
+    customer.currency || getOrganisationCurrency();
 
   const addressLines =
     getAddressLines(

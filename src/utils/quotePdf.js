@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "./organisationCurrency.js";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
 import { formatCurrency as safeFormatCurrency } from "./currency";
@@ -5,9 +6,9 @@ import { formatCurrency as safeFormatCurrency } from "./currency";
 // Formats currency.
 const formatCurrency = (
   amount,
-  currency = "GBP"
+  currency = getOrganisationCurrency()
 ) =>
-  safeFormatCurrency(amount, currency, { locale: "en-GB" });
+  safeFormatCurrency(amount, currency, { format: { currencyDisplay: "code" } });
 
 // Calculates quote totals.
 const calculateQuoteTotals = (quote) =>
@@ -79,7 +80,7 @@ export const downloadQuotePdf = (
     calculateQuoteTotals(quote);
 
   const currency =
-    quote.currency || "GBP";
+    quote.currency || getOrganisationCurrency();
 
   document.setFillColor(
     14,

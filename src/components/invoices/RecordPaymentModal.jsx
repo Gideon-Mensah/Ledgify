@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   useEffect,
   useMemo,
@@ -15,35 +17,14 @@ import { useAuth } from "../../store/AuthContext";
 import { getOrganisationToday } from "../../utils/dateUtils";
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Renders the record payment modal component.
 function RecordPaymentModal({
   isOpen,
   invoiceNumber,
   balanceDue,
-  invoiceCurrency = "GBP",
+  invoiceCurrency = getOrganisationCurrency(),
   onClose,
   onSave,
 }) {
@@ -76,7 +57,7 @@ function RecordPaymentModal({
   ] = useState(false);
 
   const paymentCurrency = String(
-    invoiceCurrency || "GBP"
+    invoiceCurrency || getOrganisationCurrency()
   ).toUpperCase();
 
   const compatibleAccounts =
@@ -88,7 +69,7 @@ function RecordPaymentModal({
             "Archived" &&
           String(
             account.currency ||
-              "GBP"
+              getOrganisationCurrency()
           ).toUpperCase() ===
             paymentCurrency
       );
@@ -146,7 +127,7 @@ function RecordPaymentModal({
             "Archived" &&
           String(
             account.currency ||
-              "GBP"
+              getOrganisationCurrency()
           ).toUpperCase() ===
             paymentCurrency
       );
@@ -274,7 +255,7 @@ function RecordPaymentModal({
     } else if (
       String(
         selectedAccount.currency ||
-          "GBP"
+          getOrganisationCurrency()
       ).toUpperCase() !==
       paymentCurrency
     ) {
@@ -434,15 +415,12 @@ function RecordPaymentModal({
         <div className="payment-form-grid">
           <div className="invoice-form-field">
             <label htmlFor="paymentAmount">
-              Payment amount
+              Payment amount ({paymentCurrency})
             </label>
 
             <div className="payment-amount-input">
               <span>
-                {paymentCurrency ===
-                "GBP"
-                  ? "£"
-                  : paymentCurrency}
+                {paymentCurrency}
               </span>
 
               <input

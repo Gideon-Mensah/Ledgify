@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, CheckCircle2, Clock3, Landmark, Link2, Scale, Search, Sparkles, Unlink } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -16,7 +18,7 @@ const list = (value) => Array.isArray(value) ? value : value?.results || [];
 const humanise = (value) => String(value || "—").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const dateOnly = (value) => value ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)) : "—";
 const dateTime = (value) => value ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)) : "Never";
-const money = (value, currency = "GBP") => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
+const money = (value, currency = getOrganisationCurrency()) => centralFormatCurrency(value, currency);
 
 export default function ReconciliationWorkspace() {
   const auth = useAuth();
@@ -112,7 +114,7 @@ export default function ReconciliationWorkspace() {
   };
 
   const selectedAccount = accounts.find((account) => account.id === accountId);
-  const currency = summary?.bank_account?.currency || selectedAccount?.currency || "GBP";
+  const currency = summary?.bank_account?.currency || selectedAccount?.currency || getOrganisationCurrency();
   const difference = summary?.difference;
 
   return <div className="reconciliation-workspace">

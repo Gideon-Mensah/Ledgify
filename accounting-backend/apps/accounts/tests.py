@@ -21,6 +21,7 @@ class AuthenticationIntegrationTests(TestCase):
             first_name="Demo", last_name="User",
         )
         self.organisation = Organisation.objects.create(
+            base_currency="GBP",
             name="Demo Organisation", created_by=self.user,
         )
         OrganisationMember.objects.create(

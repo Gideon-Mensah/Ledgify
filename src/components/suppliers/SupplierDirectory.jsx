@@ -1,3 +1,4 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import {
   useEffect,
   useMemo,
@@ -25,17 +26,7 @@ import {
 } from "../../utils/supplierCalculations";
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) =>
-  new Intl.NumberFormat(
-    "en-GB",
-    {
-      style: "currency",
-      currency,
-    }
-  ).format(Number(amount) || 0);
+const formatCurrency = centralFormatCurrency;
 
 // Renders the supplier directory component.
 function SupplierDirectory({

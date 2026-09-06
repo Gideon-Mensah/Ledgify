@@ -14,7 +14,7 @@ from apps.organisations.models import Organisation, OrganisationMember
 class FixedAssetLifecycleTests(TestCase):
     def setUp(self):
         self.user=get_user_model().objects.create_user(username="assets",password="test")
-        self.organisation=Organisation.objects.create(name="Assets",created_by=self.user)
+        self.organisation=Organisation.objects.create(base_currency="GBP", name="Assets",created_by=self.user)
         OrganisationMember.objects.create(organisation=self.organisation,user=self.user,role=OrganisationMember.Role.OWNER)
         self.asset_account=self._account("1500",Account.AccountType.ASSET,Account.AccountClass.FIXED_ASSET)
         self.accumulated=self._account("1510",Account.AccountType.ASSET,Account.AccountClass.FIXED_ASSET)

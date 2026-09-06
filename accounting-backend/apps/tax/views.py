@@ -24,6 +24,16 @@ class TaxRateViewSet(OrganisationScopedViewSetMixin, ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(organisation=self.get_organisation(), created_by=self.request.user)
 
+    def perform_destroy(self, instance):
+        from rest_framework.exceptions import ValidationError
+        if self.get_serializer(instance).data["in_use"]:
+            raise ValidationError("This tax rate is in use. Deactivate it to preserve transaction history.")
+        from django.db.models.deletion import ProtectedError
+        try:
+            instance.delete()
+        except ProtectedError as error:
+            raise ValidationError("This rate is in use. Deactivate it instead.") from error
+
 
 class TaxPeriodViewSet(OrganisationScopedViewSetMixin, ModelViewSet):
     serializer_class = TaxPeriodSerializer
@@ -38,13 +48,24 @@ class TaxPeriodViewSet(OrganisationScopedViewSetMixin, ModelViewSet):
 class TaxTransactionViewSet(OrganisationScopedViewSetMixin, ReadOnlyModelViewSet):
     serializer_class = TaxTransactionSerializer
     permission_classes = [IsAuthenticated, OrganisationActionPermission]
-    action_permissions = {"list": VIEW_TAX, "retrieve": VIEW_TAX}
+    action_permissions = {"list": VIEW_TAX, "retrieve": VIEW_TAX, "register": VIEW_TAX}
+
+    @action(detail=False, methods=["get"])
+    def register(self, request):
+        from apps.tax.services.register_service import tax_register
+        query = TaxReportQuerySerializer(data=request.query_params)
+        query.is_valid(raise_exception=True)
+        return Response(tax_register(organisation=self.get_organisation(), **query.validated_data))
+
     def get_queryset(self):
         qs = TaxTransaction.objects.filter(organisation=self.get_organisation()).select_related("tax_rate", "contact", "tax_account", "journal_entry")
-        for field in ("tax_rate", "direction", "status"):
-            if self.request.query_params.get(field): qs = qs.filter(**{field: self.request.query_params[field]})
-        if self.request.query_params.get("start_date"): qs = qs.filter(transaction_date__gte=self.request.query_params["start_date"])
-        if self.request.query_params.get("end_date"): qs = qs.filter(transaction_date__lte=self.request.query_params["end_date"])
+        query = TaxReportQuerySerializer(data=self.request.query_params)
+        query.is_valid(raise_exception=True)
+        filters = query.validated_data
+        for field in ("tax_rate", "direction", "status", "source_type"):
+            if filters.get(field): qs = qs.filter(**{field: filters[field]})
+        if filters.get("start_date"): qs = qs.filter(transaction_date__gte=filters["start_date"])
+        if filters.get("end_date"): qs = qs.filter(transaction_date__lte=filters["end_date"])
         return qs
 
 
@@ -53,7 +74,7 @@ class TaxReportViewSet(OrganisationScopedViewSetMixin, ViewSet):
     action_permissions = {"summary": VIEW_TAX, "preview": PREPARE_TAX_RETURN, "liability": VIEW_TAX}
     def _report(self, request):
         query = TaxReportQuerySerializer(data=request.query_params); query.is_valid(raise_exception=True)
-        data = {key: value for key, value in query.validated_data.items() if key in {"start_date", "end_date"}}
+        data = query.validated_data
         return Response(tax_summary(organisation=self.get_organisation(), **data))
     @action(detail=False, methods=["get"], url_path="summary")
     def summary(self, request): return self._report(request)

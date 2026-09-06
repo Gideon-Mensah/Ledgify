@@ -46,6 +46,7 @@ class BankingIntegrationTests(TestCase):
             username="banking", email="banking@example.com", password="test"
         )
         self.organisation = Organisation.objects.create(
+            base_currency="GBP",
             name="Banking Test", created_by=self.user
         )
         OrganisationMember.objects.create(
@@ -310,7 +311,7 @@ class BankingIntegrationTests(TestCase):
         self.assertFalse(duplicate.is_valid())
         self.assertIn("ledger_account_id", duplicate.errors)
 
-        foreign = Organisation.objects.create(name="Foreign bank org", created_by=self.user)
+        foreign = Organisation.objects.create(base_currency="GBP", name="Foreign bank org", created_by=self.user)
         foreign_ledger = Account.objects.create(
             organisation=foreign, code="FBANK", name="Foreign bank",
             account_type=Account.AccountType.ASSET,

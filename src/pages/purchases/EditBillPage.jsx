@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Edit supplier, dates, and lines only while the selected bill is still a draft.
 
 import { useEffect, useMemo, useState } from "react";
@@ -14,7 +15,7 @@ import { formatCurrency } from "../../utils/currency";
 import "../../styles/editBill.css";
 
 const newLine = () => ({ id: crypto.randomUUID(), description: "", quantity: "1", unitPrice: "0", discountAmount: "0", vatRate: "0", taxRateId: "", expenseAccountId: "" });
-const money = (value, currency = "GBP") => formatCurrency(value, currency, { locale: "en-GB" });
+const money = (value, currency = getOrganisationCurrency()) => formatCurrency(value, currency);
 
 export default function EditBillPage() {
   const { billId } = useParams(); const navigate = useNavigate();

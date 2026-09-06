@@ -48,7 +48,7 @@ class AccountImportTests(TestCase):
         response=self.upload(rows);self.assertEqual(response.status_code,201);data=response.json();self.assertEqual(data["invalid_rows"],3);self.assertEqual(data["existing_rows"],1)
         self.assertEqual(self.client.post(f"/api/v1/accounts/import/{data['id']}/confirm/",{},format="json",**self.headers).status_code,400)
     def test_other_organisation_code_is_not_a_conflict_and_batches_are_isolated(self):
-        other=Organisation.objects.create(name="Other",created_by=self.user);Account.objects.create(organisation=other,created_by=self.user,code="7777",name="Other account",account_type="asset",account_class="current_asset")
+        other=Organisation.objects.create(base_currency="GBP", name="Other",created_by=self.user);Account.objects.create(organisation=other,created_by=self.user,code="7777",name="Other account",account_type="asset",account_class="current_asset")
         response=self.upload([["7777","Local account","Asset","Current Asset","","GBP","Not applicable","Yes","Active"]]);self.assertEqual(response.json()["valid_rows"],1)
         OrganisationMember.objects.create(organisation=other,user=self.user,role="owner")
         self.assertEqual(self.client.get(f"/api/v1/accounts/import/{response.json()['id']}/status/",HTTP_X_ORGANISATION_ID=str(other.id)).status_code,404)

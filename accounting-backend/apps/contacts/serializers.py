@@ -1,9 +1,10 @@
 from rest_framework import serializers
+from common.currency_serializers import CurrencySerializerMixin
 
 from .models import Contact
 
 
-class ContactSerializer(serializers.ModelSerializer):
+class ContactSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     def validate_currency(self, value):
         from common.currencies import validate_currency_code
         return validate_currency_code(value)

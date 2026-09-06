@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   ArrowLeft,
   Users,
@@ -185,7 +186,7 @@ function CustomerDetailsPage() {
   const currency =
     customer.currency ||
     customerInvoices[0]?.currency ||
-    "GBP";
+    getOrganisationCurrency();
 
   // Handles toggle status.
   const handleToggleStatus = async () => {

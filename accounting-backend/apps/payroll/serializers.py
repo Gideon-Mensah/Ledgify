@@ -2,21 +2,22 @@
 
 from decimal import Decimal
 from rest_framework import serializers
+from common.currency_serializers import CurrencySerializerMixin
 from apps.payroll.models import Employee,EmployeePayrollComponent,PayrollComponent,PayrollPayment,PayrollRun,Payslip,PayslipLine
 
-class EmployeePayrollComponentSerializer(serializers.ModelSerializer):
+class EmployeePayrollComponentSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:model=EmployeePayrollComponent;fields="__all__";read_only_fields=["id","employee"]
-class EmployeeSerializer(serializers.ModelSerializer):
+class EmployeeSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     full_name=serializers.CharField(read_only=True);pay_components=EmployeePayrollComponentSerializer(many=True,read_only=True)
     class Meta:model=Employee;exclude=["organisation"];read_only_fields=["id","created_at","updated_at"]
-class PayrollComponentSerializer(serializers.ModelSerializer):
+class PayrollComponentSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:model=PayrollComponent;exclude=["organisation"];read_only_fields=["id","created_at","updated_at"]
-class PayslipLineSerializer(serializers.ModelSerializer):
+class PayslipLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:model=PayslipLine;fields="__all__";read_only_fields=fields
-class PayslipSerializer(serializers.ModelSerializer):
+class PayslipSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     employee_name=serializers.CharField(source="employee.full_name",read_only=True);lines=PayslipLineSerializer(many=True,read_only=True)
     class Meta:model=Payslip;fields="__all__";read_only_fields=fields
-class PayrollRunSerializer(serializers.ModelSerializer):
+class PayrollRunSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     payslips=PayslipSerializer(many=True,read_only=True)
     class Meta:model=PayrollRun;exclude=["organisation","created_by"];read_only_fields=["id","status","approved_by","processed_at","created_at","updated_at"]
     def validate(self,attrs):
@@ -24,7 +25,7 @@ class PayrollRunSerializer(serializers.ModelSerializer):
         return attrs
 class AssignComponentSerializer(serializers.Serializer):
     component_id=serializers.UUIDField();amount=serializers.DecimalField(max_digits=18,decimal_places=2,min_value=0,default=0);quantity=serializers.DecimalField(max_digits=18,decimal_places=4,min_value=0,default=1);rate=serializers.DecimalField(max_digits=18,decimal_places=4,min_value=0,default=0);active=serializers.BooleanField(default=True)
-class PayrollPaymentSerializer(serializers.ModelSerializer):
+class PayrollPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:model=PayrollPayment;fields="__all__";read_only_fields=fields
 class PayRunPaymentSerializer(serializers.Serializer):
     bank_account_id=serializers.UUIDField();payment_date=serializers.DateField();amount=serializers.DecimalField(max_digits=18,decimal_places=2,min_value=Decimal("0.01"))

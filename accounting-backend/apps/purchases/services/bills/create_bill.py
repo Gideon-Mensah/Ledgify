@@ -51,7 +51,7 @@ def create_bill(
         )
 
     from common.currencies import require_currency_code
-    currency = require_currency_code(currency)
+    currency = require_currency_code(currency or organisation.base_currency)
 
     if not lines:
         raise BusinessRuleError(

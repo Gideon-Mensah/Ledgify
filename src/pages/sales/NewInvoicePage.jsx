@@ -1,3 +1,6 @@
+import CurrencyOptions from "../../components/common/CurrencyOptions";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Collect invoice lines and send writable customer, tax, and account IDs to the API.
 
 import {
@@ -79,29 +82,7 @@ const createEmptyItem = () => ({
 });
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Gets customer address lines.
 const getCustomerAddressLines = (
@@ -180,7 +161,7 @@ function NewInvoicePage({ editMode = false }) {
       14
     ),
     reference: "",
-    currency: "GBP",
+    currency: getOrganisationCurrency(),
     pricingMode: "exclusive",
     notes:
       "Please use the invoice number as your payment reference.",
@@ -1222,21 +1203,7 @@ function NewInvoicePage({ editMode = false }) {
                     handleInvoiceChange
                   }
                 >
-                  <option value="GBP">
-                    GBP – British Pound
-                  </option>
-
-                  <option value="USD">
-                    USD – US Dollar
-                  </option>
-
-                  <option value="EUR">
-                    EUR – Euro
-                  </option>
-
-                  <option value="GHS">
-                    GHS – Ghana Cedi
-                  </option>
+                  <CurrencyOptions value={invoiceDetails.currency} />
                 </select>
               </div>
 

@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   getAccounts,
 } from "./accountService";
@@ -506,7 +507,7 @@ export const postInvoiceAccounting = (
   if (
     String(
       invoice.currency ||
-        "GBP"
+        getOrganisationCurrency()
     ).toUpperCase() !==
     "GBP"
   ) {
@@ -543,7 +544,7 @@ export const postInvoiceAccounting = (
 
       currency:
         invoice.currency ||
-        "GBP",
+        getOrganisationCurrency(),
 
       lines:
         buildInvoiceJournalLines(

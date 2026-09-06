@@ -6,23 +6,9 @@ from apps.tax.models import TaxTransaction
 from apps.accounting.models import JournalLine, LEDGER_EFFECTIVE_JOURNAL_STATUSES
 
 
-def tax_summary(*, organisation, start_date=None, end_date=None):
-    qs = TaxTransaction.objects.filter(organisation=organisation)
-    if start_date: qs = qs.filter(transaction_date__gte=start_date)
-    if end_date: qs = qs.filter(transaction_date__lte=end_date)
-    def total(direction, field, credit=False):
-        rows = qs.filter(direction=direction)
-        base = rows.exclude(source_type__in=["customer_credit", "supplier_credit"])
-        credits = rows.filter(source_type__in=["customer_credit", "supplier_credit"])
-        return (base.aggregate(v=Sum(field))["v"] or Decimal("0.00")) - (credits.aggregate(v=Sum(field))["v"] or Decimal("0.00"))
-    sales_net = total("OUTPUT", "net_amount")
-    output_tax = total("OUTPUT", "tax_amount")
-    purchase_net = total("INPUT", "net_amount")
-    input_tax = total("INPUT", "tax_amount")
-    credit_adjustments = qs.filter(source_type__in=["customer_credit", "supplier_credit"]).aggregate(v=Sum("tax_amount"))["v"] or Decimal("0.00")
-    return {"sales_net": sales_net, "output_tax": output_tax, "purchase_net": purchase_net,
-            "input_tax": input_tax, "credit_adjustments": credit_adjustments,
-            "net_tax_due_or_refundable": output_tax - input_tax}
+def tax_summary(*, organisation, **filters):
+    from .register_service import tax_register
+    return tax_register(organisation=organisation, **filters)["summary"]
 
 
 tax_return_preview = tax_summary

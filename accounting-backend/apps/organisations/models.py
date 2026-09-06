@@ -48,7 +48,6 @@ class Organisation(models.Model):
 
     base_currency = models.CharField(
         max_length=3,
-        default="GBP",
         validators=[validate_currency_code],
     )
     reporting_currency = models.CharField(max_length=3, blank=True, validators=[validate_optional_currency_code])

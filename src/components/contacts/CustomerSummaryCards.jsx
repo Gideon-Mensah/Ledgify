@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   BadgePoundSterling,
   CircleCheckBig,
@@ -6,15 +8,7 @@ import {
 } from "lucide-react";
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-  }).format(Number(amount) || 0);
-};
+const formatCurrency = centralFormatCurrency;
 
 // Renders the customer summary cards component.
 function CustomerSummaryCards({
@@ -22,7 +16,7 @@ function CustomerSummaryCards({
   totalSales = 0,
   totalPaid = 0,
   creditLimit = 0,
-  currency = "GBP",
+  currency = getOrganisationCurrency(),
 }) {
   const cards = [
     {

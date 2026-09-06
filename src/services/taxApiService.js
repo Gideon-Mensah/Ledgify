@@ -10,6 +10,7 @@ const query = (filters = {}) => {
 };
 
 export const taxApiService = {
+  register: (filters, options) => api.get(`tax-transactions/register/${query(filters)}`, options),
   rates: () => api.get("tax-rates/"),
   createRate: (data) => api.post("tax-rates/", data),
   updateRate: (id, data) => api.patch(`tax-rates/${id}/`, data),

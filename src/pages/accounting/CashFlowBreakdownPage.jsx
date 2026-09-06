@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, BookOpen, TriangleAlert } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -29,8 +31,8 @@ export default function CashFlowBreakdownPage() {
     }
   }, [endDate, rowKey, startDate]);
   useEffect(() => { const frame = window.requestAnimationFrame(() => void load()); return () => window.cancelAnimationFrame(frame); }, [load]);
-  const currency = auth.selectedOrganisation?.base_currency || "GBP";
-  const money = (value) => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
+  const currency = auth.selectedOrganisation?.base_currency || getOrganisationCurrency();
+  const money = (value) => centralFormatCurrency(value, currency);
   const rows = useMemo(() => data?.transactions || [], [data]);
   const cashAccounts = (row) => (row.cash_accounts || []).map((item) => `${item.code} · ${item.name}`).join(", ") || "—";
   const reversal = (row) => row.reversal_of?.entry_number ? `Reverses ${row.reversal_of.entry_number}` : row.reversal_entry?.entry_number ? `Reversed by ${row.reversal_entry.entry_number}` : "—";

@@ -12,7 +12,7 @@ class SalesApiWorkflowTests(APITestCase):
             username="sales-owner", email="sales@example.com", password="test-pass",
             first_name="Sales", last_name="Owner",
         )
-        self.organisation = Organisation.objects.create(name="Sales Test", created_by=self.user)
+        self.organisation = Organisation.objects.create(base_currency="GBP", name="Sales Test", created_by=self.user)
         OrganisationMember.objects.create(
             organisation=self.organisation, user=self.user, role=OrganisationMember.Role.OWNER,
         )

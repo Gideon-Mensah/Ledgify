@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // List supplier bills and expose only actions permitted by their financial status.
 
 import {
@@ -40,29 +42,7 @@ const normaliseText = (value) => {
 };
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Gets status class name.
 const getStatusClassName = (
@@ -645,7 +625,7 @@ function BillsPage() {
           bill.issueDate,
           bill.dueDate,
           bill.displayStatus,
-          bill.currency || "GBP",
+          bill.currency || getOrganisationCurrency(),
           Number(
             bill.total
           ).toFixed(2),

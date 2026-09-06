@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import { quotes as defaultQuotes } from "../data/quotes";
 
 const STORAGE_KEY = "ledgify_quotes";
@@ -288,7 +289,7 @@ export const createQuote = (
     expiryDate: quoteData.expiryDate,
     reference: quoteData.reference || "",
     status,
-    currency: quoteData.currency || "GBP",
+    currency: quoteData.currency || getOrganisationCurrency(),
     pricingMode:
       quoteData.pricingMode || "exclusive",
     items: quoteData.items || [],

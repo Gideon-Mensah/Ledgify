@@ -23,7 +23,7 @@ def create_customer_credit_note(*, organisation, customer, credit_note_number,
     if customer.status != "active":
         raise BusinessRuleError("The selected customer is not active.")
     from common.currencies import require_currency_code
-    currency = require_currency_code(currency)
+    currency = require_currency_code(currency or organisation.base_currency)
     if len(currency) != 3:
         raise BusinessRuleError("Currency must be a 3-letter currency code.")
     if invoice:

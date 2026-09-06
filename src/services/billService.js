@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../utils/currency.js";
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   bills as defaultBills,
 } from "../data/bills";
@@ -138,33 +140,7 @@ const normaliseDate = (value) => {
   return `${year}-${month}-${day}`;
 };
 
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(
-      Number(amount) || 0
-    );
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(
-      Number(amount) || 0
-    );
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 const formatActivityDate = (
   date = new Date()
@@ -709,7 +685,7 @@ const getBillFinancialSnapshot = (
     currency:
       String(
         bill?.currency ||
-          "GBP"
+          getOrganisationCurrency()
       ).toUpperCase(),
 
     pricingMode:
@@ -1141,7 +1117,7 @@ export const createBill = (
 
     currency:
       billData.currency ||
-      "GBP",
+      getOrganisationCurrency(),
 
     pricingMode:
       billData.pricingMode ||
@@ -2457,7 +2433,7 @@ export const createBillFromPurchaseOrder =
 
         currency:
           purchaseOrder.currency ||
-          "GBP",
+          getOrganisationCurrency(),
 
         pricingMode:
           purchaseOrder.pricingMode ||

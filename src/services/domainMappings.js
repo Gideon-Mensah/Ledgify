@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 // Translate backend field names into the stable shapes used by existing frontend screens.
 
 import { formatDisplayDate, toApiDate } from "../utils/dateUtils.js";
@@ -36,7 +37,7 @@ export function mapContact(contact) {
     isCustomer: contact.is_customer,
     isSupplier: contact.is_supplier,
     paymentTerms: paymentTermsFromApi[contact.payment_terms] || contact.payment_terms,
-    currency: contact.currency || "GBP",
+    currency: contact.currency || getOrganisationCurrency(),
     creditLimit: contact.credit_limit,
     status: contact.status === "active" ? "Active" : contact.status === "inactive" ? "Inactive" : "Archived",
     notes: contact.notes || "",
@@ -66,7 +67,7 @@ export function contactPayload(contact, type) {
     is_customer: type === "customer" || Boolean(contact.isCustomer),
     is_supplier: type === "supplier" || Boolean(contact.isSupplier),
     payment_terms: paymentTermsToApi[contact.paymentTerms] || contact.paymentTerms || "30_days",
-    currency: contact.currency || "GBP",
+    currency: contact.currency || getOrganisationCurrency(),
     credit_limit: contact.creditLimit === "" ? null : contact.creditLimit ?? null,
     address_line_1: contact.address?.line1 || "",
     address_line_2: contact.address?.line2 || "",

@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 // Convert invoice form data into the writable IDs expected by the sales API.
 
 import { api } from "./api";
@@ -89,7 +90,7 @@ export const salesApiService = {
       customer_id: data.customerId,
       issue_date: toDateInput(data.issueDate),
       due_date: toDateInput(data.dueDate),
-      currency: data.currency || "GBP",
+      currency: data.currency || getOrganisationCurrency(),
       reference: data.reference || "",
       notes: data.notes || "",
       lines: data.items.map((item) => ({

@@ -1,3 +1,4 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import {
   useMemo,
   useState,
@@ -33,18 +34,7 @@ const normaliseText = (
     .trim()
     .toLowerCase();
 
-const formatCurrency = (
-  amount
-) =>
-  new Intl.NumberFormat(
-    "en-GB",
-    {
-      style: "currency",
-      currency: "GBP",
-    }
-  ).format(
-    Number(amount) || 0
-  );
+const formatCurrency = centralFormatCurrency;
 
 const JournalImportReversalModal = ({
   batch,

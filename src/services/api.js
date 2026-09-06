@@ -80,6 +80,9 @@ export async function apiRequest(path, options = {}) {
     }
   }
   const data = responseType === "blob" ? await response.blob() : await parseResponse(response);
+  if (!skipAuth && stored.selectedOrganisation?.id !== loadAuthStorage().selectedOrganisation?.id) {
+    throw new DOMException("Organisation changed while loading data.", "AbortError");
+  }
   if (!response.ok) {
     throw Object.assign(new Error(`Request failed with status ${response.status}`), {
       status: response.status, data,

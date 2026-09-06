@@ -1,3 +1,5 @@
+import { resolveCurrencyCode } from "../../utils/currency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 // List and filter backend invoices while keeping document actions status-aware.
 
 import { useEffect, useMemo, useState } from "react";
@@ -15,14 +17,7 @@ import InvoiceRowActions from "../../components/invoices/InvoiceRowActions";
 import { downloadInvoicePdf } from "../../utils/invoicePdf";
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) =>
-  new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-  }).format(Number(amount) || 0);
+const formatCurrency = centralFormatCurrency;
 
 // Calculates invoice totals.
 const calculateInvoiceTotals = (invoice) => {
@@ -392,6 +387,7 @@ function InvoicesPage() {
       "Issue date",
       "Due date",
       "Status",
+      "Currency",
       "Total",
       "Amount paid",
       "Balance due",
@@ -404,6 +400,7 @@ function InvoicesPage() {
         invoice.issueDate,
         invoice.dueDate,
         invoice.displayStatus,
+        resolveCurrencyCode(invoice.currency),
         invoice.totals.total.toFixed(2),
         invoice.totals.amountPaid.toFixed(2),
         invoice.totals.balanceDue.toFixed(2),

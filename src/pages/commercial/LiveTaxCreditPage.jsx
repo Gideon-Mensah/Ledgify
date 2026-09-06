@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, FileMinus2, Info, Plus, Trash2 } from "lucide-react";
@@ -21,7 +23,7 @@ export default function LiveTaxCreditPage({ supplier = false }) {
   const [accounts, setAccounts] = useState([]); const [rates, setRates] = useState([]);
   const [lines, setLines] = useState([blankLine()]); const [error, setError] = useState(""); const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(() => ({ number: `${supplier ? "SC" : "CN"}-${Date.now()}`,
-    contact: "", source: "", issue_date: today(), currency: "GBP", reference: "", notes: "", inclusive: false }));
+    contact: "", source: "", issue_date: today(), currency: getOrganisationCurrency(), reference: "", notes: "", inclusive: false }));
   useEffect(() => { Promise.all([
     supplier ? contactApiService.suppliers() : contactApiService.customers(),
     api.get(supplier ? "bills/" : "invoices/"),
@@ -70,7 +72,7 @@ export default function LiveTaxCreditPage({ supplier = false }) {
     } catch (requestError) { setError(normaliseApiError(requestError)); setSaving(false); }
   };
   const base = supplier ? "/purchases/supplier-credits" : "/sales/credit-notes";
-  const formatMoney = (value) => new Intl.NumberFormat("en-GB", { style: "currency", currency: form.currency || "GBP" }).format(Number(value || 0));
+  const formatMoney = (value) => centralFormatCurrency(value, form.currency || getOrganisationCurrency());
   return <div className="credit-note-form-page"><PageHeader eyebrow={supplier ? "Purchases" : "Sales"}
     title={supplier ? "New supplier credit" : "New customer credit note"}
     description={supplier ? "Record a supplier credit while preserving the original bill and tax treatment." : "Reduce or reverse an invoice with a controlled, auditable customer credit."}

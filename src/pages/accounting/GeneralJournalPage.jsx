@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Calculator, FilterX, Plus, Printer, Search, TriangleAlert } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -54,7 +55,7 @@ export default function GeneralJournalPage() {
   useEffect(() => { const frame = requestAnimationFrame(() => void load()); return () => cancelAnimationFrame(frame); }, [load, organisation?.id]);
   const sources = meta.facets.sources; const accounts = meta.facets.accounts;
   const displayed = { debit: Number(meta.totals.debit || 0), credit: Number(meta.totals.credit || 0) }; const ledger = { debit: Number(meta.ledger_totals.debit || 0), credit: Number(meta.ledger_totals.credit || 0) };
-  const difference = displayed.debit - displayed.credit; const currency = organisation?.base_currency || "GBP"; const money = (value) => formatCurrency(value, currency);
+  const difference = displayed.debit - displayed.credit; const currency = organisation?.base_currency || getOrganisationCurrency(); const money = (value) => formatCurrency(value, currency);
   const period = filters.start || filters.end ? `${filters.start ? formatDisplayDate(filters.start) : "Beginning"} – ${filters.end ? formatDisplayDate(filters.end) : "Current date"}` : "All dates";
   const activeFilters = Object.values(filters).some(Boolean);
   const update = (key, value) => { const next = new URLSearchParams(searchParams); if (value) next.set(key, value); else next.delete(key); if (key !== "page") next.set("page", "1"); if (!next.has("page_size")) next.set("page_size", String(pageSize)); setSearchParams(next); };

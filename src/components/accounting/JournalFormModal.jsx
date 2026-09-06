@@ -1,3 +1,4 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import {
   Plus,
   Save,
@@ -72,17 +73,7 @@ const createInitialForm = () => ({
   ],
 });
 
-const formatCurrency = (
-  amount
-) => {
-  return new Intl.NumberFormat(
-    "en-GB",
-    {
-      style: "currency",
-      currency: "GBP",
-    }
-  ).format(Number(amount) || 0);
-};
+const formatCurrency = centralFormatCurrency;
 
 function JournalFormModal({
   isOpen,

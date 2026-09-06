@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import {
   useEffect,
   useMemo,
@@ -28,7 +30,7 @@ import {
   getBankAccounts,
 } from "../../services/bankAccountService";
 
-const REPORTING_CURRENCY = "GBP";
+
 
 const RANGE_OPTIONS = {
   "6-months": {
@@ -48,68 +50,10 @@ const RANGE_OPTIONS = {
 };
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = REPORTING_CURRENCY
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency ||
-          REPORTING_CURRENCY,
-        maximumFractionDigits: 0,
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          REPORTING_CURRENCY,
-        maximumFractionDigits: 0,
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Formats compact currency.
-const formatCompactCurrency = (
-  amount
-) => {
-  const numericAmount =
-    Number(amount) || 0;
-
-  const absoluteAmount =
-    Math.abs(numericAmount);
-
-  if (absoluteAmount >= 1000000) {
-    return `£${(
-      numericAmount / 1000000
-    ).toFixed(
-      absoluteAmount >= 10000000
-        ? 0
-        : 1
-    )}m`;
-  }
-
-  if (absoluteAmount >= 1000) {
-    return `£${(
-      numericAmount / 1000
-    ).toFixed(
-      absoluteAmount >= 10000
-        ? 0
-        : 1
-    )}k`;
-  }
-
-  return `£${Math.round(
-    numericAmount
-  )}`;
-};
+const formatCompactCurrency = (amount) => formatCurrency(amount, undefined, { format: { notation: "compact" } });
 
 // Parses date value.
 const parseDateValue = (
@@ -480,12 +424,12 @@ function CashFlowChart() {
             String(
               account?.currency ||
                 transaction.currency ||
-                REPORTING_CURRENCY
+                getOrganisationCurrency()
             ).toUpperCase();
 
           if (
             currency !==
-            REPORTING_CURRENCY
+            getOrganisationCurrency()
           ) {
             excludedCurrencyCount +=
               1;
@@ -594,7 +538,7 @@ function CashFlowChart() {
 
           <p>
             Money received and spent
-            across your GBP bank
+            across your {getOrganisationCurrency()} bank
             accounts.
           </p>
         </div>
@@ -780,7 +724,7 @@ function CashFlowChart() {
                   cashFlowResult
                     .excludedCurrencyCount
                 }{" "}
-                non-GBP{" "}
+                non-{getOrganisationCurrency()}{" "}
                 {cashFlowResult
                   .excludedCurrencyCount ===
                 1
@@ -800,7 +744,7 @@ function CashFlowChart() {
           </h3>
 
           <p>
-            No GBP bank transactions
+            No {getOrganisationCurrency()} bank transactions
             were found for{" "}
             {selectedRangeLabel.toLowerCase()}.
           </p>

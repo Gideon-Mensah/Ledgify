@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Present backend-calculated ratios, comparisons, trends, sources, and limitations.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -16,7 +18,7 @@ import "../../styles/financialAnalysis.css";
 
 const initialDates = (timezone) => { const end = getOrganisationToday(timezone); const start = `${end.slice(0, 4)}-01-01`; const days = Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86400000) + 1; const previousEnd = addCalendarDays(start, -1); return { start_date: start, end_date: end, comparison_start_date: addCalendarDays(previousEnd, -days + 1), comparison_end_date: previousEnd }; };
 const title = (value) => String(value || "").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-const value = (item, currency) => item?.value == null ? "Not available" : item.unit === "percent" ? `${item.value}%` : item.unit === "currency" ? new Intl.NumberFormat(undefined, { style: "currency", currency }).format(Number(item.value)) : item.unit === "days" ? `${item.value} days` : `${item.value}${item.unit === "times" ? "×" : ""}`;
+const value = (item, currency) => item?.value == null ? "Not available" : item.unit === "percent" ? `${item.value}%` : item.unit === "currency" ? centralFormatCurrency(item.value, currency) : item.unit === "days" ? `${item.value} days` : `${item.value}${item.unit === "times" ? "×" : ""}`;
 
 function RatioCard({ item, currency }) {
   const change = item.change == null ? null : Number(item.change);
@@ -30,7 +32,7 @@ function RatioCard({ item, currency }) {
 }
 
 export default function FinancialAnalysisPage() {
-  const auth = useAuth(); const currency = auth.selectedOrganisation?.base_currency || "GBP";
+  const auth = useAuth(); const currency = auth.selectedOrganisation?.base_currency || getOrganisationCurrency();
   const [filters, setFilters] = useState(() => initialDates(auth.selectedOrganisation?.timezone)); const [report, setReport] = useState(null); const [state, setState] = useState({ loading: true, error: "" });
   const [trendKey, setTrendKey] = useState("current_ratio"); const [trend, setTrend] = useState([]);
   const load = useCallback(async () => { setState({ loading: true, error: "" }); try { setReport(await reportService.financialAnalysis(filters)); setState({ loading: false, error: "" }); } catch (error) { setState({ loading: false, error: normaliseApiError(error) }); } }, [filters]);

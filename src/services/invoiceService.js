@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../utils/currency.js";
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   invoices as defaultInvoices,
 } from "../data/invoices";
@@ -95,33 +97,7 @@ const normaliseText = (value) => {
     .toLowerCase();
 };
 
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(
-      Number(amount) || 0
-    );
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(
-      Number(amount) || 0
-    );
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 const formatActivityDate = (
   date = new Date()
@@ -678,7 +654,7 @@ const getInvoiceFinancialSnapshot = (
     currency:
       String(
         invoice?.currency ||
-          "GBP"
+          getOrganisationCurrency()
       ).toUpperCase(),
 
     pricingMode:
@@ -1086,7 +1062,7 @@ export const createInvoice = (
 
     currency:
       invoiceData.currency ||
-      "GBP",
+      getOrganisationCurrency(),
 
     pricingMode:
       invoiceData.pricingMode ||
@@ -2481,7 +2457,7 @@ export const createInvoiceFromQuote = (
 
       currency:
         quote.currency ||
-        "GBP",
+        getOrganisationCurrency(),
 
       pricingMode:
         quote.pricingMode ||

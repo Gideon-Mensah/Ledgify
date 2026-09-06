@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   customers as defaultCustomers,
 } from "../data/customers";
@@ -288,7 +289,7 @@ export const createCustomer = (
       "30 days",
     currency:
       customerData.currency ||
-      "GBP",
+      getOrganisationCurrency(),
     taxNumber: String(
       customerData.taxNumber || ""
     ).trim(),

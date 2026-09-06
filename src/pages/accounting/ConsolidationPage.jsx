@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Present supported group mappings, eliminations, and consolidated statement results.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -20,7 +21,7 @@ export default function ConsolidationPage() {
   const [reportType, setReportType] = useState("trialBalance");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [groupForm, setGroupForm] = useState({ name: "", reporting_currency: "GBP", status: "active" });
+  const [groupForm, setGroupForm] = useState({ name: "", reporting_currency: getOrganisationCurrency(), status: "active" });
   const [memberForm, setMemberForm] = useState({ organisation: "", ownership_percentage: "100", consolidation_method: "full", effective_from: today(), effective_to: "", status: "active" });
   const [accountForm, setAccountForm] = useState({ code: "", name: "", account_type: "asset", account_class: "current_asset", display_order: 0, status: "active" });
   const [mappingForm, setMappingForm] = useState({ organisation: "", source_account: "", consolidation_account: "", effective_from: today(), effective_to: "" });

@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   suppliers as defaultSuppliers,
 } from "../data/suppliers";
@@ -260,7 +261,7 @@ export const createSupplier = (
       "30 days",
     currency:
       supplierData.currency ||
-      "GBP",
+      getOrganisationCurrency(),
     taxNumber:
       supplierData.taxNumber ||
       "",

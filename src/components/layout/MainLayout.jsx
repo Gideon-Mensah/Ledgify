@@ -1,3 +1,4 @@
+import { useAuth } from "../../store/AuthContext";
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
@@ -5,6 +6,7 @@ import Sidebar from "./Sidebar";
 
 // Renders the main layout component.
 function MainLayout() {
+  const { selectedOrganisation } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -40,10 +42,10 @@ function MainLayout() {
       />
 
       <div className="app-content">
-        <Header onOpenMobileMenu={openMobileMenu} />
+        <Header key={selectedOrganisation?.id || "loading"} onOpenMobileMenu={openMobileMenu} />
 
         <main className="main-content">
-          <Outlet />
+          <Outlet key={selectedOrganisation?.id || "loading"} />
         </main>
       </div>
     </div>

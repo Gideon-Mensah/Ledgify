@@ -1,12 +1,13 @@
+import { getOrganisationCurrency } from "./organisationCurrency.js";
 // Build a printable customer invoice without changing or reposting its accounting data.
 
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable";
-import { formatCurrency as safeFormatCurrency } from "./currency";
+import { formatCurrency as safeFormatCurrency } from "./currency.js";
 
 // Formats currency.
-const formatCurrency = (amount, currency = "GBP") =>
-  safeFormatCurrency(amount, currency, { locale: "en-GB" });
+const formatCurrency = (amount, currency = getOrganisationCurrency()) =>
+  safeFormatCurrency(amount, currency, { format: { currencyDisplay: "code" } });
 
 // Calculates line amounts.
 const calculateLineAmounts = (
@@ -95,7 +96,7 @@ const addAddressLines = (
 };
 
 // Downloads invoice pdf.
-export const downloadInvoicePdf = (
+export const createInvoicePdf = (
   invoice,
   company = {}
 ) => {
@@ -126,7 +127,7 @@ export const downloadInvoicePdf = (
       company.accountNumber || "12345678",
   };
 
-  const currency = invoice.currency || "GBP";
+  const currency = invoice.currency || getOrganisationCurrency();
   const totals = calculateInvoiceTotals(invoice);
 
   const amountPaid = Math.min(
@@ -617,7 +618,11 @@ export const downloadInvoicePdf = (
     }
   );
 
-  document.save(
-    `${invoice.invoiceNumber}.pdf`
-  );
+  return document;
+};
+
+export const downloadInvoicePdf = (...args) => {
+  const document = createInvoicePdf(...args);
+  const filename = String(args[0]?.invoiceNumber || "invoice").replace(/[^a-z0-9._-]+/gi, "-");
+  document.save(`${filename}.pdf`);
 };

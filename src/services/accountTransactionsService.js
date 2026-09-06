@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   getAccounts,
 } from "./accountService";
@@ -1032,7 +1033,7 @@ export const getAccountTransactions =
 
       currency:
         account.currency ||
-        "GBP",
+        getOrganisationCurrency(),
 
       fromDate:
         resolvedFromDate,

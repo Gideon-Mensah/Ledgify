@@ -25,6 +25,7 @@ class YearEndCloseTests(TestCase):
             username="year-close", email="year-close@example.com", password="test"
         )
         self.organisation = Organisation.objects.create(
+            base_currency="GBP",
             name="Year Close Test", created_by=self.user
         )
         OrganisationMember.objects.create(
@@ -350,7 +351,7 @@ class YearEndCloseTests(TestCase):
             breakdown["amount"],
             sum((item["amount"] for item in breakdown["transactions"]), zero),
         )
-        foreign = Organisation.objects.create(name="Foreign", created_by=self.user)
+        foreign = Organisation.objects.create(base_currency="GBP", name="Foreign", created_by=self.user)
         self.assertIsNone(cash_flow_drilldown(
             organisation=foreign, row_key=self.expense.id,
             start_date=date(2026, 12, 1), end_date=date(2026, 12, 31),
@@ -401,7 +402,7 @@ class YearEndCloseTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.organisation.journal_entries.count(), before)
 
-        foreign = Organisation.objects.create(name="Other organisation", created_by=self.user)
+        foreign = Organisation.objects.create(base_currency="GBP", name="Other organisation", created_by=self.user)
         foreign_account = Account.objects.create(
             organisation=foreign, code="OTHER", name="Other bank",
             account_type=Account.AccountType.ASSET,
@@ -429,6 +430,7 @@ class DirectCashFlowAccountingTests(TestCase):
             username="cash-flow-review", email="cash-flow-review@example.com", password="test"
         )
         self.organisation = Organisation.objects.create(
+            base_currency="GBP",
             name="Cash Flow Review", created_by=self.user,
         )
         OrganisationMember.objects.create(
@@ -605,7 +607,7 @@ class DirectCashFlowAccountingTests(TestCase):
             self.assertIn(transaction["journal_status"], {"posted", "reversed"})
             self.assertEqual(transaction["cash_accounts"][0]["account_class"], Account.AccountClass.BANK)
             self.assertEqual(transaction["cash_flow_category"], "operating")
-        foreign = Organisation.objects.create(name="Foreign Cash Flow", created_by=self.user)
+        foreign = Organisation.objects.create(base_currency="GBP", name="Foreign Cash Flow", created_by=self.user)
         self.assertIsNone(cash_flow_drilldown(
             organisation=foreign, row_key=self.sales.id,
             start_date=self.PERIOD_START, end_date=self.PERIOD_END,
@@ -621,7 +623,7 @@ class DirectCashFlowAccountingTests(TestCase):
         client.force_authenticate(self.user)
         response = client.get(endpoint, HTTP_X_ORGANISATION_ID=str(self.organisation.id))
         self.assertEqual(response.status_code, 200, response.content)
-        foreign = Organisation.objects.create(name="No Membership", created_by=self.user)
+        foreign = Organisation.objects.create(base_currency="GBP", name="No Membership", created_by=self.user)
         self.assertEqual(
             client.get(endpoint, HTTP_X_ORGANISATION_ID=str(foreign.id)).status_code,
             403,

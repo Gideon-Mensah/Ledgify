@@ -1,3 +1,6 @@
+import { isMonetaryField } from "../../utils/monetaryFields.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 // Guide BOM and production workflows through material, WIP, completion, and close stages.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,7 +17,7 @@ import { useAuth } from "../../store/AuthContext";
 import "../../styles/manufacturing.css";
 
 const today = () => new Date().toISOString().slice(0, 10);
-const money = (value, currency = "GBP") => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value) || 0);
+const money = (value, currency = getOrganisationCurrency()) => centralFormatCurrency(value, currency);
 const title = (value) => String(value || "").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const show = (value) => value && typeof value === "object" ? value.name || value.code || value.version_number || "—" : value ?? "—";
 
@@ -27,7 +30,7 @@ function Status({ value }) { return <span className={`manufacturing-status manuf
 function Table({ rows, columns, action }) {
   if (!rows?.length) return <div className="manufacturing-empty">No records found.</div>;
   const fields = columns || [...new Set(rows.flatMap((row) => Object.keys(row)))].filter((key) => !["id", "created_at", "updated_at", "components", "versions"].includes(key));
-  return <div className="manufacturing-table-wrap"><table className="manufacturing-table"><thead><tr>{fields.map((field) => <th key={field}>{title(field)}</th>)}{action && <th>Actions</th>}</tr></thead><tbody>{rows.map((row, index) => <tr key={row.id || index}>{fields.map((field) => <td key={field}>{field === "status" ? <Status value={row[field]} /> : show(row[field])}</td>)}{action && <td>{action(row)}</td>}</tr>)}</tbody></table></div>;
+  return <div className="manufacturing-table-wrap"><table className="manufacturing-table"><thead><tr>{fields.map((field) => <th key={field}>{title(field)}</th>)}{action && <th>Actions</th>}</tr></thead><tbody>{rows.map((row, index) => <tr key={row.id || index}>{fields.map((field) => <td key={field}>{field === "status" ? <Status value={row[field]} /> : isMonetaryField(field) ? money(row[field]) : show(row[field])}</td>)}{action && <td>{action(row)}</td>}</tr>)}</tbody></table></div>;
 }
 function Modal({ title: heading, children, onClose }) { return <div className="manufacturing-modal-backdrop" role="presentation"><section className="manufacturing-modal" role="dialog" aria-modal="true" aria-label={heading}><div className="manufacturing-modal-head"><h2>{heading}</h2><button type="button" onClick={onClose} aria-label="Close">×</button></div>{children}</section></div>; }
 function Field({ label, children }) { return <label>{label}{children}</label>; }

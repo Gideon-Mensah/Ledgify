@@ -9,7 +9,7 @@ from apps.organisations.models import Organisation,OrganisationMember
 
 class GeneralJournalPaginationTests(TestCase):
  def setUp(self):
-  self.user=get_user_model().objects.create_user(username="journal-pages",password="test");self.org=Organisation.objects.create(name="Paged Org",created_by=self.user);OrganisationMember.objects.create(organisation=self.org,user=self.user,role="owner");self.foreign=Organisation.objects.create(name="Foreign Org",created_by=self.user);OrganisationMember.objects.create(organisation=self.foreign,user=self.user,role="owner");self.client=APIClient();self.client.force_authenticate(self.user)
+  self.user=get_user_model().objects.create_user(username="journal-pages",password="test");self.org=Organisation.objects.create(base_currency="GBP", name="Paged Org",created_by=self.user);OrganisationMember.objects.create(organisation=self.org,user=self.user,role="owner");self.foreign=Organisation.objects.create(base_currency="GBP", name="Foreign Org",created_by=self.user);OrganisationMember.objects.create(organisation=self.foreign,user=self.user,role="owner");self.client=APIClient();self.client.force_authenticate(self.user)
   self.bank=Account.objects.create(organisation=self.org,created_by=self.user,code="1000",name="Bank",account_type="asset",account_class="bank");self.capital=Account.objects.create(organisation=self.org,created_by=self.user,code="3000",name="Capital",account_type="equity",account_class="equity")
   for index in range(27):
    journal=JournalEntry.objects.create(organisation=self.org,entry_number=f"JRN-{index:03}",date=date(2026,1,1)+timedelta(days=index),description=f"Entry {index}",status="draft",created_by=self.user)

@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -19,7 +20,7 @@ const createInitialForm = () => ({
   website: "",
   accountNumber: "",
   paymentTerms: "30 days",
-  currency: "GBP",
+  currency: getOrganisationCurrency(),
   taxNumber: "",
   defaultIncomeAccount: "200",
   creditLimit: 0,

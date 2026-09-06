@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   getAccounts,
 } from "./accountService";
@@ -778,7 +779,7 @@ const buildLedgerEntries =
 
               currency:
                 account.currency ||
-                "GBP",
+                getOrganisationCurrency(),
 
               debit,
 

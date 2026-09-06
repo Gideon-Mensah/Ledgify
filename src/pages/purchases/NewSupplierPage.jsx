@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -29,7 +30,7 @@ const initialForm = {
   phone: "",
   website: "",
   paymentTerms: "30 days",
-  currency: "GBP",
+  currency: "",
   taxNumber: "",
   status: "Active",
   notes: "",
@@ -50,6 +51,7 @@ function NewSupplierPage() {
   const [form, setForm] =
     useState(() => ({
       ...initialForm,
+      currency: getOrganisationCurrency(),
       accountNumber: "",
     }));
 

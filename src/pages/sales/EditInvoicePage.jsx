@@ -1,3 +1,6 @@
+import CurrencyOptions from "../../components/common/CurrencyOptions";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Allow changes only while the backend invoice remains an editable draft.
 
 import { useEffect, useMemo, useState } from "react";
@@ -141,14 +144,7 @@ const formatDisplayDate = (date) => {
 };
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) =>
-  new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-  }).format(Number(amount) || 0);
+const formatCurrency = centralFormatCurrency;
 
 // Renders the edit invoice page component.
 function EditInvoicePage() {
@@ -202,7 +198,7 @@ function EditInvoicePage() {
       reference:
         selectedInvoice.reference || "",
       currency:
-        selectedInvoice.currency || "GBP",
+        selectedInvoice.currency || getOrganisationCurrency(),
       pricingMode:
         selectedInvoice.pricingMode ||
         "exclusive",
@@ -766,18 +762,7 @@ function EditInvoicePage() {
                     handleInvoiceChange
                   }
                 >
-                  <option value="GBP">
-                    GBP – British Pound
-                  </option>
-                  <option value="USD">
-                    USD – US Dollar
-                  </option>
-                  <option value="EUR">
-                    EUR – Euro
-                  </option>
-                  <option value="GHS">
-                    GHS – Ghana Cedi
-                  </option>
+                  <CurrencyOptions value={invoiceDetails.currency} />
                 </select>
               </div>
 

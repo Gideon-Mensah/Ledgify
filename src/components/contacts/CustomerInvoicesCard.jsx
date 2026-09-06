@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   ArrowRight,
   FileText,
@@ -13,14 +15,7 @@ const normaliseText = (value) =>
     .toLowerCase();
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) =>
-  new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-  }).format(Number(amount) || 0);
+const formatCurrency = centralFormatCurrency;
 
 // Calculates invoice total.
 const calculateInvoiceTotal = (invoice) => {
@@ -235,7 +230,7 @@ function CustomerInvoicesCard({
                           total,
                           invoice.currency ||
                             customer.currency ||
-                            "GBP"
+                            getOrganisationCurrency()
                         )}
                       </td>
 
@@ -245,7 +240,7 @@ function CustomerInvoicesCard({
                             balance,
                             invoice.currency ||
                               customer.currency ||
-                              "GBP"
+                              getOrganisationCurrency()
                           )}
                         </strong>
                       </td>

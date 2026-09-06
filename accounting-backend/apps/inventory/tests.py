@@ -26,6 +26,7 @@ class InventoryFoundationTests(TestCase):
             username="inventory", email="inventory@example.com", password="test"
         )
         self.organisation = Organisation.objects.create(
+            base_currency="GBP",
             name="Inventory Test", created_by=self.user
         )
         OrganisationMember.objects.create(
@@ -266,7 +267,7 @@ class InventoryFoundationTests(TestCase):
             receipt.delete()
 
     def test_inventory_workflow_rejects_cross_organisation_warehouse(self):
-        other = Organisation.objects.create(name="Other", created_by=self.user)
+        other = Organisation.objects.create(base_currency="GBP", name="Other", created_by=self.user)
         other_warehouse = Warehouse.objects.create(
             organisation=other, code="OTHER", name="Other", created_by=self.user,
         )

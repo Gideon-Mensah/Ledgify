@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, CheckCircle2, CircleDollarSign, FileText, Landmark, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -15,7 +17,7 @@ import "../../styles/bankTransactions.css";
 const list = (value) => Array.isArray(value) ? value : value?.results || [];
 const humanise = (value) => String(value || "—").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 const dateOnly = (value) => value ? formatDisplayDate(value) : "—";
-const money = (value, currency = "GBP") => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
+const money = (value, currency = getOrganisationCurrency()) => centralFormatCurrency(value, currency);
 
 export default function BankingTransactionsWorkspace() {
   const auth = useAuth();
@@ -68,7 +70,7 @@ export default function BankingTransactionsWorkspace() {
     moneyOut: current.moneyOut + (row.transaction_type === "money_out" ? Number(row.amount || 0) : 0),
     unreconciled: current.unreconciled + (row.status === "unreconciled" ? 1 : 0),
   }), { moneyIn: 0, moneyOut: 0, unreconciled: 0 }), [visible]);
-  const displayCurrency = accounts.find((account) => account.id === filters.bank_account)?.currency || auth.selectedOrganisation?.base_currency || "GBP";
+  const displayCurrency = accounts.find((account) => account.id === filters.bank_account)?.currency || auth.selectedOrganisation?.base_currency || getOrganisationCurrency();
   const activeFilters = Object.values(filters).filter(Boolean).length;
   const updateFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
   const clearFilters = () => { setFilters({ status: "", type: "", bank_account: "", date_from: "", date_to: "" }); setSearch(""); };

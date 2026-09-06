@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   applyBankRule,
   findMatchingBankRule,
@@ -1507,13 +1508,13 @@ export const createBankTransfer = (
   const fromCurrency =
     String(
       fromAccount.currency ||
-        "GBP"
+        getOrganisationCurrency()
     ).toUpperCase();
 
   const toCurrency =
     String(
       toAccount.currency ||
-        "GBP"
+        getOrganisationCurrency()
     ).toUpperCase();
 
   if (

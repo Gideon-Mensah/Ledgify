@@ -164,12 +164,9 @@ export const mainNavigation = [
     label: "Tax",
     icon: Calculator,
     children: [
-      { label: "Tax Settings", path: "/tax/settings" },
-      { label: "Tax Rates", path: "/tax/settings#rates" },
-      { label: "Tax Periods", path: "/tax/vat-returns#periods" },
-      { label: "Tax Summary", path: "/tax/vat-returns" },
-      { label: "Tax Transactions", path: "/tax/vat-returns#transactions" },
-      { label: "Tax Return Preview", path: "/tax/vat-returns#preview" },
+      { label: "Indirect Tax", path: "/tax/vat-returns" },
+      { label: "Filing Periods", path: "/tax/vat-returns?tab=periods" },
+      { label: "Tax Rates & Settings", path: "/tax/settings" },
     ],
   },
   {

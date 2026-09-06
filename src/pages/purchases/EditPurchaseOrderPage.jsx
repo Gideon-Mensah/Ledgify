@@ -1,3 +1,6 @@
+import CurrencyOptions from "../../components/common/CurrencyOptions";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   useMemo,
   useState,
@@ -138,29 +141,7 @@ const findPurchaseOrderSupplier = (
 };
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Renders the edit purchase order page component.
 function EditPurchaseOrderPage() {
@@ -267,7 +248,7 @@ function EditPurchaseOrderPage() {
         currency:
           purchaseOrder?.currency ||
           originalSupplier?.currency ||
-          "GBP",
+          getOrganisationCurrency(),
 
         pricingMode:
           purchaseOrder
@@ -757,7 +738,7 @@ function EditPurchaseOrderPage() {
             currency:
               form.currency ||
               selectedSupplier.currency ||
-              "GBP",
+              getOrganisationCurrency(),
 
             items: cleanItems,
 
@@ -997,21 +978,7 @@ function EditPurchaseOrderPage() {
                   value={form.currency}
                   onChange={handleChange}
                 >
-                  <option value="GBP">
-                    GBP – British Pound
-                  </option>
-
-                  <option value="USD">
-                    USD – US Dollar
-                  </option>
-
-                  <option value="EUR">
-                    EUR – Euro
-                  </option>
-
-                  <option value="GHS">
-                    GHS – Ghana Cedi
-                  </option>
+                  <CurrencyOptions value={form.currency} />
                 </select>
               </div>
 

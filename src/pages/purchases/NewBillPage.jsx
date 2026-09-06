@@ -1,3 +1,6 @@
+import CurrencyOptions from "../../components/common/CurrencyOptions";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Build a supplier bill payload without calculating or posting accounting in React.
 
 import {
@@ -88,29 +91,7 @@ const calculateDueDate = (
   );
 };
 
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 const roundQuantity = (
   quantity
@@ -272,7 +253,7 @@ function NewBillPage() {
           ),
 
         paymentTerms: "30 days",
-        currency: "GBP",
+        currency: getOrganisationCurrency(),
         pricingMode: "exclusive",
         category: "",
         notes: "",
@@ -1440,21 +1421,7 @@ function NewBillPage() {
                     handleDetailChange
                   }
                 >
-                  <option value="GBP">
-                    GBP – British Pound
-                  </option>
-
-                  <option value="USD">
-                    USD – US Dollar
-                  </option>
-
-                  <option value="EUR">
-                    EUR – Euro
-                  </option>
-
-                  <option value="GHS">
-                    GHS – Ghana Cedi
-                  </option>
+                  <CurrencyOptions value={details.currency} />
                 </select>
               </div>
 

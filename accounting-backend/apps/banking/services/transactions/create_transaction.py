@@ -44,7 +44,7 @@ def create_bank_transaction(
         )
 
     from common.currencies import require_currency_code
-    currency = require_currency_code(currency)
+    currency = require_currency_code(currency or organisation.base_currency)
 
     if len(currency) != 3:
         raise BusinessRuleError(

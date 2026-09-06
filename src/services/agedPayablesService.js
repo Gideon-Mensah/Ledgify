@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   getBills,
 } from "./billService";
@@ -16,8 +17,7 @@ const MONEY_TOLERANCE =
 const DEFAULT_PAYABLE_CODE =
   "200";
 
-const DEFAULT_BASE_CURRENCY =
-  "GBP";
+
 
 const roundMoney = (
   value
@@ -1180,7 +1180,7 @@ const createCurrencyTotals = (
       const currency =
         String(
           row.currency ||
-            DEFAULT_BASE_CURRENCY
+            getOrganisationCurrency()
         )
           .trim()
           .toUpperCase();
@@ -1230,7 +1230,7 @@ export const getAgedPayables = (
     search = "",
     bucket = "all",
     baseCurrency =
-      DEFAULT_BASE_CURRENCY,
+      getOrganisationCurrency(),
   } = {}
 ) => {
   const resolvedAsOfDate =
@@ -1384,7 +1384,7 @@ export const getAgedPayables = (
               currency:
                 String(
                   bill.currency ||
-                    DEFAULT_BASE_CURRENCY
+                    getOrganisationCurrency()
                 ).toUpperCase(),
 
               billTotal,
@@ -1438,7 +1438,7 @@ export const getAgedPayables = (
   const normalisedBaseCurrency =
     String(
       baseCurrency ||
-        DEFAULT_BASE_CURRENCY
+        getOrganisationCurrency()
     )
       .trim()
       .toUpperCase();

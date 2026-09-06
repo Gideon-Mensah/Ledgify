@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   getProductById,
   setProductStockQuantity,
@@ -308,7 +309,7 @@ export const hasInvoiceFinancialChanges =
       return JSON.stringify({
         currency:
           invoice?.currency ||
-          "GBP",
+          getOrganisationCurrency(),
 
         pricingMode:
           invoice?.pricingMode ||

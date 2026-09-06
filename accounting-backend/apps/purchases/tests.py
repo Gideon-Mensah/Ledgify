@@ -12,7 +12,7 @@ class PurchasesApiWorkflowTests(APITestCase):
             username="purchases-owner", email="purchases@example.com", password="test-pass",
             first_name="Purchases", last_name="Owner",
         )
-        self.organisation = Organisation.objects.create(name="Purchases Test", created_by=self.user)
+        self.organisation = Organisation.objects.create(base_currency="GBP", name="Purchases Test", created_by=self.user)
         OrganisationMember.objects.create(
             organisation=self.organisation, user=self.user, role=OrganisationMember.Role.OWNER,
         )

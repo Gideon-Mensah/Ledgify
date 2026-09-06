@@ -1,6 +1,7 @@
 """Validate bank inputs and keep reconciliation audit fields controlled by services."""
 
 from rest_framework import serializers
+from common.currency_serializers import CurrencySerializerMixin
 from apps.date_fields import accounting_date
 from django.db.models import Sum
 
@@ -13,7 +14,7 @@ from .services.transactions import (
 )
 
 
-class BankAccountSerializer(serializers.ModelSerializer):
+class BankAccountSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     def validate_currency(self, value):
         from common.currencies import validate_currency_code
         return validate_currency_code(value)
@@ -126,7 +127,7 @@ class BankAccountSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class BankTransactionSerializer(serializers.ModelSerializer):
+class BankTransactionSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     bank_account_id = serializers.PrimaryKeyRelatedField(
         source="bank_account",
         queryset=BankAccount.objects.all(),
@@ -265,7 +266,7 @@ class ReconciliationSummaryQuerySerializer(serializers.Serializer):
     reconciliation_date = accounting_date("reconciliation date")
 
 
-class BankReconciliationHistorySerializer(serializers.ModelSerializer):
+class BankReconciliationHistorySerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     transaction = serializers.SerializerMethodField()
     performed_by = serializers.SerializerMethodField()
     journal = serializers.SerializerMethodField()
@@ -289,7 +290,7 @@ class BankReconciliationHistorySerializer(serializers.ModelSerializer):
         return {"id": str(obj.accounting_journal_id), "entry_number": obj.accounting_journal.entry_number}
 
 
-class BankImportRowSerializer(serializers.ModelSerializer):
+class BankImportRowSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:
         model=BankStatementImportRow
         fields=["id", "row_number", "transaction_date", "description", "reference", "amount",
@@ -297,7 +298,7 @@ class BankImportRowSerializer(serializers.ModelSerializer):
         read_only_fields=fields
 
 
-class BankImportSerializer(serializers.ModelSerializer):
+class BankImportSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     rows=BankImportRowSerializer(many=True, read_only=True)
     class Meta:
         model=BankStatementImport
@@ -323,7 +324,7 @@ class BankImportPreviewSerializer(serializers.Serializer):
         return value
 
 
-class BankRuleSerializer(serializers.ModelSerializer):
+class BankRuleSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     bank_account_id=serializers.PrimaryKeyRelatedField(source="bank_account", queryset=BankAccount.objects.all(), required=False, allow_null=True)
     target_account_id=serializers.PrimaryKeyRelatedField(source="target_account", queryset=Account.objects.all())
     class Meta:

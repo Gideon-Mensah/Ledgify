@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
     accounts as defaultAccounts,
 } from "../data/accounts";
@@ -421,7 +422,7 @@ export const createAccount = (
 
         currency:
             accountData.currency ||
-            "GBP",
+            getOrganisationCurrency(),
 
         openingBalance:
             roundMoney(
@@ -536,7 +537,7 @@ export const updateAccount = (
 
         currency:
             accountData.currency ||
-            "GBP",
+            getOrganisationCurrency(),
 
         openingBalance:
             nextOpeningBalance,

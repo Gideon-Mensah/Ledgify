@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 // Load and update supplier bills through the backend instead of browser-stored financial data.
 
 import { api } from "./api";
@@ -77,7 +78,7 @@ export const purchasesApiService = {
       supplier_id: data.supplierId,
       issue_date: toDateInput(data.issueDate),
       due_date: toDateInput(data.dueDate),
-      currency: data.currency || "GBP",
+      currency: data.currency || getOrganisationCurrency(),
       notes: data.notes || "",
       lines: data.items.map((item) => ({
         description: item.description,
@@ -104,7 +105,7 @@ export const purchasesApiService = {
       supplier_id: data.supplierId,
       issue_date: toDateInput(data.issueDate),
       due_date: toDateInput(data.dueDate),
-      currency: data.currency || "GBP",
+      currency: data.currency || getOrganisationCurrency(),
       notes: data.notes || "",
       lines: data.items.map((item) => ({
         description: item.description,

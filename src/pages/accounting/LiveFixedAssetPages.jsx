@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Manage asset registration, depreciation, activation, and journal-linked asset history.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -28,7 +30,7 @@ function State({ loading, error, children }) {
 function AssetTable({ rows, currency, categories }) {
   const pagination = useTablePagination(rows);
   if (!rows.length) return <div className="fixed-assets-empty">No fixed assets have been added yet.</div>;
-  const money = (value) => new Intl.NumberFormat(undefined, { style: "currency", currency }).format(Number(value || 0));
+  const money = (value) => centralFormatCurrency(value, currency);
   return <><div className="fixed-assets-table-wrapper"><table className="fixed-assets-table"><thead><tr><th>Asset number</th><th>Asset name</th><th>Category</th><th>Purchase date</th><th>In service</th><th className="is-numeric">Cost</th><th className="is-numeric">Accumulated depreciation</th><th className="is-numeric">Net book value</th><th>Status</th><th>Actions</th></tr></thead><tbody>{pagination.pageRows.map((row) => <tr key={row.id}><td><Link to={`/fixed-assets/${row.id}`}>{row.asset_number}</Link></td><td>{row.asset_name}</td><td>{categories.find((item) => item.id === row.asset_category)?.name || show(row.asset_category)}</td><td>{row.purchase_date}</td><td>{row.in_service_date}</td><td className="is-numeric">{money(row.cost)}</td><td className="is-numeric">{money(row.accumulated_depreciation)}</td><td className="is-numeric"><strong>{money(row.net_book_value)}</strong></td><td><Status value={row.status}/></td><td><Link className="invoice-secondary-button" to={`/fixed-assets/${row.id}`}>View</Link></td></tr>)}</tbody></table></div><TablePagination {...pagination}/></>;
 }
 function AccountSelect({ name, value, onChange, accounts }) { return <select required name={name} value={value} onChange={onChange}><option value="">Select account</option>{accounts.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select>; }
@@ -82,7 +84,7 @@ function NewAssetForm({ accounts, categories, currency, form, setForm, onCancel,
 }
 
 export function LiveFixedAssetsPage() {
-  const auth = useAuth(); const currency = auth.selectedOrganisation?.base_currency || "GBP";
+  const auth = useAuth(); const currency = auth.selectedOrganisation?.base_currency || getOrganisationCurrency();
   const [assets, setAssets] = useState([]); const [categories, setCategories] = useState([]); const [accounts, setAccounts] = useState([]);
   const [state, setState] = useState({ loading: true, error: "" }); const [message, setMessage] = useState(""); const [panel, setPanel] = useState(""); const [assetAction, setAssetAction] = useState({ saving: false, error: "" });
   const [category, setCategory] = useState({ name: "", description: "", default_useful_life_months: 60, default_depreciation_method: "straight_line", default_asset_account: "", default_accumulated_depreciation_account: "", default_depreciation_expense_account: "" });
@@ -90,7 +92,7 @@ export function LiveFixedAssetsPage() {
   const load = useCallback(async () => { setState({ loading: true, error: "" }); try { const [items, groups, ledgers] = await Promise.all([fixedAssetApiService.assets(), fixedAssetApiService.categories(), accountingApiService.accounts({ status: "active" })]); setAssets(items); setCategories(groups); setAccounts(ledgers); setState({ loading: false, error: "" }); } catch (error) { setState({ loading: false, error: normaliseApiError(error) }); } }, []);
   useEffect(() => { const frame = requestAnimationFrame(() => void load()); return () => cancelAnimationFrame(frame); }, [load]);
   const totals = useMemo(() => assets.reduce((result, item) => ({ cost: result.cost + Number(item.cost || 0), depreciation: result.depreciation + Number(item.accumulated_depreciation || 0), nbv: result.nbv + Number(item.net_book_value || 0) }), { cost: 0, depreciation: 0, nbv: 0 }), [assets]);
-  const money = (value) => new Intl.NumberFormat(undefined, { style: "currency", currency }).format(value);
+  const money = (value) => centralFormatCurrency(value, currency);
   const saveCategory = async (event) => { event.preventDefault(); try { await fixedAssetApiService.createCategory(category); setMessage("Asset category created."); setPanel(""); await load(); } catch (error) { setMessage(normaliseApiError(error)); } };
   const saveAsset = async (event) => { event.preventDefault(); setAssetAction({ saving: true, error: "" }); try { await fixedAssetApiService.createAsset(form); setMessage("Draft fixed asset created."); setPanel(""); setAssetAction({ saving: false, error: "" }); setForm({ asset_number: "", asset_name: "", description: "", asset_category: "", purchase_date: today(), in_service_date: today(), cost: "", residual_value: "0", useful_life_months: 60, depreciation_method: "straight_line", asset_account: "", accumulated_depreciation_account: "", depreciation_expense_account: "" }); await load(); } catch (error) { setAssetAction({ saving: false, error: normaliseApiError(error) }); } };
   const change = (setter) => (event) => setter((value) => ({ ...value, [event.target.name]: event.target.value }));

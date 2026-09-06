@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
     ArrowLeft,
     Save,
@@ -47,7 +48,7 @@ const createFormData = (customer) => ({
     paymentTerms:
         customer?.paymentTerms || "30 days",
     currency:
-        customer?.currency || "GBP",
+        customer?.currency || getOrganisationCurrency(),
     taxNumber:
         customer?.taxNumber || "",
     defaultIncomeAccount:

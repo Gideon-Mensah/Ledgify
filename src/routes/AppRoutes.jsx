@@ -359,6 +359,7 @@ function AppRoutes() {
 
                     <Route path="reports" element={<ReportsPage />} />
                     <Route path="reports/financial-analysis" element={<FinancialAnalysisPage />} />
+                    <Route path="tax" element={<VatReturnsPage />} />
                     <Route path="tax/vat-returns" element={<VatReturnsPage />} />
                     <Route path="tax/settings" element={<TaxSettingsPage />} />
                     <Route path="payroll" element={<PayrollPage />} />

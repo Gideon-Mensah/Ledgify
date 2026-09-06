@@ -1,3 +1,5 @@
+import CurrencyOptions from "../../components/common/CurrencyOptions";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   useEffect,
   useState,
@@ -118,7 +120,7 @@ function EditSupplierPage() {
         "30 days",
       currency:
         selectedSupplier.currency ||
-        "GBP",
+        getOrganisationCurrency(),
       taxNumber:
         selectedSupplier.taxNumber ||
         "",
@@ -722,21 +724,7 @@ function EditSupplierPage() {
                   value={form.currency}
                   onChange={handleChange}
                 >
-                  <option value="GBP">
-                    GBP – British Pound
-                  </option>
-
-                  <option value="USD">
-                    USD – US Dollar
-                  </option>
-
-                  <option value="EUR">
-                    EUR – Euro
-                  </option>
-
-                  <option value="GHS">
-                    GHS – Ghana Cedi
-                  </option>
+                  <CurrencyOptions value={form.currency} />
                 </select>
               </div>
 

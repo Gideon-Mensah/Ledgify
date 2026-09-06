@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   useMemo,
   useState,
@@ -64,29 +66,7 @@ const normaliseText = (value) => {
 };
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Formats date.
 const formatDate = (dateValue) => {
@@ -771,7 +751,7 @@ function PurchaseOrderDetailsPage() {
             purchaseOrder.currency ||
             selectedSupplier
               ?.currency ||
-            "GBP",
+            getOrganisationCurrency(),
 
           pricingMode:
             purchaseOrder.pricingMode ||
@@ -1596,7 +1576,7 @@ function PurchaseOrderDetailsPage() {
                   {purchaseOrder.currency ||
                     selectedSupplier
                       ?.currency ||
-                    "GBP"}
+                    getOrganisationCurrency()}
                 </strong>
               </div>
 

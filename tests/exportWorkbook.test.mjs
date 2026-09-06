@@ -80,3 +80,20 @@ test("Cash Flow drill-down exposes backend audit fields without recalculating am
   for (const field of ["journal_status", "reversal_of", "reversal_entry", "cash_accounts", "cash_flow_category", "row.amount"]) assert.match(page, new RegExp(field.replace(".", "\\.")));
   assert.match(page, /Cash or bank account/); assert.match(page, /Counterpart account/); assert.match(page, /Status \/ reversal/);
 });
+
+test("currency exports retain numeric money, ISO metadata and appropriate minor units", async () => {
+  for (const currency of ["GHS", "GBP", "USD", "EUR", "JPY", "BHD"]) {
+    const entries = storedZipEntries(await bytes(createXlsxWorkbook({ title: "Invoices", rows: [{ invoice: "INV-1", amount_due: "1234.50", currency }], metadata: { currency } })));
+    const sheet = entries.get("xl/worksheets/sheet1.xml");
+    assert.match(sheet, /<v>1234.5<\/v>/);
+    assert.match(sheet, new RegExp(`Currency: ${currency}`));
+    assert.match(entries.get("xl/styles.xml"), new RegExp(`&quot;${currency}&quot;`));
+    if (currency !== "GBP") assert.doesNotMatch(sheet, /£/);
+  }
+});
+
+test("mixed-currency document rows keep their own Excel currency styles", async () => {
+  const entries = storedZipEntries(await bytes(createXlsxWorkbook({ title: "Invoices", rows: [{ total: "10", currency: "GHS" }, { total: "20", currency: "GBP" }], metadata: { currency: "GHS" } })));
+  assert.match(entries.get("xl/styles.xml"), /numFmtId="165" formatCode="&quot;GBP/);
+  assert.match(entries.get("xl/worksheets/sheet1.xml"), /s="13"><v>20<\/v>/);
+});

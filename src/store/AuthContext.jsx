@@ -64,9 +64,11 @@ export function AuthProvider({ children }) {
   }, [resolveSession]);
 
   const selectOrganisation = useCallback(async (organisation) => {
+    // Persist before mounting the new organisation so effects use its request scope.
+    saveAuthStorage({ ...loadAuthStorage(), selectedOrganisation: organisation, permissions: [] });
     commit((current) => ({ ...current, selectedOrganisation: organisation, permissions: [] }));
     const permissions = await loadPermissions(organisation);
-    commit((current) => ({ ...current, permissions }));
+    commit((current) => current.selectedOrganisation?.id === organisation.id ? { ...current, permissions } : current);
   }, [commit, loadPermissions]);
 
   useEffect(() => {

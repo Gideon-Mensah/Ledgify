@@ -1,6 +1,7 @@
 """Validate inventory relationships while exposing posted movement details read-only."""
 
 from rest_framework import serializers
+from common.currency_serializers import CurrencySerializerMixin
 
 from apps.accounting.models import Account
 from apps.contacts.models import Contact
@@ -15,14 +16,14 @@ from apps.inventory.models import (
 )
 
 
-class AccountSummarySerializer(serializers.ModelSerializer):
+class AccountSummarySerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = ["id", "code", "name", "account_type", "account_class"]
         read_only_fields = fields
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     default_sales_tax_rate_id = serializers.PrimaryKeyRelatedField(
         source="default_sales_tax_rate", queryset=TaxRate.objects.all(), required=False, allow_null=True,
     )
@@ -114,7 +115,7 @@ class ProductSerializer(serializers.ModelSerializer):
         }
 
 
-class WarehouseSerializer(serializers.ModelSerializer):
+class WarehouseSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = Warehouse
         fields = [
@@ -136,7 +137,7 @@ class WarehouseSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
-class StockMovementSerializer(serializers.ModelSerializer):
+class StockMovementSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     product = serializers.SerializerMethodField(read_only=True)
     warehouse = serializers.SerializerMethodField(read_only=True)
 
@@ -211,7 +212,7 @@ class InventoryValuationQuerySerializer(serializers.Serializer):
     as_of_date = serializers.DateField(required=False)
 
 
-class InventoryTransactionSerializer(serializers.ModelSerializer):
+class InventoryTransactionSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     product = serializers.SerializerMethodField(read_only=True)
     warehouse = serializers.SerializerMethodField(read_only=True)
     destination_warehouse = serializers.SerializerMethodField(read_only=True)
@@ -286,7 +287,7 @@ class InventoryWorkflowRequestSerializer(serializers.Serializer):
         return value
 
 
-class StockCountLineSerializer(serializers.ModelSerializer):
+class StockCountLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     product = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -308,7 +309,7 @@ class StockCountLineSerializer(serializers.ModelSerializer):
         }
 
 
-class StockCountSerializer(serializers.ModelSerializer):
+class StockCountSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     lines = StockCountLineSerializer(many=True, read_only=True)
 
     class Meta:

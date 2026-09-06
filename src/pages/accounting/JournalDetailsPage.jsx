@@ -1,3 +1,5 @@
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 // Show an auditable journal and allow posting or reversal only when permissions permit.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -19,11 +21,11 @@ export default function JournalDetailsPage() {
   useEffect(() => { const frame = window.requestAnimationFrame(() => void load()); return () => window.cancelAnimationFrame(frame); }, [load]);
   const totals = useMemo(() => (journal?.lines || []).reduce((sum, line) => ({ debit: sum.debit + Number(line.debit || 0), credit: sum.credit + Number(line.credit || 0) }), { debit: 0, credit: 0 }), [journal]);
   const difference = totals.debit - totals.credit; const balanced = Math.abs(difference) < 0.005;
-  const currency = journal?.organisation?.base_currency || journal?.transaction_currency || "GBP";
+  const currency = journal?.organisation?.base_currency || journal?.transaction_currency || getOrganisationCurrency();
   const timezone = auth.selectedOrganisation?.timezone || "UTC";
   const dateTime = (value) => value ? formatTimestamp(value, { timeZone: timezone }) : "—";
   const dateOnly = (value) => value ? formatDisplayDate(value) : "—";
-  const money = (value) => new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(Number(value || 0));
+  const money = (value) => centralFormatCurrency(value, currency);
   const printJournal = () => { if (!journal?.lines?.length) { setPrintError("This journal has no lines to print."); return; } setPrintError(""); window.requestAnimationFrame(() => window.print()); };
   const mutate = async () => { setActionError(""); try { const result = action === "post" ? await accountingApiService.postJournal(journal.id) : await accountingApiService.reverseJournal(journal.id, { reversal_date: getOrganisationToday(timezone) }); setAction(""); if (action === "reverse") window.location.assign(`/accounting/journals/${result.id}`); else setJournal(result); } catch (error) { setActionError(normaliseApiError(error)); setAction(""); } };
   if (state.loading) return <div className="journal-details-page"><section className="journal-details-not-found"><span className="header-spinner"/><h1>Loading journal entry</h1><p>Retrieving the accounting record and its lines.</p></section></div>;

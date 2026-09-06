@@ -1,3 +1,4 @@
+import { getOrganisationCurrency } from "../utils/organisationCurrency.js";
 import {
   createAccount,
   getAccountById,
@@ -299,7 +300,7 @@ const createBankLedgerAccount = (
 
     currency:
       bankAccount.currency ||
-      "GBP",
+      getOrganisationCurrency(),
 
     openingBalance:
       roundMoney(
@@ -659,7 +660,7 @@ export const createBankAccount = (
 
     currency:
       accountData.currency ||
-      "GBP",
+      getOrganisationCurrency(),
 
     openingBalance,
 
@@ -909,7 +910,7 @@ export const updateBankAccount = (
 
         currency:
           updatedAccount.currency ||
-          "GBP",
+          getOrganisationCurrency(),
 
         openingBalance:
           nextOpeningBalance,

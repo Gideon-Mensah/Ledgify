@@ -1,3 +1,5 @@
+import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
+import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Present one invoice, its payments, and links to the accounting records behind it.
 
 import {
@@ -44,29 +46,7 @@ const emptyTotals = {
 };
 
 // Formats currency.
-const formatCurrency = (
-  amount,
-  currency = "GBP"
-) => {
-  try {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency:
-          currency || "GBP",
-      }
-    ).format(Number(amount) || 0);
-  } catch {
-    return new Intl.NumberFormat(
-      "en-GB",
-      {
-        style: "currency",
-        currency: "GBP",
-      }
-    ).format(Number(amount) || 0);
-  }
-};
+const formatCurrency = centralFormatCurrency;
 
 // Gets status class name.
 const getStatusClassName = (
@@ -823,7 +803,7 @@ function InvoiceDetailsPage() {
 
                 <strong>
                   {invoice.currency ||
-                    "GBP"}
+                    getOrganisationCurrency()}
                 </strong>
               </div>
             </div>
@@ -1245,7 +1225,7 @@ function InvoiceDetailsPage() {
         }
         balanceDue={balanceDue}
         invoiceCurrency={
-          invoice.currency || "GBP"
+          invoice.currency || getOrganisationCurrency()
         }
         onClose={
           handleClosePaymentModal
