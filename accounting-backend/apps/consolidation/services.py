@@ -10,8 +10,10 @@ from common.exceptions import BusinessRuleError
 from apps.accounting.models import JournalLine, LEDGER_EFFECTIVE_JOURNAL_STATUSES
 from apps.fx.services import convert_amount,get_effective_rate
 from .models import *
+from .security import require_group
 @transaction.atomic
 def prepare_consolidation(*,group,period,user):
+ require_group(group,user,period)
  if period.group_id!=group.id or period.status=="finalised":raise BusinessRuleError("Invalid or finalised consolidation period.")
  version=(period.snapshots.aggregate(v=models.Max("version"))["v"] or 0)+1
  members=group.members.filter(status="active",effective_from__lte=period.end_date).filter(models.Q(effective_to=None)|models.Q(effective_to__gte=period.start_date))
@@ -28,17 +30,20 @@ def prepare_consolidation(*,group,period,user):
    method="average" if row["account__account_type"] in {"revenue","expense"} else "closing";rate=closing
    ConsolidationSnapshotLine.objects.create(snapshot=snapshot,source_account_id=row["account_id"],consolidation_account=mappings[row["account_id"]].consolidation_account,source_debit=row["debit"],source_credit=row["credit"],translated_debit=convert_amount(amount=row["debit"],rate=rate),translated_credit=convert_amount(amount=row["credit"],rate=rate),exchange_rate=rate,translation_method=method)
  period.status="prepared";period.prepared_at=timezone.now();period.prepared_by=user;period.save();ConsolidationHistory.objects.create(group=group,period=period,event="PREPARED",user=user,metadata={"version":version});return period
-def consolidated_trial_balance(*,group,period):
+def consolidated_trial_balance(*,group,period,user):
+ require_group(group,user,period)
  totals=defaultdict(lambda:[None,Decimal("0"),Decimal("0")])
  latest={x.organisation_id:x for x in period.snapshots.order_by("organisation_id","-version")}
  for snap in latest.values():
   for line in snap.lines.select_related("consolidation_account"):t=totals[line.consolidation_account_id];t[0]=line.consolidation_account;t[1]+=line.translated_debit;t[2]+=line.translated_credit
  for line in EliminationJournalLine.objects.filter(journal__period=period,journal__status="posted").select_related("consolidation_account"):t=totals[line.consolidation_account_id];t[0]=line.consolidation_account;t[1]+=line.debit;t[2]+=line.credit
  rows=[{"account":{"id":str(v[0].id),"code":v[0].code,"name":v[0].name,"account_type":v[0].account_type,"account_class":v[0].account_class},"debit":v[1],"credit":v[2]} for v in totals.values()];d=sum(x["debit"] for x in rows);c=sum(x["credit"] for x in rows);return {"rows":rows,"total_debit":d,"total_credit":c,"difference":d-c,"balanced":d==c}
-def consolidated_profit_loss(*,group,period):
- rows=consolidated_trial_balance(group=group,period=period)["rows"];income=sum(x["credit"]-x["debit"] for x in rows if x["account"]["account_type"]=="revenue");expenses=sum(x["debit"]-x["credit"] for x in rows if x["account"]["account_type"]=="expense");return {"income":income,"expenses":expenses,"net_profit":income-expenses}
-def consolidated_balance_sheet(*,group,period):
- rows=consolidated_trial_balance(group=group,period=period)["rows"];total=lambda kind:sum(x["debit"]-x["credit"] if kind=="asset" else x["credit"]-x["debit"] for x in rows if x["account"]["account_type"]==kind);a=total("asset");l=total("liability");e=total("equity")+consolidated_profit_loss(group=group,period=period)["net_profit"];return {"assets":a,"liabilities":l,"equity":e,"difference":a-l-e,"balanced":a==l+e}
+def consolidated_profit_loss(*,group,period,user):
+ require_group(group,user,period)
+ rows=consolidated_trial_balance(group=group,period=period,user=user)["rows"];income=sum(x["credit"]-x["debit"] for x in rows if x["account"]["account_type"]=="revenue");expenses=sum(x["debit"]-x["credit"] for x in rows if x["account"]["account_type"]=="expense");return {"income":income,"expenses":expenses,"net_profit":income-expenses}
+def consolidated_balance_sheet(*,group,period,user):
+ require_group(group,user,period)
+ rows=consolidated_trial_balance(group=group,period=period,user=user)["rows"];total=lambda kind:sum(x["debit"]-x["credit"] if kind=="asset" else x["credit"]-x["debit"] for x in rows if x["account"]["account_type"]==kind);a=total("asset");l=total("liability");e=total("equity")+consolidated_profit_loss(group=group,period=period,user=user)["net_profit"];return {"assets":a,"liabilities":l,"equity":e,"difference":a-l-e,"balanced":a==l+e}
 
 def validate_elimination_lines(*,group,lines):
  if len(lines)<2:raise BusinessRuleError("An elimination journal requires at least two lines.")
@@ -53,6 +58,7 @@ def validate_elimination_lines(*,group,lines):
 
 @transaction.atomic
 def post_elimination(*,journal,user):
+ require_group(journal.group,user,journal.period)
  row=EliminationJournal.objects.select_for_update().prefetch_related("lines__consolidation_account").get(pk=journal.pk)
  if row.status!="draft":raise BusinessRuleError("Only draft elimination journals can be posted.")
  lines=[{"consolidation_account":x.consolidation_account,"debit":x.debit,"credit":x.credit} for x in row.lines.all()]
@@ -61,6 +67,7 @@ def post_elimination(*,journal,user):
 
 @transaction.atomic
 def reverse_elimination(*,journal,user,date=None):
+ require_group(journal.group,user,journal.period)
  row=EliminationJournal.objects.select_for_update().prefetch_related("lines").get(pk=journal.pk)
  if row.status!="posted" or hasattr(row,"reversal_entry"):raise BusinessRuleError("Only an unreversed posted elimination can be reversed.")
  reversal=EliminationJournal.objects.create(group=row.group,period=row.period,entry_number=f"REV-{row.entry_number}",date=date or timezone.localdate(),description=f"Reversal of {row.entry_number}",reference=row.reference,status="posted",created_by=user,posted_by=user,posted_at=timezone.now(),reversal_of=row)

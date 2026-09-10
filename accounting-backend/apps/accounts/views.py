@@ -106,3 +106,36 @@ class CurrentUserView(APIView):
             "last_name": user.last_name,
             "is_email_verified": user.is_email_verified,
         })
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from rest_framework.exceptions import AuthenticationFailed, ValidationError
+        from rest_framework_simplejwt.tokens import UntypedToken
+        from rest_framework_simplejwt.exceptions import TokenError
+        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+        from rest_framework_simplejwt.settings import api_settings
+        from datetime import datetime, timezone
+
+        raw = request.data.get("refresh")
+        if not isinstance(raw, str):
+            raise ValidationError({"refresh": "A refresh token is required."})
+        try:
+            token = UntypedToken(raw)
+            if token.get("token_type") != "refresh" or str(token.get(api_settings.USER_ID_CLAIM)) != str(request.user.pk):
+                raise AuthenticationFailed("This session is no longer valid.")
+            user = get_user_model().objects.select_for_update().get(pk=request.user.pk)
+            outstanding, _ = OutstandingToken.objects.get_or_create(
+                jti=token["jti"], defaults={"user": user, "token": raw,
+                "expires_at": datetime.fromtimestamp(token["exp"], tz=timezone.utc)})
+        except (TokenError, KeyError, ValueError, TypeError, DjangoValidationError):
+            raise AuthenticationFailed("This session is no longer valid.") from None
+        BlacklistedToken.objects.get_or_create(token=outstanding)
+        # Invalidate access tokens and any refresh successor issued during logout.
+        user.auth_version += 1
+        user.save(update_fields=["auth_version"])
+        return Response(status=204)

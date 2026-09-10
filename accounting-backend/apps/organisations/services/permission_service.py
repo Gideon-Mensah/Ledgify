@@ -7,7 +7,7 @@ from apps.organisations.permissions import ALL_PERMISSIONS, ROLE_PERMISSIONS
 
 
 def get_membership(*, organisation, user):
-    if not user or not user.is_authenticated or not organisation.is_active:
+    if not user or not user.is_authenticated or not user.is_active or not organisation.is_active:
         return None
     return OrganisationMember.objects.filter(
         organisation=organisation,

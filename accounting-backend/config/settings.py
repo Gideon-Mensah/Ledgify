@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     
     # Third-party
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     
     # Local apps
@@ -75,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'common.middleware.AdminLoginThrottleMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -207,6 +209,7 @@ FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 PASSWORD_RESET_TIMEOUT = int(os.environ.get("PASSWORD_RESET_TIMEOUT", "3600"))
 
 # AI is temporarily production-disabled through this reversible feature flag.
+ENABLE_CONSOLIDATION = env_bool("ENABLE_CONSOLIDATION", False)
 AI_ENABLED = env_bool("AI_ENABLED", False)
 AI_PROVIDER = os.environ.get("AI_PROVIDER", "disabled")
 AI_MODEL = os.environ.get("AI_MODEL", "")
@@ -230,7 +233,7 @@ REST_FRAMEWORK = {
     ],
 
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "apps.accounts.authentication.SessionVersionJWTAuthentication",
     ],
 }
 
@@ -255,3 +258,30 @@ SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
 if SENTRY_DSN:
     import sentry_sdk
     sentry_sdk.init(dsn=SENTRY_DSN,environment=os.environ.get("SENTRY_ENVIRONMENT","production"),send_default_pii=False,traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE","0")))
+
+# Atomic Redis counters are shared by every production Gunicorn worker.
+CACHE_URL = os.environ.get("DJANGO_CACHE_URL", "")
+if CACHE_URL:
+    if not CACHE_URL.startswith(("redis://", "rediss://")):
+        raise RuntimeError("DJANGO_CACHE_URL must identify Redis.")
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": CACHE_URL,
+        "OPTIONS": {"socket_connect_timeout": 2, "socket_timeout": 2}, "KEY_PREFIX": "ledgify"}}
+elif DEBUG:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "ledgify-development"}}
+else:
+    raise RuntimeError("DJANGO_CACHE_URL is required when DJANGO_DEBUG=false.")
+LOGIN_IP_RATE = os.environ.get("DRF_LOGIN_RATE", "10/minute")
+LOGIN_ACCOUNT_RATE = os.environ.get("LOGIN_ACCOUNT_RATE", "10/minute")
+TRUSTED_PROXY_CIDRS = [value.strip() for value in os.environ.get("TRUSTED_PROXY_CIDRS", "").split(",") if value.strip()]
+# Check configuration on startup, without emitting its values.
+import ipaddress
+import re
+for rate in (LOGIN_IP_RATE, LOGIN_ACCOUNT_RATE):
+    if not re.fullmatch(r"[1-9][0-9]*/(second|minute|hour|day)", rate):
+        raise RuntimeError("Login rates must use a positive count/second, minute, hour or day.")
+for cidr in TRUSTED_PROXY_CIDRS:
+    try:
+        if ipaddress.ip_network(cidr).prefixlen == 0:
+            raise ValueError()
+    except ValueError:
+        raise RuntimeError("TRUSTED_PROXY_CIDRS must contain specific, valid proxy networks.") from None

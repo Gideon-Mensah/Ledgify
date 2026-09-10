@@ -16,7 +16,8 @@ from apps.organisations.services import require_organisation_permission
 ZERO=Decimal("0.00");MONEY=Decimal("0.01")
 def money(value):return Decimal(str(value)).quantize(MONEY,rounding=ROUND_HALF_UP)
 def scope(org,order):
- if order.organisation_id!=org.id:raise BusinessRuleError("Production order belongs to another organisation.")
+ from apps.manufacturing.security import check_order
+ check_order(org,order)
 def valid_account(org,account):
  if not account or account.organisation_id!=org.id or account.status!=Account.Status.ACTIVE:raise BusinessRuleError("Production account must be active and organisation-scoped.")
 @transaction.atomic
@@ -45,7 +46,7 @@ def complete_production(*,organisation,production_order,quantity_completed,compl
  order.save(update_fields=fields);return {"production_order":order,"transfer_amount":transfer,**result}
 @transaction.atomic
 def close_production_order(*,organisation,production_order,close_date,user):
- require_organisation_permission(organisation=organisation,user=user,permission=CLOSE_PRODUCTION_ORDER);order=ProductionOrder.objects.select_for_update().select_related("wip_account","variance_account").get(pk=production_order.pk);scope(organisation,order);validate_period_open(organisation,close_date)
+ require_organisation_permission(organisation=organisation,user=user,permission=CLOSE_PRODUCTION_ORDER);order=ProductionOrder.objects.select_for_update().select_related("wip_account").prefetch_related("variance_account").get(pk=production_order.pk);scope(organisation,order);validate_period_open(organisation,close_date)
  if order.status!="completed" or order.completed_quantity!=order.planned_quantity:raise BusinessRuleError("Only fully completed production orders can be closed.")
  remaining=money(get_current_wip(organisation=organisation,production_order=order));variance=None
  if remaining:

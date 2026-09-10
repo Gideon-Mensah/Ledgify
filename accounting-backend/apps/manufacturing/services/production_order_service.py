@@ -16,7 +16,8 @@ from apps.organisations.permissions import CREATE_PRODUCTION_ORDER,ISSUE_MATERIA
 from apps.organisations.services import require_organisation_permission
 from .bom_service import explode_bom,get_effective_bom_version,validate_bom_no_cycles
 def _scope(org,order):
- if order.organisation_id!=org.id:raise BusinessRuleError("Production order belongs to another organisation.")
+ from apps.manufacturing.security import check_order
+ check_order(org,order)
 def _account(org,account):
  if not account or account.organisation_id!=org.id or account.status!=Account.Status.ACTIVE:raise BusinessRuleError("Production account must be active and organisation-scoped.")
 @transaction.atomic

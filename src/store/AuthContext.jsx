@@ -7,6 +7,8 @@ import { authService } from "../services/authService";
 import { clearAuthStorage, loadAuthStorage, saveAuthStorage } from "../services/authStorage";
 import { setAuthFailureHandler } from "../services/api";
 
+import { getSessionGeneration, assertCurrentSession, invalidateSession } from "../services/sessionLifecycle.js";
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -15,17 +17,24 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const commit = useCallback((next) => {
+    const generation = getSessionGeneration();
     setAuth((current) => {
+      if (generation !== getSessionGeneration()) return current;
       const value = typeof next === "function" ? next(current) : next;
       saveAuthStorage(value);
       return value;
     });
   }, []);
 
-  const logout = useCallback(() => {
-    clearAuthStorage();
-    setAuth(loadAuthStorage());
-    navigate("/login", { replace: true });
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Local sign-out still succeeds when the server is unavailable.
+    } finally {
+      setAuth(loadAuthStorage());
+      navigate("/login", { replace: true });
+    }
   }, [navigate]);
 
   const loadPermissions = useCallback(async (organisation) => {
@@ -35,6 +44,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const resolveSession = useCallback(async (tokens = null) => {
+    const generation = getSessionGeneration();
     if (tokens) commit((current) => ({
       ...current, accessToken: tokens.access,
       refreshToken: tokens.refresh || current.refreshToken,
@@ -42,6 +52,7 @@ export function AuthProvider({ children }) {
     const [user, organisations] = await Promise.all([
       authService.getCurrentUser(), authService.getUserOrganisations(),
     ]);
+    assertCurrentSession(generation);
     const stored = loadAuthStorage();
     let selected = stored.selectedOrganisation
       ? organisations.find((item) => item.id === stored.selectedOrganisation.id)
@@ -49,12 +60,15 @@ export function AuthProvider({ children }) {
     if (!selected && organisations.length === 1) selected = organisations[0];
     commit({ ...stored, user, organisations, selectedOrganisation: selected });
     const permissions = selected ? await loadPermissions(selected) : [];
+    assertCurrentSession(generation);
     commit((current) => ({ ...current, permissions }));
     return { organisations, selected };
   }, [commit, loadPermissions]);
 
   const login = useCallback(async (credentials) => {
+    const generation = invalidateSession();
     const tokens = await authService.login(credentials);
+    assertCurrentSession(generation);
     const stored = loadAuthStorage();
     saveAuthStorage({
       ...stored, accessToken: tokens.access, refreshToken: tokens.refresh,
@@ -64,10 +78,12 @@ export function AuthProvider({ children }) {
   }, [resolveSession]);
 
   const selectOrganisation = useCallback(async (organisation) => {
+    const generation = getSessionGeneration();
     // Persist before mounting the new organisation so effects use its request scope.
     saveAuthStorage({ ...loadAuthStorage(), selectedOrganisation: organisation, permissions: [] });
     commit((current) => ({ ...current, selectedOrganisation: organisation, permissions: [] }));
     const permissions = await loadPermissions(organisation);
+    assertCurrentSession(generation);
     commit((current) => current.selectedOrganisation?.id === organisation.id ? { ...current, permissions } : current);
   }, [commit, loadPermissions]);
 
@@ -84,9 +100,11 @@ export function AuthProvider({ children }) {
         if (active) setIsLoading(false);
         return;
       }
+      const generation = getSessionGeneration();
       try {
         await resolveSession();
       } catch {
+        if (generation !== getSessionGeneration()) return;
         clearAuthStorage();
         if (active) setAuth(loadAuthStorage());
       } finally {

@@ -1,13 +1,17 @@
 // Send authenticated API requests for the selected organisation and refresh expired access tokens once.
 
-import { clearAuthStorage, loadAuthStorage, saveAuthStorage } from "./authStorage";
-import { normaliseCurrencyCode } from "../utils/currency";
+import { clearAuthStorage, loadAuthStorage, saveAuthStorage } from "./authStorage.js";
+import { normaliseCurrencyCode } from "../utils/currency.js";
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL
+export const API_BASE_URL = (import.meta.env?.VITE_API_BASE_URL
   || "http://127.0.0.1:8000/api/v1").replace(/\/$/, "");
 
+import { getSessionGeneration, assertCurrentSession, isLoggingOut } from "./sessionLifecycle.js";
+
 let refreshPromise = null;
+let refreshGeneration = null;
 let authFailureHandler = null;
+export const getPendingRefresh = () => refreshPromise;
 
 export function setAuthFailureHandler(handler) {
   authFailureHandler = handler;
@@ -30,11 +34,15 @@ async function parseResponse(response) {
 }
 
 async function refreshAccessToken() {
-  if (refreshPromise) return refreshPromise;
+  if (isLoggingOut()) throw new DOMException("Signing out.", "AbortError");
+  const generation = getSessionGeneration();
+  if (refreshPromise && refreshGeneration === generation) return refreshPromise;
+  refreshGeneration = generation;
   const stored = loadAuthStorage();
   if (!stored.refreshToken) throw new Error("Your session has expired.");
   refreshPromise = fetch(`${API_BASE_URL}/auth/token/refresh/`, {
     method: "POST",
+    signal: AbortSignal.timeout(10000),
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ refresh: stored.refreshToken }),
   }).then(async (response) => {
@@ -43,18 +51,21 @@ async function refreshAccessToken() {
       status: response.status, data,
     });
     const next = {
-      ...stored,
+      ...loadAuthStorage(),
       accessToken: data.access,
       refreshToken: data.refresh || stored.refreshToken,
     };
-    saveAuthStorage(next);
-    return next.accessToken;
-  }).finally(() => { refreshPromise = null; });
+    if (generation === getSessionGeneration()) saveAuthStorage(next);
+    return next;
+  }).finally(() => {
+    if (refreshGeneration === generation) refreshPromise = null;
+  });
   return refreshPromise;
 }
 
 export async function apiRequest(path, options = {}) {
   const { skipAuth = false, retry = true, headers = {}, responseType, ...requestOptions } = options;
+  const generation = getSessionGeneration();
   const stored = loadAuthStorage();
   const requestHeaders = { Accept: "application/json", ...headers };
   if (requestOptions.body && !(requestOptions.body instanceof FormData)) {
@@ -71,15 +82,21 @@ export async function apiRequest(path, options = {}) {
   });
   if (response.status === 401 && retry && !skipAuth && stored.refreshToken) {
     try {
+      assertCurrentSession(generation);
       await refreshAccessToken();
+      assertCurrentSession(generation);
       return apiRequest(path, { ...options, retry: false });
     } catch (error) {
-      clearAuthStorage();
-      authFailureHandler?.();
+      if (generation === getSessionGeneration() && error.name !== "AbortError" && !isLoggingOut()) {
+        clearAuthStorage();
+        authFailureHandler?.();
+      }
       throw error;
     }
   }
+  if (!skipAuth) assertCurrentSession(generation);
   const data = responseType === "blob" ? await response.blob() : await parseResponse(response);
+  if (!skipAuth) assertCurrentSession(generation);
   if (!skipAuth && stored.selectedOrganisation?.id !== loadAuthStorage().selectedOrganisation?.id) {
     throw new DOMException("Organisation changed while loading data.", "AbortError");
   }

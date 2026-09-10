@@ -1,3 +1,4 @@
+from rest_framework import serializers
 """Organisation-scoped accounting endpoints that delegate business rules to services."""
 
 from rest_framework.decorators import action
@@ -250,11 +251,11 @@ class JournalEntryViewSet(
             )
 
         if start_date:
-            queryset = queryset.filter(date__gte=start_date)
+            queryset = queryset.filter(date__gte=serializers.DateField().run_validation(start_date))
         if end_date:
-            queryset = queryset.filter(date__lte=end_date)
+            queryset = queryset.filter(date__lte=serializers.DateField().run_validation(end_date))
         if account_id:
-            queryset = queryset.filter(lines__account_id=account_id)
+            queryset = queryset.filter(lines__account_id=serializers.UUIDField().run_validation(account_id))
         if search:
             queryset = queryset.filter(
                 Q(entry_number__icontains=search)

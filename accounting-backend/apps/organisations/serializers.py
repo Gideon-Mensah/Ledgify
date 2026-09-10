@@ -10,6 +10,15 @@ class OrganisationSerializer(serializers.ModelSerializer):
         from common.currencies import validate_currency_code
         return validate_currency_code(value)
 
+    def validate(self, attrs):
+        from apps.fx.account_validation import validate_fx_account
+        for field, kind in (("fx_gain_account", "gain"), ("fx_loss_account", "loss")):
+            account = attrs.get(field, getattr(self.instance, field, None))
+            if account:
+                try: validate_fx_account(self.instance, account, kind)
+                except serializers.ValidationError as error: raise serializers.ValidationError({field: error.detail}) from None
+        return attrs
+
     role = serializers.SerializerMethodField()
 
     class Meta:

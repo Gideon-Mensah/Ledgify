@@ -92,7 +92,7 @@ def _reverse_created_customer_payment(
 ):
     payment = (
         CustomerPayment.objects.select_for_update()
-        .select_related("accounting_journal")
+        .prefetch_related("accounting_journal")
         .filter(pk=history.metadata.get("payment_id"))
         .first()
     )
@@ -147,7 +147,7 @@ def _reverse_created_supplier_payment(
 ):
     payment = (
         SupplierPayment.objects.select_for_update()
-        .select_related("accounting_journal")
+        .prefetch_related("accounting_journal")
         .filter(pk=history.metadata.get("payment_id"))
         .first()
     )
@@ -234,7 +234,7 @@ def unreconcile_bank_transaction(
     )
     bank_transaction = (
         BankTransaction.objects.select_for_update()
-        .select_related("accounting_journal")
+        .prefetch_related("accounting_journal")
         .get(pk=bank_transaction.pk)
     )
     if bank_transaction.organisation_id != organisation.id:
@@ -285,7 +285,7 @@ def unreconcile_bank_transaction(
     elif reconciliation_type == "bank_transfer":
         opposite = (
             BankTransaction.objects.select_for_update()
-            .select_related("accounting_journal")
+            .prefetch_related("accounting_journal")
             .filter(pk=history.reconciliation_object_id)
             .first()
         )

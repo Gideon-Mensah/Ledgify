@@ -4,7 +4,9 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from django.db import transaction
+from rest_framework_simplejwt.tokens import UntypedToken
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer, TokenObtainPairSerializer
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.utils import get_md5_hash_password
 
@@ -39,17 +41,30 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return attrs
 
 
-class PasswordAwareTokenRefreshSerializer(TokenRefreshSerializer):
-    """Reject refresh tokens issued before the user's password changed."""
+class SessionTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["auth_version"] = user.auth_version
+        return token
 
     def validate(self, attrs):
-        refresh = self.token_class(attrs["refresh"])
+        attrs["email"] = attrs.get("email", "").strip()
+        return super().validate(attrs)
+
+
+class PasswordAwareTokenRefreshSerializer(TokenRefreshSerializer):
+    @transaction.atomic
+    def validate(self, attrs):
+        # Lock the same user row as logout before checking/rotating the token.
+        refresh = UntypedToken(attrs["refresh"])
         user_id = refresh.payload.get(api_settings.USER_ID_CLAIM)
-        claimed_hash = refresh.payload.get(api_settings.REVOKE_TOKEN_CLAIM)
         try:
-            user = get_user_model().objects.get(**{api_settings.USER_ID_FIELD: user_id})
-        except (get_user_model().DoesNotExist, TypeError, ValueError):
+            user = get_user_model().objects.select_for_update().get(
+                **{api_settings.USER_ID_FIELD: user_id})
+        except (get_user_model().DoesNotExist, TypeError, ValueError, DjangoValidationError):
+            raise AuthenticationFailed("This session is no longer valid.") from None
+        if (not user.is_active or refresh.get("auth_version") != user.auth_version
+                or refresh.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password)):
             raise AuthenticationFailed("This session is no longer valid.")
-        if claimed_hash != get_md5_hash_password(user.password):
-            raise AuthenticationFailed("This session is no longer valid.", code="password_changed")
         return super().validate(attrs)

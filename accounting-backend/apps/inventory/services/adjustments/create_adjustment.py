@@ -36,7 +36,7 @@ def create_stock_adjustment(
     require_organisation_permission(
         organisation=organisation, user=user, permission=ADJUST_STOCK,
     )
-    product = Product.objects.select_for_update().select_related(
+    product = Product.objects.select_for_update().prefetch_related(
         "inventory_asset_account"
     ).get(pk=product.pk)
     warehouse = Warehouse.objects.select_for_update().get(pk=warehouse.pk)
@@ -122,8 +122,8 @@ def create_stock_adjustment(
 @transaction.atomic
 def reverse_stock_movement(*, movement, user, reversal_date=None):
     movement = StockMovement.objects.select_for_update().select_related(
-        "organisation", "accounting_journal"
-    ).get(pk=movement.pk)
+        "organisation"
+    ).prefetch_related("accounting_journal").get(pk=movement.pk)
     require_organisation_permission(
         organisation=movement.organisation, user=user, permission=ADJUST_STOCK,
     )

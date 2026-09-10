@@ -54,7 +54,9 @@ def create_supplier_payment(*, organisation, supplier, bank_account, payment_dat
     rate=get_effective_rate(organisation=organisation,base_currency=currency,target_currency=organisation.base_currency,date=payment_date)
     base_amount=convert_amount(amount=amount,rate=rate);payable_base=convert_amount(amount=amount,rate=bill.exchange_rate) if bill else base_amount
     fx=payable_base-base_amount
-    if fx and not (organisation.fx_gain_account if fx>0 else organisation.fx_loss_account):raise BusinessRuleError("Configure FX gain and loss accounts before foreign settlement.")
+    if fx:
+        from apps.fx.account_validation import validate_fx_account
+        validate_fx_account(organisation, organisation.fx_gain_account if fx>0 else organisation.fx_loss_account, "gain" if fx>0 else "loss")
     payment = SupplierPayment.objects.create(
         organisation=organisation, supplier=supplier, bill=bill,
         bank_account=bank_account, payment_date=payment_date, amount=amount,

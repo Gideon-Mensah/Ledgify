@@ -26,6 +26,8 @@ class User(AbstractUser):
         max_length=150,
     )
 
+    auth_version = models.PositiveBigIntegerField(default=0)
+
     is_email_verified = models.BooleanField(
         default=False,
     )

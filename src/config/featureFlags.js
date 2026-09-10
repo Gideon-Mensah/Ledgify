@@ -11,3 +11,5 @@ export function parseBooleanFlag(value, fallback = false) {
 
 // AI is temporarily disabled through a reversible feature flag.
 export const AI_ENABLED = parseBooleanFlag(import.meta.env?.VITE_AI_ENABLED, false);
+
+export const CONSOLIDATION_ENABLED = parseBooleanFlag(import.meta.env?.VITE_ENABLE_CONSOLIDATION, false);

@@ -12,7 +12,7 @@ import {
   Sparkles,
   Building2,
 } from "lucide-react";
-import { AI_ENABLED } from "../config/featureFlags";
+import { AI_ENABLED, CONSOLIDATION_ENABLED } from "../config/featureFlags";
 
 export const mainNavigation = [
   {
@@ -132,7 +132,7 @@ export const mainNavigation = [
         path: "/accounting/period-locks",
       },
       { label: "Currencies & FX", path: "/accounting/fx" },
-      { label: "Consolidation", path: "/accounting/consolidation" },
+      ...(CONSOLIDATION_ENABLED ? [{ label: "Consolidation", path: "/accounting/consolidation" }] : []),
     ],
   },
   {

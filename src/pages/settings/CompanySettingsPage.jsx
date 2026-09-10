@@ -10,7 +10,7 @@ import { inventoryService } from "../../services/inventoryService";
 import { settingsService } from "../../services/settingsService";
 import { useAuth } from "../../store/AuthContext";
 import { CURRENCY_OPTIONS, normaliseCurrencyCode } from "../../utils/currency";
-import { AI_ENABLED } from "../../config/featureFlags";
+import { AI_ENABLED, CONSOLIDATION_ENABLED } from "../../config/featureFlags";
 import "../../styles/settings.css";
 
 const items = [
@@ -27,7 +27,7 @@ const items = [
   { id: "payroll", group: "People", title: "Payroll", description: "Employees, components, pay runs and payroll accounts.", icon: Users, path: "/payroll", permission: "view_payroll" },
   { id: "currencies", group: "Advanced", title: "Currency & FX", description: "Dated exchange rates, exposure and revaluation.", icon: CircleDollarSign, path: "/accounting/fx", permission: "view_accounting" },
   { id: "manufacturing", group: "Advanced", title: "Manufacturing", description: "BOMs, production orders and configured WIP accounts.", icon: Factory, path: "/manufacturing", permission: "view_manufacturing" },
-  { id: "consolidation", group: "Advanced", title: "Consolidation", description: "Groups, mappings, eliminations and group reports.", icon: Building2, path: "/accounting/consolidation", permission: "view_consolidation" },
+  ...(CONSOLIDATION_ENABLED ? [{ id: "consolidation", group: "Advanced", title: "Consolidation", description: "Groups, mappings, eliminations and group reports.", icon: Building2, path: "/accounting/consolidation", permission: "view_consolidation" }] : []),
   ...(AI_ENABLED ? [{ id: "ai", group: "Advanced", title: "AI settings", description: "Analysis, draft actions, anomalies and data sharing.", icon: Bot, permission: "manage_ai_settings" }] : []),
   { id: "users", group: "Security & Access", title: "Users", description: "Organisation membership, roles and active access.", icon: Users, permission: "manage_organisation_users" },
   { id: "roles", group: "Security & Access", title: "Roles & permissions", description: "Understand access provided by each Ledgify role.", icon: Shield, permission: "manage_organisation_users" },
@@ -97,6 +97,7 @@ function SettingsOverview({ available }) {
 export default function CompanySettingsPage() {
   const auth = useAuth(); const { section = "overview" } = useParams();
   const available = useMemo(() => items.filter((item) => !item.permission || auth.hasPermission(item.permission)), [auth]); const selected = items.find((item) => item.id === section);
+  if (section === "consolidation" && !CONSOLIDATION_ENABLED) return <Navigate to="/settings" replace/>;
   if (section === "ai" && !AI_ENABLED) return <Navigate to="/settings" replace/>;
   if (selected?.path) return <Navigate to={selected.path} replace/>;
   const content = { organisation: <OrganisationSettings/>, financial: <OrganisationSettings financial/>, inventory: <InventorySettings/>, "fixed-assets": <FixedAssetSettings/>, ai: <AISettings/>, users: <UsersSettings/>, roles: <RolesSettings/>, security: <SecuritySettings/>, integrations: <IntegrationsSettings/>, system: <SystemSettings/> }[section];

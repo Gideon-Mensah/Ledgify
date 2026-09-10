@@ -71,8 +71,8 @@ def _mark_reconciled(
 def accept_customer_payment_match(*, organisation, bank_transaction, payment, user):
     bank_transaction = _lock_bank_transaction(organisation, bank_transaction)
     payment = CustomerPayment.objects.select_for_update().select_related(
-        "bank_account", "accounting_journal"
-    ).get(pk=payment.pk)
+        "bank_account"
+    ).prefetch_related("accounting_journal").get(pk=payment.pk)
     if payment.organisation_id != organisation.id:
         raise BusinessRuleError("Payment does not belong to this organisation.")
     if payment.status != CustomerPayment.Status.POSTED or not payment.accounting_journal_id:
@@ -95,8 +95,8 @@ def accept_customer_payment_match(*, organisation, bank_transaction, payment, us
 def accept_supplier_payment_match(*, organisation, bank_transaction, payment, user):
     bank_transaction = _lock_bank_transaction(organisation, bank_transaction)
     payment = SupplierPayment.objects.select_for_update().select_related(
-        "bank_account", "accounting_journal"
-    ).get(pk=payment.pk)
+        "bank_account"
+    ).prefetch_related("accounting_journal").get(pk=payment.pk)
     if payment.organisation_id != organisation.id:
         raise BusinessRuleError("Payment does not belong to this organisation.")
     if payment.status != SupplierPayment.Status.POSTED or not payment.accounting_journal_id:

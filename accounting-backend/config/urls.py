@@ -20,7 +20,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from apps.accounts.views import PasswordAwareTokenRefreshView
 from common.health import health,ready
 from common.throttles import LoginRateThrottle
-class ThrottledTokenObtainPairView(TokenObtainPairView):throttle_classes=[LoginRateThrottle]
+from apps.accounts.serializers import SessionTokenObtainPairSerializer
+class ThrottledTokenObtainPairView(TokenObtainPairView):
+    throttle_classes = [LoginRateThrottle]
+    serializer_class = SessionTokenObtainPairSerializer
 
 
 urlpatterns = [

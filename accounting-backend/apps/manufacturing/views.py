@@ -1,5 +1,7 @@
 """Organisation-scoped production actions delegated to inventory and journal services."""
 
+from rest_framework import serializers
+from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -29,7 +31,7 @@ class BOMViewSet(OrganisationScopedViewSetMixin,ModelViewSet):
  def get_queryset(self):return BillOfMaterials.objects.filter(organisation=self.get_organisation()).select_related("product").prefetch_related("versions__components__component_product")
  def perform_create(self,s):s.save(organisation=self.get_organisation(),created_by=self.request.user)
  @action(detail=True,methods=["post"])
- def explode(self,r,pk=None):return Response(explode_bom(organisation=self.get_organisation(),product=self.get_object().product,quantity=r.data.get("quantity"),production_date=r.data.get("production_date")))
+ def explode(self,r,pk=None):return Response(explode_bom(organisation=self.get_organisation(),product=self.get_object().product,quantity=serializers.DecimalField(max_digits=18,decimal_places=4,min_value=Decimal("0.0001")).run_validation(r.data.get("quantity")),production_date=serializers.DateField().run_validation(r.data.get("production_date"))))
 class BOMVersionViewSet(OrganisationScopedViewSetMixin,ModelViewSet):
  serializer_class=BOMVersionSerializer;permission_classes=[IsAuthenticated,OrganisationActionPermission]
  action_permissions={"list":VIEW_MANUFACTURING,"retrieve":VIEW_MANUFACTURING,"create":MANAGE_BOMS,"update":MANAGE_BOMS,"partial_update":MANAGE_BOMS,"destroy":MANAGE_BOMS,"cost":VIEW_MANUFACTURING,"activate":MANAGE_BOMS}
@@ -43,8 +45,8 @@ class BOMVersionViewSet(OrganisationScopedViewSetMixin,ModelViewSet):
  def perform_destroy(self,obj):self._draft(obj);obj.delete()
  @action(detail=True,methods=["get"])
  def cost(self,r,pk=None):
-  warehouse=Warehouse.objects.filter(organisation=self.get_organisation(),id=r.query_params.get("warehouse")).first() if r.query_params.get("warehouse") else None
-  return Response(calculate_bom_cost(organisation=self.get_organisation(),bom_version=self.get_object(),warehouse=warehouse,as_of_date=r.query_params.get("as_of_date")))
+  warehouse=get_object_or_404(Warehouse,organisation=self.get_organisation(),id=serializers.UUIDField().run_validation(r.query_params.get("warehouse"))) if r.query_params.get("warehouse") else None
+  return Response(calculate_bom_cost(organisation=self.get_organisation(),bom_version=self.get_object(),warehouse=warehouse,as_of_date=serializers.DateField().run_validation(r.query_params["as_of_date"]) if "as_of_date" in r.query_params else None))
  @action(detail=True,methods=["post"])
  def activate(self,r,pk=None):return Response(self.get_serializer(activate_bom_version(organisation=self.get_organisation(),bom_version=self.get_object())).data)
 class ProductionOrderViewSet(OrganisationScopedViewSetMixin,ModelViewSet):
@@ -54,8 +56,8 @@ class ProductionOrderViewSet(OrganisationScopedViewSetMixin,ModelViewSet):
  def create(self,r,*a,**k):
   q=ProductionOrderCreateSerializer(data=r.data);q.is_valid(raise_exception=True);d=q.validated_data;org=self.get_organisation()
   def obj(model,key):
-   value=d.pop(key,None);return model.objects.filter(id=value,organisation=org).first() if value else None
-  product=obj(Product,"product");warehouse=obj(Warehouse,"warehouse");wip=obj(Account,"wip_account");variance=obj(Account,"variance_account");version=BOMVersion.objects.filter(id=d.pop("bom_version",None),bom__organisation=org).first() if d.get("bom_version") else None
+   value=d.pop(key,None);return get_object_or_404(model,id=value,organisation=org) if value else None
+  product=obj(Product,"product");warehouse=obj(Warehouse,"warehouse");wip=obj(Account,"wip_account");variance=obj(Account,"variance_account");version=get_object_or_404(BOMVersion,id=d.pop("bom_version",None),bom__organisation=org) if d.get("bom_version") else None
   if not all((product,warehouse,wip)):raise BusinessRuleError("A production relationship was not found in this organisation.")
   result=create_production_order(organisation=org,product=product,warehouse=warehouse,wip_account=wip,variance_account=variance,bom_version=version,user=r.user,**d);return Response(self.get_serializer(result).data,status=201)
  def update(self,r,*a,**k):
@@ -101,7 +103,7 @@ class ManufacturingReportViewSet(OrganisationScopedViewSetMixin,ViewSet):
  def bom_explosion(self,r):
   for field in ("product_id","quantity","production_date"):
    if not r.query_params.get(field):raise BusinessRuleError(f"{field.replace('_',' ').title()} is required.")
-  return Response(bom_explosion_report(organisation=self.get_organisation(),product_id=r.query_params["product_id"],quantity=r.query_params["quantity"],production_date=r.query_params["production_date"]))
+  return Response(bom_explosion_report(organisation=self.get_organisation(),product_id=serializers.UUIDField().run_validation(r.query_params["product_id"]),quantity=serializers.DecimalField(max_digits=18,decimal_places=4,min_value=Decimal("0.0001")).run_validation(r.query_params["quantity"]),production_date=serializers.DateField().run_validation(r.query_params["production_date"])))
  @action(detail=False,methods=["get"],url_path="material-requirements")
  def material_requirements(self,r):return Response(material_requirements_report(organisation=self.get_organisation()))
  @action(detail=False,methods=["get"],url_path="material-shortages")

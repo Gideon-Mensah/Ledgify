@@ -10,6 +10,9 @@ from apps.fx.models import FXRevaluation
 from apps.fx.services.exchange_rate_service import convert_amount,get_effective_rate
 
 def _post(*,organisation,revaluation_type,as_of_date,foreign_currency,foreign_amount,old_base_amount,control_account,gain_account,loss_account,user,source_reference="aggregate"):
+    from apps.fx.account_validation import validate_fx_account
+    for account,kind in ((control_account,revaluation_type),(gain_account,"gain"),(loss_account,"loss")):
+        validate_fx_account(organisation,account,kind)
     if FXRevaluation.objects.select_for_update().filter(organisation=organisation,revaluation_type=revaluation_type,as_of_date=as_of_date,foreign_currency_id=foreign_currency,source_reference=source_reference).exists():raise BusinessRuleError("This FX exposure has already been revalued for the selected date.")
     rate=get_effective_rate(organisation=organisation,base_currency=foreign_currency,target_currency=organisation.base_currency,date=as_of_date);new=convert_amount(amount=foreign_amount,rate=rate);difference=new-old_base_amount
     if difference==0:raise BusinessRuleError("There is no FX revaluation difference.")

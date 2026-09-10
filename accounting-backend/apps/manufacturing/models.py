@@ -12,12 +12,20 @@ class ProductionCostTransaction(models.Model):
   if self.pk and ProductionCostTransaction.objects.filter(pk=self.pk).exists():raise BusinessRuleError("Production cost transactions are immutable.")
   return super().save(*args,**kwargs)
 
+def forbid_reparent(instance, fields):
+ old=type(instance).objects.filter(pk=instance.pk).first()
+ if old:
+  from common.exceptions import BusinessRuleError
+  for field in fields:
+   if getattr(old,field)!=getattr(instance,field):raise BusinessRuleError("Manufacturing ownership cannot be changed.")
+
 class BillOfMaterials(models.Model):
  class Status(models.TextChoices):ACTIVE="active","Active";INACTIVE="inactive","Inactive";ARCHIVED="archived","Archived"
  id=models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False);organisation=models.ForeignKey("organisations.Organisation",on_delete=models.CASCADE,related_name="boms");product=models.ForeignKey("inventory.Product",on_delete=models.PROTECT,related_name="boms");code=models.CharField(max_length=50);name=models.CharField(max_length=150);description=models.TextField(blank=True);status=models.CharField(max_length=10,choices=Status.choices,default=Status.ACTIVE);created_by=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,related_name="boms_created");created_at=models.DateTimeField(auto_now_add=True);updated_at=models.DateTimeField(auto_now=True)
  class Meta:constraints=[models.UniqueConstraint(fields=["organisation","code"],name="unique_bom_code_per_org")]
  def clean(self):
   from common.exceptions import BusinessRuleError
+  forbid_reparent(self,("organisation_id",))
   if self.product.organisation_id!=self.organisation_id or self.product.status!="active" or not self.product.track_inventory:raise BusinessRuleError("BOM product must be an active tracked product in this organisation.")
  def save(self,*a,**k):self.full_clean();return super().save(*a,**k)
 class BOMVersion(models.Model):
@@ -26,6 +34,7 @@ class BOMVersion(models.Model):
  class Meta:constraints=[models.UniqueConstraint(fields=["bom","version_number"],name="unique_bom_version"),models.CheckConstraint(condition=models.Q(output_quantity__gt=0),name="bom_output_positive")]
  def clean(self):
   from common.exceptions import BusinessRuleError
+  forbid_reparent(self,("bom_id",))
   if self.effective_to and self.effective_to<self.effective_from:raise BusinessRuleError("Effective end cannot precede start.")
   if self.status==self.Status.ACTIVE:
    q=BOMVersion.objects.filter(bom=self.bom,status=self.Status.ACTIVE).exclude(pk=self.pk).filter(models.Q(effective_to=None)|models.Q(effective_to__gte=self.effective_from));q=q.filter(effective_from__lte=self.effective_to) if self.effective_to else q
@@ -36,6 +45,7 @@ class BOMComponent(models.Model):
  class Meta:ordering=["sequence","id"];constraints=[models.CheckConstraint(condition=models.Q(quantity__gt=0),name="bom_component_qty_positive"),models.CheckConstraint(condition=models.Q(scrap_percentage__gte=0),name="bom_scrap_nonnegative")]
  def clean(self):
   from common.exceptions import BusinessRuleError
+  forbid_reparent(self,("bom_version_id",))
   if self.component_product.organisation_id!=self.bom_version.bom.organisation_id or self.component_product_id==self.bom_version.bom.product_id:raise BusinessRuleError("BOM component is cross-organisation or directly self-referencing.")
  def save(self,*a,**k):self.full_clean();return super().save(*a,**k)
 class ProductionOrder(models.Model):
@@ -44,6 +54,11 @@ class ProductionOrder(models.Model):
  class Meta:constraints=[models.UniqueConstraint(fields=["organisation","order_number"],name="unique_production_order"),models.CheckConstraint(condition=models.Q(planned_quantity__gt=0),name="production_planned_positive")]
  def save(self,*args,**kwargs):
   from common.exceptions import BusinessRuleError
+  forbid_reparent(self,("organisation_id",))
+  from .security import check_owned, check_version
+  check_owned(self.organisation,self.product,self.warehouse,self.wip_account,self.variance_account)
+  check_version(self.organisation,self.bom_version)
+  if self.bom_version.bom.product_id!=self.product_id:raise BusinessRuleError("BOM version does not match the production product.")
   if self.pk:
    old=ProductionOrder.objects.filter(pk=self.pk).first()
    if old and old.status!=self.Status.DRAFT:

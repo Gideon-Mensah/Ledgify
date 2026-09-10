@@ -1,4 +1,5 @@
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from uuid import UUID
 
 
 class OrganisationScopedViewSetMixin:
@@ -13,6 +14,11 @@ class OrganisationScopedViewSetMixin:
             raise PermissionDenied(
                 "X-Organisation-ID header is required."
             )
+
+        try:
+            organisation_id = UUID(str(organisation_id))
+        except (ValueError, TypeError, AttributeError):
+            raise ValidationError({"X-Organisation-ID": "Enter a valid organisation UUID."}) from None
 
         from apps.organisations.models import OrganisationMember
 

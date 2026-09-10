@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../store/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
-import { AIFeatureRoute } from "./FeatureRoute";
+import { AIFeatureRoute, ConsolidationFeatureRoute } from "./FeatureRoute";
 import LoginPage from "../pages/auth/LoginPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "../pages/auth/ResetPasswordPage";
@@ -364,7 +364,7 @@ function AppRoutes() {
                     <Route path="tax/settings" element={<TaxSettingsPage />} />
                     <Route path="payroll" element={<PayrollPage />} />
                     <Route path="accounting/fx" element={<FXPage />} />
-                    <Route path="accounting/consolidation" element={<ConsolidationPage />} />
+                    <Route path="accounting/consolidation" element={<ConsolidationFeatureRoute><ConsolidationPage /></ConsolidationFeatureRoute>} />
                     <Route path="ai" element={<AIFeatureRoute><AIAssistantPage /></AIFeatureRoute>} />
                     <Route
                         path="settings/company"

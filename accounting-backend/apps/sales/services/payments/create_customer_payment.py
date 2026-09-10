@@ -58,7 +58,9 @@ def create_customer_payment(*, organisation, customer, bank_account, payment_dat
     rate=get_effective_rate(organisation=organisation,base_currency=currency,target_currency=organisation.base_currency,date=payment_date)
     base_amount=convert_amount(amount=amount,rate=rate);receivable_base=convert_amount(amount=amount,rate=invoice.exchange_rate) if invoice else base_amount
     fx=base_amount-receivable_base
-    if fx and not (organisation.fx_gain_account if fx>0 else organisation.fx_loss_account):raise BusinessRuleError("Configure FX gain and loss accounts before foreign settlement.")
+    if fx:
+        from apps.fx.account_validation import validate_fx_account
+        validate_fx_account(organisation, organisation.fx_gain_account if fx>0 else organisation.fx_loss_account, "gain" if fx>0 else "loss")
     payment = CustomerPayment.objects.create(
         organisation=organisation, customer=customer, invoice=invoice,
         bank_account=bank_account, payment_date=payment_date, amount=amount,

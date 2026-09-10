@@ -1,5 +1,5 @@
 // Store only the session details needed to restore authentication and organisation context.
-import { normaliseCurrencyCode } from "../utils/currency";
+import { normaliseCurrencyCode } from "../utils/currency.js";
 
 const STORAGE_KEY = "ledgify.auth";
 

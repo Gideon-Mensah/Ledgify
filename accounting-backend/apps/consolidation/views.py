@@ -11,8 +11,18 @@ from apps.organisations.permissions import *
 from .models import *
 from .serializers import *
 from .services import *
+from .security import require_enabled, require_group
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers
 class ParentScope(OrganisationScopedViewSetMixin):
- def groups(self):return ConsolidationGroup.objects.filter(parent_organisation=self.get_organisation())
+ def initial(self, request, *args, **kwargs):
+  require_enabled()
+  super().initial(request, *args, **kwargs)
+ def groups(self):
+  groups=ConsolidationGroup.objects.filter(parent_organisation=self.get_organisation())
+  for group in groups: require_group(group, self.request.user)
+  return groups
 class GroupViewSet(ParentScope,ModelViewSet):
  serializer_class=GroupSerializer;permission_classes=[IsAuthenticated,OrganisationActionPermission];action_permissions={"list":VIEW_CONSOLIDATION,"retrieve":VIEW_CONSOLIDATION,"create":MANAGE_CONSOLIDATION,"update":MANAGE_CONSOLIDATION,"partial_update":MANAGE_CONSOLIDATION,"destroy":MANAGE_CONSOLIDATION}
  def get_queryset(self):return self.groups()
@@ -34,7 +44,7 @@ class MappingViewSet(ParentScope,ModelViewSet):
  def get_queryset(self):return ConsolidationAccountMapping.objects.filter(group__in=self.groups()).select_related("organisation","source_account","consolidation_account")
  @action(detail=False,methods=["get"])
  def unmapped(self,r):
-  group=self.groups().get(pk=r.query_params["group"]);mapped=group.mappings.values_list("source_account_id",flat=True);ids=group.members.filter(status="active").values_list("organisation_id",flat=True)
+  group=get_object_or_404(self.groups(), pk=serializers.UUIDField().run_validation(r.query_params.get("group")));mapped=group.mappings.values_list("source_account_id",flat=True);ids=group.members.filter(status="active").values_list("organisation_id",flat=True)
   return Response(list(__import__("apps.accounting.models",fromlist=["Account"]).Account.objects.filter(organisation_id__in=ids,status="active").exclude(id__in=mapped).values("id","organisation_id","code","name")))
 class EliminationViewSet(ParentScope,ModelViewSet):
  serializer_class=EliminationSerializer;permission_classes=[IsAuthenticated,OrganisationActionPermission];action_permissions={"list":VIEW_CONSOLIDATION,"retrieve":VIEW_CONSOLIDATION,"create":MANAGE_CONSOLIDATION,"update":MANAGE_CONSOLIDATION,"partial_update":MANAGE_CONSOLIDATION,"destroy":MANAGE_CONSOLIDATION,"post":RUN_CONSOLIDATION,"reverse":RUN_CONSOLIDATION}
@@ -43,13 +53,15 @@ class EliminationViewSet(ParentScope,ModelViewSet):
   if journal.status!="draft":raise BusinessRuleError("Posted elimination journals are immutable.")
   parsed=[]
   for line in lines:
-   account=ConsolidationAccount.objects.filter(group=journal.group,pk=line.get("consolidation_account")).first()
+   account=line.get("consolidation_account")
    parsed.append({**line,"consolidation_account":account})
   validate_elimination_lines(group=journal.group,lines=parsed);journal.lines.all().delete();EliminationJournalLine.objects.bulk_create([EliminationJournalLine(journal=journal,**line) for line in parsed])
+ @transaction.atomic
  def perform_create(self,s):
   group=s.validated_data["group"];period=s.validated_data["period"];lines=s.validated_data.pop("lines",[])
   if not self.groups().filter(pk=group.pk).exists() or period.group_id!=group.id:raise BusinessRuleError("Invalid consolidation group or period.")
   journal=s.save(created_by=self.request.user);self._save_lines(journal,lines)
+ @transaction.atomic
  def perform_update(self,s):
   if s.instance.status!="draft":raise BusinessRuleError("Posted elimination journals are immutable.")
   lines=s.validated_data.pop("lines",None);journal=s.save()
@@ -71,15 +83,15 @@ class PeriodViewSet(ParentScope,ModelViewSet):
  def prepare(self,r,pk=None):return Response(self.get_serializer(prepare_consolidation(group=self.get_object().group,period=self.get_object(),user=r.user)).data)
  @action(detail=True,methods=["post"])
  def finalise(self,r,pk=None):
-  p=self.get_object();tb=consolidated_trial_balance(group=p.group,period=p)
+  p=self.get_object();tb=consolidated_trial_balance(group=p.group,period=p,user=r.user)
   if not tb["balanced"]:from common.exceptions import BusinessRuleError;raise BusinessRuleError("Consolidated trial balance is not balanced.")
   p.status="finalised";p.finalised_at=__import__("django").utils.timezone.now();p.finalised_by=r.user;p.save();ConsolidationHistory.objects.create(group=p.group,period=p,event="FINALISED",user=r.user);return Response(self.get_serializer(p).data)
 class ReportViewSet(ParentScope,ViewSet):
  permission_classes=[IsAuthenticated,OrganisationActionPermission];action_permissions={"trial_balance":VIEW_CONSOLIDATION,"profit_loss":VIEW_CONSOLIDATION,"balance_sheet":VIEW_CONSOLIDATION}
- def period(self,r):return ConsolidationPeriod.objects.get(id=r.query_params["period"],group__in=self.groups())
+ def period(self,r):return get_object_or_404(ConsolidationPeriod, id=serializers.UUIDField().run_validation(r.query_params.get("period")),group__in=self.groups())
  @action(detail=False,methods=["get"],url_path="trial-balance")
- def trial_balance(self,r):p=self.period(r);return Response(consolidated_trial_balance(group=p.group,period=p))
+ def trial_balance(self,r):p=self.period(r);return Response(consolidated_trial_balance(group=p.group,period=p,user=r.user))
  @action(detail=False,methods=["get"],url_path="profit-loss")
- def profit_loss(self,r):p=self.period(r);return Response(consolidated_profit_loss(group=p.group,period=p))
+ def profit_loss(self,r):p=self.period(r);return Response(consolidated_profit_loss(group=p.group,period=p,user=r.user))
  @action(detail=False,methods=["get"],url_path="balance-sheet")
- def balance_sheet(self,r):p=self.period(r);return Response(consolidated_balance_sheet(group=p.group,period=p))
+ def balance_sheet(self,r):p=self.period(r);return Response(consolidated_balance_sheet(group=p.group,period=p,user=r.user))

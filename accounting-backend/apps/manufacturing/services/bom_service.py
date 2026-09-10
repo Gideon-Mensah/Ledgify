@@ -9,12 +9,15 @@ from common.exceptions import BusinessRuleError
 from apps.inventory.models import Warehouse
 from apps.inventory.services.costing import get_current_average_cost
 from apps.manufacturing.models import BOMVersion,BillOfMaterials
+from apps.manufacturing.security import check_owned, check_version
 def get_effective_bom_version(*,organisation,product,date):
+ check_owned(organisation,product)
  qs=BOMVersion.objects.filter(bom__organisation=organisation,bom__product=product,status=BOMVersion.Status.ACTIVE,effective_from__lte=date).filter(Q(effective_to=None)|Q(effective_to__gte=date));count=qs.count()
  if count==0:raise BusinessRuleError("No active BOM version is available for this product and date.")
  if count>1:raise BusinessRuleError("Multiple active BOM versions overlap for this product and date.")
- return qs.select_related("bom","bom__product").get()
+ version=qs.select_related("bom","bom__product").get();check_version(organisation,version);return version
 def validate_bom_no_cycles(*,organisation,bom_version,max_depth=20):
+ check_version(organisation,bom_version)
  def walk(product,path,depth):
   if depth>max_depth:raise BusinessRuleError("BOM maximum depth exceeded.")
   if product.id in path:raise BusinessRuleError("Circular BOM: "+" -> ".join(str(x) for x in path+[product.id]))
@@ -39,6 +42,7 @@ def explode_bom(*,organisation,product,quantity,production_date,max_depth=20):
   return {"product":{"id":str(item.id),"code":item.code,"name":item.name},"requested_quantity":requested,"bom_version":{"id":str(version.id),"version_number":version.version_number},"components":rows}
  root=walk(product,quantity,[],0);root["flattened_requirements"]=[{"product":{"id":str(p.id),"code":p.code,"name":p.name},"required_quantity":qty} for p,qty in ((product.__class__.objects.get(id=pid),qty) for pid,qty in flat.items())];return root
 def calculate_bom_cost(*,organisation,bom_version,warehouse=None,as_of_date=None):
+ check_version(organisation,bom_version);check_owned(organisation,warehouse)
  warehouse=warehouse or Warehouse.objects.filter(organisation=organisation,is_default=True,status="active").first()
  if not warehouse:raise BusinessRuleError("A warehouse is required for BOM costing.")
  total=Decimal("0");rows=[]
