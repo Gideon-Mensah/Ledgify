@@ -126,6 +126,7 @@ class BankAccount(models.Model):
 
 
 class BankTransaction(models.Model):
+    import_fingerprint=models.CharField(max_length=64,null=True,blank=True,editable=False)
     class TransactionType(models.TextChoices):
         MONEY_IN = "money_in", "Money in"
         MONEY_OUT = "money_out", "Money out"
@@ -261,7 +262,8 @@ class BankTransaction(models.Model):
             models.CheckConstraint(
                 condition=models.Q(amount__gt=0),
                 name="bank_transaction_amount_positive",
-            )
+            ),
+            models.UniqueConstraint(fields=["organisation","bank_account","import_fingerprint"],condition=models.Q(import_fingerprint__isnull=False),name="unique_bank_import_fingerprint")
         ]
 
         indexes = [

@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Allocate Work in Progress into finished goods and post production variances."""
 
 from decimal import Decimal, ROUND_HALF_UP
@@ -20,7 +21,7 @@ def scope(org,order):
  check_order(org,order)
 def valid_account(org,account):
  if not account or account.organisation_id!=org.id or account.status!=Account.Status.ACTIVE:raise BusinessRuleError("Production account must be active and organisation-scoped.")
-@transaction.atomic
+@ledger_transaction
 def _add(*,organisation,production_order,date,amount,source_account,user,cost_type,description=""):
  order=ProductionOrder.objects.select_for_update().select_related("wip_account").get(pk=production_order.pk);scope(organisation,order);require_organisation_permission(organisation=organisation,user=user,permission=POST_PRODUCTION_COSTS);validate_period_open(organisation,date);valid_account(organisation,source_account);amount=money(amount)
  # Late invoices and allocations may be posted after the last physical receipt,
@@ -32,7 +33,7 @@ def add_labour_cost(**kwargs):return _add(cost_type="labour",**kwargs)
 def add_overhead_cost(**kwargs):return _add(cost_type="overhead",**kwargs)
 def add_subcontract_cost(**kwargs):return _add(cost_type="subcontract",**kwargs)
 def get_current_wip(*,organisation,production_order):return get_production_order_cost_summary(organisation=organisation,production_order=production_order)["current_wip"]
-@transaction.atomic
+@ledger_transaction
 def complete_production(*,organisation,production_order,quantity_completed,completion_date,destination_warehouse,user,reference=""):
  require_organisation_permission(organisation=organisation,user=user,permission=COMPLETE_PRODUCTION);order=ProductionOrder.objects.select_for_update().select_related("product","wip_account").get(pk=production_order.pk);scope(organisation,order);validate_period_open(organisation,completion_date);qty=Decimal(str(quantity_completed));cumulative=order.completed_quantity+qty
  if order.status not in {"released","in_progress","partly_completed"} or qty<=0 or cumulative>order.planned_quantity:raise BusinessRuleError("Production completion is invalid.")
@@ -44,7 +45,7 @@ def complete_production(*,organisation,production_order,quantity_completed,compl
  order.completed_quantity=cumulative;order.status="completed" if cumulative==order.planned_quantity else "partly_completed";fields=["completed_quantity","status","updated_at"]
  if order.status=="completed":order.completed_at=timezone.now();fields.append("completed_at")
  order.save(update_fields=fields);return {"production_order":order,"transfer_amount":transfer,**result}
-@transaction.atomic
+@ledger_transaction
 def close_production_order(*,organisation,production_order,close_date,user):
  require_organisation_permission(organisation=organisation,user=user,permission=CLOSE_PRODUCTION_ORDER);order=ProductionOrder.objects.select_for_update().select_related("wip_account").prefetch_related("variance_account").get(pk=production_order.pk);scope(organisation,order);validate_period_open(organisation,close_date)
  if order.status!="completed" or order.completed_quantity!=order.planned_quantity:raise BusinessRuleError("Only fully completed production orders can be closed.")

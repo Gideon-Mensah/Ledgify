@@ -1,7 +1,26 @@
 """Canonical ISO 4217 currency codes accepted by Ledgify."""
 from django.core.exceptions import ValidationError
 
-SUPPORTED_CURRENCIES = ("AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BRL", "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHF", "CLP", "CNY", "COP", "CRC", "CUC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD", "HNL", "HRK", "HTG", "HUF", "IDR", "ILS", "INR", "IQD", "IRR", "ISK", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR", "MZN", "NAD", "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SLL", "SOS", "SRD", "SSP", "STN", "SVC", "SYP", "SZL", "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX", "USD", "UYU", "UZS", "VES", "VND", "VUV", "WST", "XAF", "XCD", "XCG", "XDR", "XOF", "XPF", "XSU", "YER", "ZAR", "ZMW", "ZWG", "ZWL")
+import json
+from pathlib import Path
+from decimal import Decimal, ROUND_HALF_UP
+
+CURRENCY_METADATA = json.loads(Path(__file__).with_name("currency_metadata.json").read_text())
+SUPPORTED_CURRENCIES = tuple(CURRENCY_METADATA)
+
+
+def money(value, currency="GHS"):
+    require_currency_code(currency)
+    if isinstance(value, float):
+        from common.exceptions import BusinessRuleError
+        raise BusinessRuleError("Financial calculations require decimal values, not binary floats.")
+    amount = Decimal(value)
+    if not amount.is_finite():
+        from common.exceptions import BusinessRuleError
+        raise BusinessRuleError("A finite monetary amount is required.")
+    return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
 LEGACY_GHANA_CURRENCY_VALUES = {"GH¢", "GH₵", "GHC"}
 
 
@@ -12,7 +31,7 @@ def validate_currency_code(value, *, allow_blank=False):
     if code in LEGACY_GHANA_CURRENCY_VALUES:
         raise ValidationError("Use the ISO currency code GHS for Ghanaian cedi.")
     if code not in SUPPORTED_CURRENCIES:
-        raise ValidationError("Use a valid ISO 4217 currency code, such as GHS, GBP, USD or EUR.")
+        raise ValidationError("Use a supported two-decimal currency, such as GHS, GBP, USD or EUR.")
     return code
 
 

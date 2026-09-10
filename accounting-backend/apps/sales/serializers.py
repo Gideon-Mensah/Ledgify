@@ -429,6 +429,9 @@ class CustomerPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerial
                 "invoice_id": str(item.invoice_id),
                 "amount": item.amount,
                 "allocated_at": item.allocated_at,
+                "effective_date": item.effective_date,
+                "status": item.status,
+                "reversal_effective_date": item.reversal_effective_date,
             }
             for item in obj.allocations.filter(
                 status="active",
@@ -508,6 +511,7 @@ class ApplyCustomerCreditSerializer(serializers.Serializer):
 
 
 class CustomerPaymentAllocationRequestSerializer(serializers.Serializer):
+    effective_date = serializers.DateField(required=False)
     invoice_id = serializers.UUIDField()
     amount = serializers.DecimalField(max_digits=18, decimal_places=2)
 

@@ -60,13 +60,17 @@ class EliminationViewSet(ParentScope,ModelViewSet):
  def perform_create(self,s):
   group=s.validated_data["group"];period=s.validated_data["period"];lines=s.validated_data.pop("lines",[])
   if not self.groups().filter(pk=group.pk).exists() or period.group_id!=group.id:raise BusinessRuleError("Invalid consolidation group or period.")
+  mutable_period(period)
   journal=s.save(created_by=self.request.user);self._save_lines(journal,lines)
  @transaction.atomic
  def perform_update(self,s):
+  mutable_period(s.instance.period)
   if s.instance.status!="draft":raise BusinessRuleError("Posted elimination journals are immutable.")
   lines=s.validated_data.pop("lines",None);journal=s.save()
   if lines is not None:self._save_lines(journal,lines)
+ @transaction.atomic
  def perform_destroy(self,obj):
+  mutable_period(obj.period)
   if obj.status!="draft":raise BusinessRuleError("Posted elimination journals are immutable.")
   obj.delete()
  @action(detail=True,methods=["post"])
@@ -82,10 +86,9 @@ class PeriodViewSet(ParentScope,ModelViewSet):
  @action(detail=True,methods=["post"])
  def prepare(self,r,pk=None):return Response(self.get_serializer(prepare_consolidation(group=self.get_object().group,period=self.get_object(),user=r.user)).data)
  @action(detail=True,methods=["post"])
- def finalise(self,r,pk=None):
-  p=self.get_object();tb=consolidated_trial_balance(group=p.group,period=p,user=r.user)
-  if not tb["balanced"]:from common.exceptions import BusinessRuleError;raise BusinessRuleError("Consolidated trial balance is not balanced.")
-  p.status="finalised";p.finalised_at=__import__("django").utils.timezone.now();p.finalised_by=r.user;p.save();ConsolidationHistory.objects.create(group=p.group,period=p,event="FINALISED",user=r.user);return Response(self.get_serializer(p).data)
+ def finalise(self,r,pk=None):return Response(self.get_serializer(finalise_period(period=self.get_object(),user=r.user)).data)
+ @action(detail=True,methods=["post"])
+ def reopen(self,r,pk=None):return Response(self.get_serializer(reopen_period(period=self.get_object(),user=r.user,reason=r.data.get("reason"))).data)
 class ReportViewSet(ParentScope,ViewSet):
  permission_classes=[IsAuthenticated,OrganisationActionPermission];action_permissions={"trial_balance":VIEW_CONSOLIDATION,"profit_loss":VIEW_CONSOLIDATION,"balance_sheet":VIEW_CONSOLIDATION}
  def period(self,r):return get_object_or_404(ConsolidationPeriod, id=serializers.UUIDField().run_validation(r.query_params.get("period")),group__in=self.groups())

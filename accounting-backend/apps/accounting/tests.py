@@ -1,3 +1,4 @@
+from common.accounting_test_fixtures import calendar_periods
 from datetime import date
 from decimal import Decimal
 
@@ -437,6 +438,7 @@ class DirectCashFlowAccountingTests(TestCase):
             organisation=self.organisation, user=self.user,
             role=OrganisationMember.Role.OWNER,
         )
+        calendar_periods(self.organisation)
         self.bank = self.account("0010", Account.AccountType.ASSET, Account.AccountClass.BANK)
         self.savings = self.account("0011", Account.AccountType.ASSET, Account.AccountClass.BANK)
         self.capital = self.account("3000", Account.AccountType.EQUITY, Account.AccountClass.EQUITY)

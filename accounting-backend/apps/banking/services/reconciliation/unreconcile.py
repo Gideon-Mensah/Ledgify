@@ -1,3 +1,5 @@
+from common.ledger_integrity import ledger_transaction
+from apps.finance.services.allocations.carrying import reverse_allocation_fx
 """Remove a reconciliation link while preserving the audit trail and valid journals."""
 
 from decimal import Decimal
@@ -121,6 +123,7 @@ def _reverse_created_customer_payment(
         )
 
     reversal = reverse_journal_entry(
+            source_workflow=True,
         journal_entry=payment.accounting_journal,
         user=user,
         reversal_date=reversal_date,
@@ -128,12 +131,14 @@ def _reverse_created_customer_payment(
     )
     reversed_at = timezone.now()
     for allocation in active:
+        reverse_allocation_fx(allocation=allocation,user=user,date=reversal_date)
         allocation.status = CustomerPaymentAllocation.Status.REVERSED
         allocation.reversed_at = reversed_at
+        allocation.reversal_effective_date = reversal_date
         allocation.reversed_by = user
         allocation.reversal_reason = reason
         allocation.save(update_fields=[
-            "status", "reversed_at", "reversed_by", "reversal_reason",
+            "status", "reversed_at", "reversed_by", "reversal_reason", "reversal_effective_date",
         ])
     invoice = Invoice.objects.select_for_update().get(pk=active[0].invoice_id)
     _restore_invoice(invoice, history.metadata.get("previous_document_status"))
@@ -176,6 +181,7 @@ def _reverse_created_supplier_payment(
         )
 
     reversal = reverse_journal_entry(
+            source_workflow=True,
         journal_entry=payment.accounting_journal,
         user=user,
         reversal_date=reversal_date,
@@ -183,12 +189,14 @@ def _reverse_created_supplier_payment(
     )
     reversed_at = timezone.now()
     for allocation in active:
+        reverse_allocation_fx(allocation=allocation,user=user,date=reversal_date)
         allocation.status = SupplierPaymentAllocation.Status.REVERSED
         allocation.reversed_at = reversed_at
+        allocation.reversal_effective_date = reversal_date
         allocation.reversed_by = user
         allocation.reversal_reason = reason
         allocation.save(update_fields=[
-            "status", "reversed_at", "reversed_by", "reversal_reason",
+            "status", "reversed_at", "reversed_by", "reversal_reason", "reversal_effective_date",
         ])
     bill = Bill.objects.select_for_update().get(pk=active[0].bill_id)
     _restore_bill(bill, history.metadata.get("previous_document_status"))
@@ -225,7 +233,7 @@ def _mark_unreconciled(
     ])
 
 
-@transaction.atomic
+@ledger_transaction
 def unreconcile_bank_transaction(
     *, organisation, bank_transaction, user, reversal_date=None, reason=""
 ):
@@ -277,6 +285,7 @@ def unreconcile_bank_transaction(
         if not history.accounting_journal_id:
             raise BusinessRuleError("The manual reconciliation journal is missing.")
         reversal = reverse_journal_entry(
+            source_workflow=True,
             journal_entry=history.accounting_journal,
             user=user,
             reversal_date=reversal_date,
@@ -310,6 +319,7 @@ def unreconcile_bank_transaction(
         if not history.accounting_journal_id:
             raise BusinessRuleError("The bank transfer journal is missing.")
         reversal = reverse_journal_entry(
+            source_workflow=True,
             journal_entry=history.accounting_journal,
             user=user,
             reversal_date=reversal_date,

@@ -1,3 +1,5 @@
+from apps.accounting.services.periods.period_service import lock_accounting_period
+from common.accounting_test_fixtures import calendar_periods
 from datetime import date
 from decimal import Decimal
 from django.contrib.auth import get_user_model
@@ -14,6 +16,7 @@ from apps.sales.services.payments import create_customer_payment
 class FXWorkflowTests(TestCase):
  def setUp(self):
   self.user=get_user_model().objects.create_user(username="fx",email="fx@example.com",password="x",first_name="F",last_name="X");self.org=Organisation.objects.create(name="FX Org",base_currency="GBP",created_by=self.user);OrganisationMember.objects.create(organisation=self.org,user=self.user,role="owner")
+  calendar_periods(self.org)
   for code,name in (("GBP","Pound"),("USD","Dollar")):Currency.objects.get_or_create(code=code,defaults={"name":name})
   self.revenue=self.account("4000","Revenue","revenue","sales");self.ar=self.account("1100","AR","asset","receivable");self.bank=self.account("1000","USD bank","asset","bank",currency="USD");self.gain=self.account("7900","FX gain","revenue","other_income");self.loss=self.account("7901","FX loss","expense","other_expense");self.org.fx_gain_account=self.gain;self.org.fx_loss_account=self.loss;self.org.save()
   self.customer=Contact.objects.create(organisation=self.org,created_by=self.user,name="Foreign customer",is_customer=True,currency="USD")
@@ -38,6 +41,6 @@ class FXWorkflowTests(TestCase):
  def test_revaluation_reversal_then_settlement_does_not_double_count_fx(self):
   self.rate("0.80",date(2026,1,1));self.rate("0.90",date(2026,1,31));self.rate("0.85",date(2026,2,1));invoice=create_invoice(organisation=self.org,customer=self.customer,invoice_number="USD-SETTLE",issue_date=date(2026,1,15),due_date=date(2026,2,15),currency="USD",user=self.user,lines=[{"description":"Export","quantity":1,"unit_price":100,"revenue_account":self.revenue}]);approve_invoice(invoice=invoice,user=self.user);row=revalue_receivables(organisation=self.org,as_of_date=date(2026,1,31),foreign_currency="USD",foreign_amount=100,old_base_amount=Decimal("80"),control_account=self.ar,gain_account=self.gain,loss_account=self.loss,user=self.user,source_reference=f"invoice:{invoice.id}");row=reverse_fx_revaluation(revaluation=row,user=self.user,reversal_date=date(2026,2,1));payment=create_customer_payment(organisation=self.org,customer=self.customer,bank_account=self.bank,payment_date=date(2026,2,2),amount=100,user=self.user,currency="USD",invoice=invoice);self.assertEqual(invoice.base_currency_amount,Decimal("80.00"));self.assertEqual(payment.base_currency_amount,Decimal("85.00"));self.assertEqual(payment.realised_fx_gain_loss,Decimal("5.00"));self.assertEqual(row.gain_loss,Decimal("10.00"));self.assertEqual(sum(x.debit for x in row.journal.lines.all()),sum(x.credit for x in row.journal.lines.all()));self.assertEqual(sum(x.debit for x in row.reversal_journal.lines.all()),sum(x.credit for x in row.reversal_journal.lines.all()));self.assertEqual(sum(x.debit for x in payment.accounting_journal.lines.all()),sum(x.credit for x in payment.accounting_journal.lines.all()))
  def test_locked_period_prevents_revaluation_and_reversal_without_partial_writes(self):
-  self.rate("0.90",date(2026,1,1));AccountingPeriod.objects.create(organisation=self.org,name="January",start_date=date(2026,1,1),end_date=date(2026,1,31),status="locked")
+  self.rate("0.90",date(2026,1,1));lock_accounting_period(period=AccountingPeriod.objects.get(organisation=self.org,start_date=date(2026,1,1)),user=self.user)
   with self.assertRaises(BusinessRuleError):revalue_receivables(organisation=self.org,as_of_date=date(2026,1,31),foreign_currency="USD",foreign_amount=100,old_base_amount=Decimal("80"),control_account=self.ar,gain_account=self.gain,loss_account=self.loss,user=self.user)
   self.assertEqual(self.org.fx_revaluations.count(),0)

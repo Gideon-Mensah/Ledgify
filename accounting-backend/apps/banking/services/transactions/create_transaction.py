@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 from decimal import Decimal
 
 from django.db import transaction
@@ -7,7 +8,7 @@ from common.exceptions import BusinessRuleError
 from apps.banking.models import BankAccount, BankTransaction
 
 
-@transaction.atomic
+@ledger_transaction
 def create_bank_transaction(
     *,
     organisation,

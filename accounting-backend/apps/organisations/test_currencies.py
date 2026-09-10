@@ -90,12 +90,12 @@ class CurrencyWorkflowTests(TestCase):
         result = self.document("GHS", customer_id=str(self.orgs["GBP"][1].id))
         self.assertEqual(result.status_code, 400, result.data)
 
-    def test_shared_field_rejects_symbols_and_supports_three_decimal_currency(self):
+    def test_shared_field_restricts_unsupported_precision(self):
         from common.currency_serializers import CurrencyCodeField
         from rest_framework.exceptions import ValidationError as ApiValidationError
         field = CurrencyCodeField()
-        self.assertEqual(field.run_validation("bhd"), "BHD")
-        for invalid in ("£", "$", "GH¢", "GH₵", "GHC", "XYZ"):
+        self.assertEqual(field.run_validation("ghs"), "GHS")
+        for invalid in ("£", "$", "GH¢", "GH₵", "GHC", "XYZ", "BHD", "JPY"):
             with self.assertRaises(ApiValidationError):
                 field.run_validation(invalid)
 

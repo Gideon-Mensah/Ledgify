@@ -1,3 +1,5 @@
+from apps.accounting.services.periods.period_service import lock_accounting_period
+from common.accounting_test_fixtures import calendar_periods
 from datetime import date
 from decimal import Decimal
 
@@ -33,6 +35,7 @@ class InventoryFoundationTests(TestCase):
             organisation=self.organisation, user=self.user,
             role=OrganisationMember.Role.OWNER,
         )
+        calendar_periods(self.organisation)
         self.inventory_account = self._account(
             "INV", Account.AccountType.ASSET, Account.AccountClass.CURRENT_ASSET
         )
@@ -60,10 +63,10 @@ class InventoryFoundationTests(TestCase):
             created_by=self.user,
         )
 
-    def _adjust(self, adjustment_type, quantity, unit_cost="5.00"):
+    def _adjust(self, adjustment_type, quantity, unit_cost="5.00", adjustment_date=date(2026,8,12)):
         return create_stock_adjustment(
             organisation=self.organisation, product=self.product,
-            warehouse=self.warehouse, adjustment_date=date(2026, 8, 12),
+            warehouse=self.warehouse, adjustment_date=adjustment_date,
             adjustment_type=adjustment_type, quantity=quantity,
             unit_cost=unit_cost, offset_account=self.offset_account,
             user=self.user,
@@ -218,8 +221,7 @@ class InventoryFoundationTests(TestCase):
 
     def test_stock_count_expected_quantity_uses_count_date(self):
         self._adjust(StockMovement.MovementType.ADJUSTMENT_IN, "5", "2.00")
-        later = self._adjust(StockMovement.MovementType.ADJUSTMENT_IN, "2", "2.00")
-        StockMovement.objects.filter(pk=later.pk).update(movement_date=date(2026, 8, 13))
+        self._adjust(StockMovement.MovementType.ADJUSTMENT_IN, "2", "2.00", adjustment_date=date(2026,8,13))
         count = create_stock_count(
             organisation=self.organisation, warehouse=self.warehouse,
             count_date=date(2026, 8, 12), reference="COUNT-AS-OF",
@@ -241,11 +243,7 @@ class InventoryFoundationTests(TestCase):
         destination = Warehouse.objects.create(
             organisation=self.organisation, code="LOCKED", name="Locked", created_by=self.user,
         )
-        AccountingPeriod.objects.create(
-            organisation=self.organisation, name="August 2026",
-            start_date=date(2026, 8, 1), end_date=date(2026, 8, 31),
-            status=AccountingPeriod.Status.LOCKED,
-        )
+        lock_accounting_period(period=AccountingPeriod.objects.get(organisation=self.organisation,start_date=date(2026,8,1)), user=self.user)
         with self.assertRaises(BusinessRuleError):
             transfer_stock(
                 organisation=self.organisation, product=self.product,

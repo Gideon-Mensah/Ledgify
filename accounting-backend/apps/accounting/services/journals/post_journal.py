@@ -7,6 +7,8 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from common.exceptions import BusinessRuleError
+from common.currencies import require_currency_code
+from common.ledger_integrity import lock_ledger, journal_transition
 
 from apps.accounting.models import Account, JournalEntry
 from apps.accounting.services.periods.period_service import (
@@ -26,6 +28,7 @@ def post_journal_entry(
     Validate and post a draft journal entry.
     """
 
+    lock_ledger(journal_entry.organisation_id)
     journal_entry = (
         JournalEntry.objects
         .select_for_update()
@@ -33,6 +36,8 @@ def post_journal_entry(
         .get(pk=journal_entry.pk)
     )
 
+    require_currency_code(journal_entry.organisation.base_currency)
+    require_currency_code(journal_entry.transaction_currency,allow_blank=True)
     if journal_entry.status != JournalEntry.Status.DRAFT:
         raise BusinessRuleError(
             "Only draft journal entries can be posted."
@@ -69,6 +74,7 @@ def post_journal_entry(
 
     for index, line in enumerate(lines, start=1):
         account = line.account
+        require_currency_code(account.currency,allow_blank=True)
 
         if (
             account.organisation_id
@@ -158,13 +164,7 @@ def post_journal_entry(
     journal_entry.posted_by = user
     journal_entry.posted_at = timezone.now()
 
-    journal_entry.save(
-        update_fields=[
-            "status",
-            "posted_by",
-            "posted_at",
-            "updated_at",
-        ]
-    )
+    with journal_transition():
+        journal_entry.save(update_fields=["status", "posted_by", "posted_at", "updated_at"])
 
     return journal_entry

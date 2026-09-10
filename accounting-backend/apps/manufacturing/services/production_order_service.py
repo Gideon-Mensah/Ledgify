@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Manage production order status changes and protect completed manufacturing history."""
 
 from collections import defaultdict
@@ -20,7 +21,7 @@ def _scope(org,order):
  check_order(org,order)
 def _account(org,account):
  if not account or account.organisation_id!=org.id or account.status!=Account.Status.ACTIVE:raise BusinessRuleError("Production account must be active and organisation-scoped.")
-@transaction.atomic
+@ledger_transaction
 def create_production_order(*,organisation,product,warehouse,planned_quantity,start_date,due_date,wip_account,user,bom_version=None,variance_account=None,reference="",notes="",order_number=None):
  require_organisation_permission(organisation=organisation,user=user,permission=CREATE_PRODUCTION_ORDER);planned_quantity=Decimal(str(planned_quantity))
  if product.organisation_id!=organisation.id or product.status!="active" or not product.track_inventory:raise BusinessRuleError("Manufactured product is invalid.")
@@ -31,7 +32,7 @@ def create_production_order(*,organisation,product,warehouse,planned_quantity,st
  bom_version=bom_version or get_effective_bom_version(organisation=organisation,product=product,date=start_date)
  if bom_version.bom.organisation_id!=organisation.id or bom_version.bom.product_id!=product.id:raise BusinessRuleError("BOM version does not match the production product.")
  return ProductionOrder.objects.create(organisation=organisation,order_number=order_number or f"PO-{timezone.now().strftime('%Y%m%d%H%M%S%f')}",product=product,bom_version=bom_version,warehouse=warehouse,planned_quantity=planned_quantity,start_date=start_date,due_date=due_date,wip_account=wip_account,variance_account=variance_account,reference=reference,notes=notes,created_by=user)
-@transaction.atomic
+@ledger_transaction
 def release_production_order(*,organisation,production_order,user):
  require_organisation_permission(organisation=organisation,user=user,permission=RELEASE_PRODUCTION_ORDER);order=ProductionOrder.objects.select_for_update().select_related("bom_version__bom","warehouse","wip_account").get(pk=production_order.pk);_scope(organisation,order)
  if order.status!=ProductionOrder.Status.DRAFT:raise BusinessRuleError("Only draft production orders can be released.")
@@ -51,7 +52,7 @@ def get_material_shortages(*,organisation,production_order=None,warehouse=None):
   if warehouse and order.warehouse_id!=warehouse.id:continue
   result.extend(get_material_shortages(organisation=organisation,production_order=order))
  return result
-@transaction.atomic
+@ledger_transaction
 def issue_production_order_materials(*,organisation,production_order,lines,issue_date,user,reference=""):
  require_organisation_permission(organisation=organisation,user=user,permission=ISSUE_MATERIALS);validate_period_open(organisation,issue_date);order=ProductionOrder.objects.select_for_update().get(pk=production_order.pk);_scope(organisation,order)
  if order.status not in {"released","in_progress","partly_completed"}:raise BusinessRuleError("Production order is not eligible for material issue.")
@@ -65,7 +66,7 @@ def issue_production_order_materials(*,organisation,production_order,lines,issue
  for c,qty in prepared:
   issue_material_to_wip(organisation=organisation,product=c.product,warehouse=order.warehouse,quantity=qty,issue_date=issue_date,wip_account=order.wip_account,user=user,production_order_id=order.id,reference=reference,check_permissions=False);c.issued_quantity+=qty;c.save(update_fields=["issued_quantity","updated_at"])
  order.status="in_progress";order.save(update_fields=["status","updated_at"]);return order
-@transaction.atomic
+@ledger_transaction
 def return_production_order_material(*,organisation,production_order,component,quantity,return_date,user,reference=""):
  require_organisation_permission(organisation=organisation,user=user,permission=ISSUE_MATERIALS);order=ProductionOrder.objects.select_for_update().get(pk=production_order.pk);_scope(organisation,order);c=ProductionOrderComponent.objects.select_for_update().select_related("product").get(pk=component.pk,production_order=order);qty=Decimal(str(quantity))
  if order.status not in {"in_progress","partly_completed"} or qty<=0 or qty>c.issued_quantity-c.returned_quantity:raise BusinessRuleError("Material return is invalid.")

@@ -5,6 +5,8 @@ from decimal import Decimal
 from django.db import transaction
 
 from common.exceptions import BusinessRuleError
+from common.ledger_integrity import lock_ledger
+from common.currencies import require_currency_code, money
 
 from apps.accounting.models import Account, JournalEntry, JournalLine
 from apps.accounting.services.journals.journal_number import (
@@ -26,6 +28,8 @@ def create_journal_entry(
     source_type=JournalEntry.SourceType.MANUAL,
     source_id=None,
 ):
+    lock_ledger(organisation.pk)
+    require_currency_code(organisation.base_currency)
     # Manual journals need an explicit permission check. Journals created by an
     # approved business workflow are authorised by that workflow instead.
     if source_type == JournalEntry.SourceType.MANUAL:
@@ -108,6 +112,8 @@ def create_journal_entry(
                 f"an invalid debit or credit amount."
             )
 
+        if not debit.is_finite() or not credit.is_finite() or money(debit, organisation.base_currency) != debit or money(credit, organisation.base_currency) != credit:
+            raise BusinessRuleError("Journal amounts must be finite and have at most two decimal places.")
         if debit < Decimal("0.00"):
             raise BusinessRuleError(
                 f"Journal line {index} debit cannot be negative."

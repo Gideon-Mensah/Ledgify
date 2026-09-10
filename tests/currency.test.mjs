@@ -41,11 +41,11 @@ test("amount validation preserves zero, negative and large values and rejects in
     assert.equal(formatCurrency(value, "GHS", "en-GH"), new Intl.NumberFormat("en-GH", { style: "currency", currency: "GHS" }).format(Number(value)));
   }
   for (const value of [null, undefined, "", " ", "bad", NaN, Infinity, {}, false, "£10", "0x10"]) assert.equal(formatCurrency(value, "GBP"), "—");
-  assert.equal(formatCurrency(1, "JPY", "en-US"), "¥1");
+  assert.equal(formatCurrency(1, "JPY", "en-US"), "JPY 1");
   assert.equal(formatCurrency(1, "USD", "en-US"), "$1.00");
-  assert.match(formatCurrency(1, "BHD", "en-US"), /1\.000/);
-  assert.match(currencyNumberFormat("BHD"), /0\.000/);
-  assert.doesNotMatch(currencyNumberFormat("JPY"), /\.00/);
+  assert.equal(formatCurrency(1, "BHD", "en-US"), "BHD 1");
+  assert.equal(isValidCurrencyCode("BHD"), false);
+  assert.equal(isValidCurrencyCode("JPY"), false);
 });
 
 test("production screens centralise currency formatting and contain no pound symbols", async () => {

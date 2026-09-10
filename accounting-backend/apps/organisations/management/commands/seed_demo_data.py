@@ -61,6 +61,15 @@ class Command(BaseCommand):
             defaults={"role": OrganisationMember.Role.OWNER, "is_active": True},
         )
 
+        # Demo accounting periods are explicit setup, never an implicit posting fallback.
+        from apps.accounting.models import AccountingPeriod
+        from datetime import date
+        current_year = timezone.localdate().year
+        for year in (current_year - 1, current_year):
+            start, end = date(year, 1, 1), date(year, 12, 31)
+            if not AccountingPeriod.objects.filter(organisation=organisation, start_date__lte=end, end_date__gte=start).exists():
+                AccountingPeriod.objects.create(organisation=organisation, name=f"Demo {year}", start_date=start, end_date=end)
+
         account_specs = {
             "1000": ("Business Bank", "asset", "bank", "cash"),
             "1100": ("Accounts Receivable", "asset", "receivable", "operating"),

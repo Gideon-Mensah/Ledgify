@@ -1,9 +1,10 @@
 """Validate, post, and reverse organisation opening balances."""
-from decimal import Decimal,InvalidOperation
+from decimal import Decimal,InvalidOperation,ROUND_HALF_UP
 from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 from common.exceptions import BusinessRuleError
+from common.ledger_integrity import lock_ledger
 from apps.organisations.permissions import APPROVE_OPENING_BALANCES,MANAGE_OPENING_BALANCES
 from apps.organisations.services import require_organisation_permission
 from apps.accounting.models import Account,JournalEntry,OpeningBalance,OpeningBalanceLine
@@ -16,6 +17,8 @@ def totals(record):
 
 @transaction.atomic
 def save_draft(*,record,organisation,user,data):
+ lock_ledger(organisation.pk)
+ if record:record=OpeningBalance.objects.select_for_update().get(pk=record.pk,organisation=organisation)
  require_organisation_permission(organisation=organisation,user=user,permission=MANAGE_OPENING_BALANCES)
  if record and (record.organisation_id!=organisation.id or record.status!=OpeningBalance.Status.DRAFT):raise BusinessRuleError("Only an organisation draft opening balance can be edited.")
  if record is None:record=OpeningBalance.objects.create(organisation=organisation,opening_date=data["opening_date"],reference=data.get("reference",""),description=data.get("description",""),created_by=user,updated_by=user)
@@ -27,14 +30,17 @@ def save_draft(*,record,organisation,user,data):
   if not account:raise BusinessRuleError(f"Opening balance row {index} uses an invalid, inactive, or foreign account.")
   if account.id in seen:raise BusinessRuleError(f"Account {account.code} appears more than once.")
   seen.add(account.id)
-  try:debit=Decimal(str(item.get("debit") or 0)).quantize(Decimal("0.01"));credit=Decimal(str(item.get("credit") or 0)).quantize(Decimal("0.01"))
+  try:debit=Decimal(str(item.get("debit") or 0)).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP);credit=Decimal(str(item.get("credit") or 0)).quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
   except (InvalidOperation,ValueError):raise BusinessRuleError(f"Opening balance row {index} has an invalid amount.")
   if debit<ZERO or credit<ZERO or (debit>ZERO and credit>ZERO):raise BusinessRuleError(f"Account {account.code} requires one non-negative debit or credit amount.")
   if debit==ZERO and credit==ZERO:continue
   OpeningBalanceLine.objects.create(opening_balance=record,account=account,debit=debit,credit=credit,unusual_side_confirmed=bool(item.get("unusual_side_confirmed")))
  return record
 
+@transaction.atomic
 def submit(record,user):
+ lock_ledger(record.organisation_id)
+ record=OpeningBalance.objects.select_for_update().get(pk=record.pk)
  require_organisation_permission(organisation=record.organisation,user=user,permission=MANAGE_OPENING_BALANCES)
  if record.status!=OpeningBalance.Status.DRAFT:raise BusinessRuleError("Only a draft opening balance can be submitted.")
  summary=totals(record)
@@ -43,9 +49,13 @@ def submit(record,user):
 
 @transaction.atomic
 def post(record,user):
+ lock_ledger(record.organisation_id)
  record=OpeningBalance.objects.select_for_update().select_related("organisation").prefetch_related("lines__account").get(pk=record.pk)
  require_organisation_permission(organisation=record.organisation,user=user,permission=APPROVE_OPENING_BALANCES)
+ if record.status==OpeningBalance.Status.POSTED:return record
  if record.status!=OpeningBalance.Status.SUBMITTED:raise BusinessRuleError("Only a submitted opening balance can be posted.")
+ if OpeningBalance.objects.filter(organisation=record.organisation,opening_date=record.opening_date,status=OpeningBalance.Status.REVERSED,journal__reversal_entry__date__gt=record.opening_date).exists():
+  raise BusinessRuleError("An earlier opening balance was reversed on a later date. Date the replacement no earlier than that reversal to preserve historical balances.")
  if record.organisation.require_separate_approver and record.created_by_id==user.id:raise BusinessRuleError("You cannot approve an opening balance you created.")
  if OpeningBalance.objects.filter(organisation=record.organisation,opening_date=record.opening_date,status=OpeningBalance.Status.POSTED).exclude(pk=record.pk).exists():raise BusinessRuleError("A posted opening balance already exists for this date. Reverse it before posting a correction.")
  summary=totals(record)
@@ -55,6 +65,8 @@ def post(record,user):
 
 @transaction.atomic
 def reverse(record,user,reversal_date):
+ lock_ledger(record.organisation_id)
+ record=OpeningBalance.objects.select_for_update().get(pk=record.pk)
  require_organisation_permission(organisation=record.organisation,user=user,permission=APPROVE_OPENING_BALANCES)
  if record.status!=OpeningBalance.Status.POSTED or not record.journal_id:raise BusinessRuleError("Only a posted opening balance can be reversed.")
- reversal=reverse_journal_entry(record.journal,user,reversal_date,check_permissions=False);record.reversal_journal=reversal;record.status=OpeningBalance.Status.REVERSED;record.updated_by=user;record.save(update_fields=["reversal_journal","status","updated_by","updated_at"]);return record
+ reversal=reverse_journal_entry(record.journal,user,reversal_date,check_permissions=False,source_workflow=True);record.reversal_journal=reversal;record.status=OpeningBalance.Status.REVERSED;record.updated_by=user;record.save(update_fields=["reversal_journal","status","updated_by","updated_at"]);return record

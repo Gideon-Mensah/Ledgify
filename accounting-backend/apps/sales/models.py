@@ -607,6 +607,9 @@ class CustomerCreditAllocation(models.Model):
         Invoice, on_delete=models.PROTECT, related_name="credit_allocations"
     )
     amount = models.DecimalField(max_digits=18, decimal_places=2)
+    carrying_base_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
+    source_base_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
+    effective_date = models.DateField(null=True, blank=True)
     applied_at = models.DateTimeField()
     applied_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
@@ -933,6 +936,10 @@ class CustomerPaymentAllocation(models.Model):
         Invoice, on_delete=models.PROTECT, related_name="payment_allocations"
     )
     amount = models.DecimalField(max_digits=18, decimal_places=2)
+    carrying_base_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
+    source_base_amount = models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
+    effective_date = models.DateField(null=True, blank=True)
+    reversal_effective_date = models.DateField(null=True, blank=True)
     allocated_at = models.DateTimeField()
     allocated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
@@ -970,7 +977,7 @@ class CustomerPaymentAllocation(models.Model):
             if previous and previous.status == self.Status.REVERSED:
                 protected = (
                     "organisation_id", "payment_id", "invoice_id", "amount",
-                    "allocated_at", "allocated_by_id", "status", "reversed_at",
+                    "effective_date", "reversal_effective_date", "allocated_at", "allocated_by_id", "status", "reversed_at",
                     "reversed_by_id", "reversal_reason",
                 )
                 if any(

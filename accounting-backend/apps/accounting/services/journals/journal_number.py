@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Generate organisation-specific journal numbers without sharing sequences across businesses."""
 
 from django.db import transaction
@@ -5,7 +6,7 @@ from django.db import transaction
 from apps.accounting.models import JournalSequence
 
 
-@transaction.atomic
+@ledger_transaction
 def get_next_journal_number(organisation):
     sequence = (
         JournalSequence.objects

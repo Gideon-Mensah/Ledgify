@@ -1,3 +1,5 @@
+from apps.accounting.services.journals import post_journal_entry
+from common.accounting_test_fixtures import calendar_periods
 """General Journal server-pagination and isolation regressions."""
 from datetime import date,timedelta
 from decimal import Decimal
@@ -10,11 +12,14 @@ from apps.organisations.models import Organisation,OrganisationMember
 class GeneralJournalPaginationTests(TestCase):
  def setUp(self):
   self.user=get_user_model().objects.create_user(username="journal-pages",password="test");self.org=Organisation.objects.create(base_currency="GBP", name="Paged Org",created_by=self.user);OrganisationMember.objects.create(organisation=self.org,user=self.user,role="owner");self.foreign=Organisation.objects.create(base_currency="GBP", name="Foreign Org",created_by=self.user);OrganisationMember.objects.create(organisation=self.foreign,user=self.user,role="owner");self.client=APIClient();self.client.force_authenticate(self.user)
+  calendar_periods(self.org); calendar_periods(self.foreign)
   self.bank=Account.objects.create(organisation=self.org,created_by=self.user,code="1000",name="Bank",account_type="asset",account_class="bank");self.capital=Account.objects.create(organisation=self.org,created_by=self.user,code="3000",name="Capital",account_type="equity",account_class="equity")
   for index in range(27):
    journal=JournalEntry.objects.create(organisation=self.org,entry_number=f"JRN-{index:03}",date=date(2026,1,1)+timedelta(days=index),description=f"Entry {index}",status="draft",created_by=self.user)
-   JournalLine.objects.create(journal_entry=journal,account=self.bank,debit=Decimal("10.00"),credit=0);JournalLine.objects.create(journal_entry=journal,account=self.capital,debit=0,credit=Decimal("10.00"));JournalEntry.objects.filter(pk=journal.pk).update(status="posted")
-  JournalEntry.objects.create(organisation=self.foreign,entry_number="FOREIGN",date=date(2026,1,1),description="Never disclose",status="posted",created_by=self.user)
+   JournalLine.objects.create(journal_entry=journal,account=self.bank,debit=Decimal("10.00"),credit=0);JournalLine.objects.create(journal_entry=journal,account=self.capital,debit=0,credit=Decimal("10.00"));post_journal_entry(journal,self.user)
+  foreign_bank=Account.objects.create(organisation=self.foreign,created_by=self.user,code="1000",name="Bank",account_type="asset",account_class="bank");foreign_equity=Account.objects.create(organisation=self.foreign,created_by=self.user,code="3000",name="Equity",account_type="equity",account_class="equity")
+  foreign_journal=JournalEntry.objects.create(organisation=self.foreign,entry_number="FOREIGN",date=date(2026,1,1),description="Never disclose",status="draft",created_by=self.user)
+  JournalLine.objects.create(journal_entry=foreign_journal,account=foreign_bank,debit=10,credit=0);JournalLine.objects.create(journal_entry=foreign_journal,account=foreign_equity,debit=0,credit=10);post_journal_entry(foreign_journal,self.user)
  def get(self,organisation=None,**params):return self.client.get("/api/v1/journals/register/",params,HTTP_X_ORGANISATION_ID=str((organisation or self.org).id))
  def test_first_middle_last_pages_are_stable_complete_journals(self):
   first=self.get();self.assertEqual(first.status_code,200);self.assertEqual(first.json()["count"],27);self.assertEqual(len(first.json()["results"]),25);self.assertEqual(first.json()["results"][0]["entry_number"],"JRN-000");self.assertEqual(len(first.json()["results"][0]["lines"]),2)

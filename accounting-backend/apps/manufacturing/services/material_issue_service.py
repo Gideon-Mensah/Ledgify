@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Move material cost from Inventory into Work in Progress for production."""
 
 from decimal import Decimal,ROUND_HALF_UP
@@ -29,11 +30,11 @@ def _movement(*,organisation,product,warehouse,date,kind,quantity,unit_cost,user
 def _journal(*,organisation,date,debit,credit,amount,user,source_type,source_id,reference,description):
  journal=create_journal_entry(organisation=organisation,date=date,description=description,reference=reference,source_type=source_type,source_id=source_id,user=user,lines=[{"account":debit,"debit":amount,"credit":ZERO,"description":description},{"account":credit,"debit":ZERO,"credit":amount,"description":description}]);post_journal_entry(journal_entry=journal,user=user);return journal
 def _finish(movement,journal,user):movement.accounting_journal=journal;movement.status=StockMovement.Status.POSTED;movement.posted_by=user;movement.posted_at=timezone.now();movement.save(update_fields=["accounting_journal","status","posted_by","posted_at","updated_at"])
-@transaction.atomic
+@ledger_transaction
 def issue_material_to_wip(*,organisation,product,warehouse,quantity,issue_date,wip_account,user,production_order_id=None,reference="",description="",check_permissions=True):
  if check_permissions: require_organisation_permission(organisation=organisation,user=user,permission=ISSUE_MATERIALS)
  quantity,inventory=_validate(organisation,product,warehouse,quantity,wip_account,issue_date);movement=_movement(organisation=organisation,product=product,warehouse=warehouse,date=issue_date,kind=StockMovement.MovementType.PRODUCTION_MATERIAL_ISSUE,quantity=quantity,unit_cost=0,user=user,production_order_id=production_order_id,reference=reference,description=description or "Production material issue");cost=cost_stock_movement(organisation=organisation,movement=movement);movement.unit_cost=cost["unit_cost"];movement.total_cost=cost["cost_used"];movement.save(update_fields=["unit_cost","total_cost","updated_at"]);amount=cost["cost_used"].quantize(Decimal(".01"),rounding=ROUND_HALF_UP);journal=_journal(organisation=organisation,date=issue_date,debit=wip_account,credit=inventory,amount=amount,user=user,source_type=JournalEntry.SourceType.MANUFACTURING_MATERIAL_ISSUE,source_id=movement.id,reference=reference,description=description or "Material issued to WIP");_finish(movement,journal,user);audit=ProductionCostTransaction.objects.create(organisation=organisation,production_order_id=production_order_id,transaction_date=issue_date,cost_type="material",source_type="stock_movement",source_id=movement.id,amount=amount,journal_entry=journal,description=description,created_by=user);return {"movement":movement,"cost_transaction":audit,"journal":journal,"cost":cost}
-@transaction.atomic
+@ledger_transaction
 def return_material_from_wip(*,organisation,product,warehouse,quantity,return_date,wip_account,user,original_issue_movement=None,production_order_id=None,reference="",description="",check_permissions=True):
  if check_permissions: require_organisation_permission(organisation=organisation,user=user,permission=ISSUE_MATERIALS)
  quantity,inventory=_validate(organisation,product,warehouse,quantity,wip_account,return_date)
@@ -44,7 +45,7 @@ def return_material_from_wip(*,organisation,product,warehouse,quantity,return_da
   from apps.inventory.services.costing import get_current_average_cost
   unit=get_current_average_cost(organisation=organisation,product=product,warehouse=warehouse)["average_unit_cost"]
  movement=_movement(organisation=organisation,product=product,warehouse=warehouse,date=return_date,kind=StockMovement.MovementType.PRODUCTION_MATERIAL_RETURN,quantity=quantity,unit_cost=unit,user=user,production_order_id=production_order_id,reference=reference,description=description or "Material return from WIP");cost_stock_movement(organisation=organisation,movement=movement);amount=(quantity*unit).quantize(Decimal(".01"),rounding=ROUND_HALF_UP);journal=_journal(organisation=organisation,date=return_date,debit=inventory,credit=wip_account,amount=amount,user=user,source_type=JournalEntry.SourceType.MANUFACTURING_COST,source_id=movement.id,reference=reference,description=description or "Material returned from WIP");_finish(movement,journal,user);audit=ProductionCostTransaction.objects.create(organisation=organisation,production_order_id=production_order_id,transaction_date=return_date,cost_type="return",source_type="stock_movement",source_id=movement.id,amount=-amount,journal_entry=journal,description=description,created_by=user);return {"movement":movement,"cost_transaction":audit,"journal":journal}
-@transaction.atomic
+@ledger_transaction
 def receive_finished_goods_from_wip(*,organisation,product,warehouse,quantity,total_cost,completion_date,wip_account,user,production_order_id=None,reference="",description="",check_permissions=True):
  if check_permissions: require_organisation_permission(organisation=organisation,user=user,permission=ISSUE_MATERIALS)
  quantity,inventory=_validate(organisation,product,warehouse,quantity,wip_account,completion_date);total_cost=Decimal(str(total_cost))

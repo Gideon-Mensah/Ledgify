@@ -82,7 +82,7 @@ test("Cash Flow drill-down exposes backend audit fields without recalculating am
 });
 
 test("currency exports retain numeric money, ISO metadata and appropriate minor units", async () => {
-  for (const currency of ["GHS", "GBP", "USD", "EUR", "JPY", "BHD"]) {
+  for (const currency of ["GHS", "GBP", "USD", "EUR", "KES", "NGN"]) {
     const entries = storedZipEntries(await bytes(createXlsxWorkbook({ title: "Invoices", rows: [{ invoice: "INV-1", amount_due: "1234.50", currency }], metadata: { currency } })));
     const sheet = entries.get("xl/worksheets/sheet1.xml");
     assert.match(sheet, /<v>1234.5<\/v>/);

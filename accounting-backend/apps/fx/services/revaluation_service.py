@@ -1,3 +1,4 @@
+from common.ledger_integrity import lock_ledger
 """Revalue open foreign-currency balances and post unrealised exchange differences."""
 
 from decimal import Decimal
@@ -10,6 +11,7 @@ from apps.fx.models import FXRevaluation
 from apps.fx.services.exchange_rate_service import convert_amount,get_effective_rate
 
 def _post(*,organisation,revaluation_type,as_of_date,foreign_currency,foreign_amount,old_base_amount,control_account,gain_account,loss_account,user,source_reference="aggregate"):
+    lock_ledger(organisation.pk)
     from apps.fx.account_validation import validate_fx_account
     for account,kind in ((control_account,revaluation_type),(gain_account,"gain"),(loss_account,"loss")):
         validate_fx_account(organisation,account,kind)
@@ -32,8 +34,9 @@ def revalue_bank_accounts(**kwargs):return _post(revaluation_type=FXRevaluation.
 
 @transaction.atomic
 def reverse_fx_revaluation(*,revaluation,user,reversal_date=None):
+    lock_ledger(revaluation.organisation_id)
     row=FXRevaluation.objects.select_for_update().select_related("journal").get(pk=revaluation.pk)
     if row.reversal_journal_id:raise BusinessRuleError("This FX revaluation has already been reversed.")
-    reversal=reverse_journal_entry(journal_entry=row.journal,user=user,reversal_date=reversal_date)
+    reversal=reverse_journal_entry(source_workflow=True,journal_entry=row.journal,user=user,reversal_date=reversal_date)
     row.reversal_journal=reversal;row.reversed_by=user;row.reversed_at=timezone.now();row.save(update_fields=["reversal_journal","reversed_by","reversed_at"])
     return row

@@ -178,7 +178,33 @@ class AccountImportBatch(models.Model):
     class Meta:
         ordering = ["-uploaded_at"]
 
+from django.db import transaction
+from common.ledger_integrity import JournalQuerySet, JournalLineQuerySet, _transition, _period_transition, lock_ledger
+from common.exceptions import BusinessRuleError
+
 class JournalEntry(models.Model):
+    objects = JournalQuerySet.as_manager()
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        lock_ledger(self.organisation_id)
+        old=type(self).objects.select_for_update().filter(pk=self.pk).first()
+        if old and old.status in ('posted','reversed'):
+            protected=[field.attname for field in self._meta.concrete_fields if field.name not in ('status','updated_at')]
+            if any(getattr(old,field)!=getattr(self,field) for field in protected):
+                raise BusinessRuleError('Posted or reversed journals are immutable; reverse and replace instead.')
+            if old.status!=self.status and not (_transition.get() and old.status=='posted' and self.status=='reversed'):
+                raise BusinessRuleError('Use the approved reversal workflow.')
+        elif self.status!='draft' and not _transition.get():
+            raise BusinessRuleError('Use the journal posting service.')
+        return super().save(*args, **kwargs)
+
+    @transaction.atomic
+    def delete(self, *args, **kwargs):
+        old=type(self).objects.select_for_update().get(pk=self.pk)
+        if old.status!='draft':raise BusinessRuleError('Posted or reversed journals cannot be deleted.')
+        return super().delete(*args, **kwargs)
+
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
         POSTED = "posted", "Posted"
@@ -334,6 +360,7 @@ LEDGER_EFFECTIVE_JOURNAL_STATUSES = (
 
 
 class JournalLine(models.Model):
+    objects = JournalLineQuerySet.as_manager()
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -397,80 +424,20 @@ class JournalLine(models.Model):
     def __str__(self):
         return f"{self.journal_entry.entry_number} - {self.account}"
     
+    @transaction.atomic
     def save(self, *args, **kwargs):
-        if self.pk:
-            previous = JournalEntry.objects.filter(
-                pk=self.pk
-            ).first()
+        old=type(self).objects.filter(pk=self.pk).first()
+        ids={self.journal_entry_id}
+        if old:ids.add(old.journal_entry_id)
+        parents=list(JournalEntry.objects.select_for_update().filter(pk__in=ids).order_by('id'))
+        if len(parents)!=len(ids) or any(parent.status!='draft' for parent in parents):
+            raise BusinessRuleError('Posted or reversed journal lines are immutable.')
+        return super().save(*args, **kwargs)
 
-            if (
-                previous
-                and previous.status == JournalEntry.Status.POSTED
-                and self.status == JournalEntry.Status.POSTED
-            ):
-                protected_fields = [
-                    "organisation_id",
-                    "entry_number",
-                    "date",
-                    "reference",
-                    "description",
-                    "source_type",
-                    "source_id",
-                ]
-
-                for field in protected_fields:
-                    if getattr(previous, field) != getattr(self, field):
-                        from common.exceptions import BusinessRuleError
-
-                        raise BusinessRuleError(
-                            "Posted journal entries cannot be edited. "
-                            "Reverse the journal instead."
-                        )
-
-        super().save(*args, **kwargs)
-
+    @transaction.atomic
     def delete(self, *args, **kwargs):
-        if self.status in {
-            JournalEntry.Status.POSTED,
-            JournalEntry.Status.REVERSED,
-        }:
-            from common.exceptions import BusinessRuleError
-
-            raise BusinessRuleError(
-                "Posted or reversed journal entries cannot be deleted."
-            )
-
-        return super().delete(*args, **kwargs)
-    def save(self, *args, **kwargs):
-        if (
-            self.journal_entry_id
-            and self.journal_entry.status
-            in {
-                JournalEntry.Status.POSTED,
-                JournalEntry.Status.REVERSED,
-            }
-        ):
-            from common.exceptions import BusinessRuleError
-
-            raise BusinessRuleError(
-                "Lines belonging to posted or reversed journals "
-                "cannot be edited."
-            )
-
-        super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        if self.journal_entry.status in {
-            JournalEntry.Status.POSTED,
-            JournalEntry.Status.REVERSED,
-        }:
-            from common.exceptions import BusinessRuleError
-
-            raise BusinessRuleError(
-                "Lines belonging to posted or reversed journals "
-                "cannot be deleted."
-            )
-
+        parent=JournalEntry.objects.select_for_update().get(pk=self.journal_entry_id)
+        if parent.status!='draft':raise BusinessRuleError('Posted or reversed journal lines cannot be deleted.')
         return super().delete(*args, **kwargs)
 
 class JournalSequence(models.Model):
@@ -495,6 +462,22 @@ class JournalSequence(models.Model):
         )
         
 class AccountingPeriod(models.Model):
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        self.start_date = models.DateField().to_python(self.start_date)
+        self.end_date = models.DateField().to_python(self.end_date)
+        lock_ledger(self.organisation_id)
+        if self.end_date<self.start_date:raise BusinessRuleError('Period end must be on or after its start.')
+        old=type(self).objects.filter(pk=self.pk).first()
+        if old:
+            if any(getattr(old,f)!=getattr(self,f) for f in ('organisation_id','start_date','end_date')):
+                raise BusinessRuleError('Period ownership and boundaries are immutable; create a reviewed replacement.')
+            if old.status!=self.status and not _period_transition.get():
+                raise BusinessRuleError('Use the audited close or reopen workflow.')
+        if type(self).objects.filter(organisation_id=self.organisation_id,start_date__lte=self.end_date,end_date__gte=self.start_date).exclude(pk=self.pk).exists():
+            raise BusinessRuleError('Accounting periods must not overlap, including boundary dates.')
+        return super().save(*args, **kwargs)
+
     class Status(models.TextChoices):
         OPEN = "open", "Open"
         LOCKED = "locked", "Locked"
@@ -726,6 +709,7 @@ class OpeningBalance(models.Model):
     posted_by=models.ForeignKey(settings.AUTH_USER_MODEL,on_delete=models.PROTECT,null=True,blank=True,related_name="opening_balances_posted")
     created_at=models.DateTimeField(auto_now_add=True);updated_at=models.DateTimeField(auto_now=True);posted_at=models.DateTimeField(null=True,blank=True)
     class Meta:
+        constraints=[models.UniqueConstraint(fields=["organisation","opening_date"],condition=models.Q(status="posted"),name="unique_posted_opening_date")]
         ordering=["-opening_date","-created_at"];indexes=[models.Index(fields=["organisation","status"]),models.Index(fields=["organisation","opening_date"])]
 
 
@@ -737,3 +721,26 @@ class OpeningBalanceLine(models.Model):
     unusual_side_confirmed=models.BooleanField(default=False)
     class Meta:
         ordering=["account__code"];constraints=[models.UniqueConstraint(fields=["opening_balance","account"],name="unique_opening_balance_account")]
+
+
+class PaymentRequest(models.Model):
+    """Durable organisation/operation replay record, committed with the payment."""
+    organisation=models.ForeignKey(Organisation,on_delete=models.PROTECT)
+    operation=models.CharField(max_length=32)
+    key=models.UUIDField()
+    payload_hash=models.CharField(max_length=64)
+    response=models.JSONField(null=True)
+    result_id=models.UUIDField(null=True)
+    created_at=models.DateTimeField(auto_now_add=True)
+    class Meta:
+        constraints=[models.UniqueConstraint(fields=['organisation','operation','key'],name='unique_payment_request_key')]
+
+
+class AccountingCorrection(models.Model):
+    organisation = models.ForeignKey(Organisation, on_delete=models.PROTECT)
+    source_id = models.UUIDField()
+    operation = models.CharField(max_length=32)
+    reversal_journal = models.OneToOneField(JournalEntry, on_delete=models.PROTECT)
+    reason = models.TextField()
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    performed_at = models.DateTimeField(auto_now_add=True)

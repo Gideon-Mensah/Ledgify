@@ -22,12 +22,14 @@ class AgedPayablesQuerySerializer(serializers.Serializer):
 
 
 class CustomerBalanceQuerySerializer(serializers.Serializer):
+    as_of_date = serializers.DateField(required=False)
     customer_id = serializers.UUIDField(
         required=False,
     )
 
 
 class SupplierBalanceQuerySerializer(serializers.Serializer):
+    as_of_date = serializers.DateField(required=False)
     supplier_id = serializers.UUIDField(
         required=False,
     )

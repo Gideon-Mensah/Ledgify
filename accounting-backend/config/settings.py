@@ -104,6 +104,7 @@ if env_bool("DJANGO_TRUST_PROXY_SSL_HEADER"):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 CORS_ALLOW_HEADERS = [
+    "idempotency-key",
     "accept",
     "authorization",
     "content-type",

@@ -1,3 +1,4 @@
+import { createPaymentSubmission } from "../../utils/paymentSubmission.js";
 import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
@@ -34,6 +35,7 @@ function RecordBillPaymentModal({
   onRecord,
 }) {
   const auth = useAuth();
+  const [submission] = useState(createPaymentSubmission);
   const today = getOrganisationToday(auth.selectedOrganisation?.timezone);
   const [
     bankAccounts,
@@ -275,10 +277,13 @@ function RecordBillPaymentModal({
       return;
     }
 
+    const idempotencyKey = submission.begin({ details, document: bill.id });
+    if (!idempotencyKey) return;
     setIsRecording(true);
 
     try {
       await onRecord({
+        idempotencyKey,
         amount: details.amount,
 
         paymentDate:
@@ -306,6 +311,7 @@ function RecordBillPaymentModal({
         notes:
           details.notes.trim(),
       });
+      submission.complete();
     } catch (error) {
       setErrors({
         form:
@@ -313,6 +319,7 @@ function RecordBillPaymentModal({
           "The payment could not be recorded.",
       });
     } finally {
+      submission.finish();
       setIsRecording(false);
     }
   };

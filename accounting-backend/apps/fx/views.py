@@ -1,3 +1,4 @@
+from common.currencies import SUPPORTED_CURRENCIES
 """Organisation FX endpoints delegated to dated-rate and revaluation services."""
 
 from rest_framework.permissions import IsAuthenticated
@@ -15,7 +16,7 @@ from apps.fx.serializers import *
 from apps.fx.services import revalue_bank_accounts,revalue_payables,revalue_receivables,reverse_fx_revaluation
 
 class CurrencyViewSet(ReadOnlyModelViewSet):
-    queryset=Currency.objects.filter(status="active");serializer_class=CurrencySerializer;permission_classes=[IsAuthenticated]
+    queryset=Currency.objects.filter(status="active",code__in=SUPPORTED_CURRENCIES,decimal_places=2);serializer_class=CurrencySerializer;permission_classes=[IsAuthenticated]
 class ExchangeRateViewSet(OrganisationScopedViewSetMixin,ModelViewSet):
     serializer_class=ExchangeRateSerializer;permission_classes=[IsAuthenticated,OrganisationActionPermission];http_method_names=["get","post","head","options"]
     action_permissions={"list":VIEW_ACCOUNTING,"retrieve":VIEW_ACCOUNTING,"create":MANAGE_ACCOUNTS}
@@ -50,6 +51,14 @@ class FXReportViewSet(OrganisationScopedViewSetMixin,ViewSet):
     def unrealised(self,request):return Response(FXRevaluationSerializer(FXRevaluation.objects.filter(organisation=self.get_organisation()),many=True).data)
     @action(detail=False,methods=["get"])
     def exposure(self,request):
-        from apps.sales.models import Invoice;from apps.purchases.models import Bill
-        base=self.get_organisation().base_currency
-        return Response({"base_currency":base,"receivables":list(Invoice.objects.filter(organisation=self.get_organisation()).exclude(currency=base).values("currency").annotate(amount=Sum("total"))),"payables":list(Bill.objects.filter(organisation=self.get_organisation()).exclude(currency=base).values("currency").annotate(amount=Sum("total")))})
+        from django.utils import timezone
+        from apps.finance.services.aging import aged_receivables, aged_payables
+        organisation=self.get_organisation()
+        cutoff=timezone.localdate()
+        def exposure_rows(report):
+            return [{"currency": row["currency"], "amount": row["net_outstanding"]}
+                    for row in report["currency_totals"]
+                    if row["currency"] != organisation.base_currency and row["net_outstanding"]]
+        return Response({"as_of_date": cutoff, "base_currency": organisation.base_currency,
+            "receivables": exposure_rows(aged_receivables(organisation=organisation,as_of_date=cutoff)),
+            "payables": exposure_rows(aged_payables(organisation=organisation,as_of_date=cutoff))})

@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Apply available payments to the oldest eligible documents deterministically."""
 
 from decimal import Decimal
@@ -11,7 +12,7 @@ from .customer_allocation import allocate_customer_payment
 from .supplier_allocation import allocate_supplier_payment
 
 
-@transaction.atomic
+@ledger_transaction
 def auto_allocate_customer_payment(*, organisation, payment, user):
     payment = CustomerPayment.objects.select_for_update().get(pk=payment.pk)
     if (
@@ -41,7 +42,7 @@ def auto_allocate_customer_payment(*, organisation, payment, user):
             "amount_unallocated": payment.amount_unallocated}
 
 
-@transaction.atomic
+@ledger_transaction
 def auto_allocate_supplier_payment(*, organisation, payment, user):
     payment = SupplierPayment.objects.select_for_update().get(pk=payment.pk)
     if (

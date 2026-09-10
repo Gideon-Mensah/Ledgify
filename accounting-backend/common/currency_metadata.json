@@ -1,0 +1,78 @@
+{
+  "AED": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "AUD": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "CAD": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "CHF": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "CNY": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "EUR": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "GBP": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "GHS": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "HKD": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "INR": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "KES": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "NGN": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "NOK": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "NZD": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "SEK": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "SGD": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "USD": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "ZAR": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  },
+  "ZMW": {
+    "minor_units": 2,
+    "rounding": "ROUND_HALF_UP"
+  }
+}

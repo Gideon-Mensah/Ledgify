@@ -1,3 +1,5 @@
+from apps.accounting.services.periods.period_service import lock_accounting_period
+from common.accounting_test_fixtures import calendar_periods
 from datetime import date
 from decimal import Decimal
 
@@ -16,6 +18,7 @@ class FixedAssetLifecycleTests(TestCase):
         self.user=get_user_model().objects.create_user(username="assets",password="test")
         self.organisation=Organisation.objects.create(base_currency="GBP", name="Assets",created_by=self.user)
         OrganisationMember.objects.create(organisation=self.organisation,user=self.user,role=OrganisationMember.Role.OWNER)
+        calendar_periods(self.organisation)
         self.asset_account=self._account("1500",Account.AccountType.ASSET,Account.AccountClass.FIXED_ASSET)
         self.accumulated=self._account("1510",Account.AccountType.ASSET,Account.AccountClass.FIXED_ASSET)
         self.expense=self._account("6000",Account.AccountType.EXPENSE,Account.AccountClass.OPERATING_EXPENSE)
@@ -55,8 +58,7 @@ class FixedAssetLifecycleTests(TestCase):
 
     def test_depreciation_respects_locked_period(self):
         activate_asset(organisation=self.organisation,asset=self.asset,offset_account=self.bank,user=self.user)
-        AccountingPeriod.objects.create(organisation=self.organisation,name="January",
-            start_date=date(2026,1,1),end_date=date(2026,1,31),status=AccountingPeriod.Status.LOCKED)
+        lock_accounting_period(period=AccountingPeriod.objects.get(organisation=self.organisation,start_date=date(2026,1,1)), user=self.user)
         with self.assertRaises(BusinessRuleError):
             run_depreciation(organisation=self.organisation,period=date(2026,1,31),user=self.user)
 

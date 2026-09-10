@@ -1,3 +1,4 @@
+from common.accounting_test_fixtures import calendar_periods
 from datetime import date
 from decimal import Decimal
 from django.contrib.auth import get_user_model
@@ -11,6 +12,7 @@ class PayrollWorkflowTests(TestCase):
     def setUp(self):
         self.user=get_user_model().objects.create_user(username="payroll-owner",email="payroll@example.com",password="x",first_name="Pay",last_name="Roll")
         self.org=Organisation.objects.create(base_currency="GBP", name="Payroll Test",created_by=self.user);OrganisationMember.objects.create(organisation=self.org,user=self.user,role="owner")
+        calendar_periods(self.org)
         self.salary=self.account("6000","Salary expense","expense","operating_expense");self.tax=self.account("2200","Deduction liability","liability","current_liability");self.payable=self.account("2210","Payroll payable","liability","current_liability");self.bank=self.account("1000","Bank","asset","bank")
         self.employee=Employee.objects.create(organisation=self.org,employee_number="E001",first_name="Ada",last_name="Mensah",hire_date=date(2026,1,1),currency="USD")
         earning=PayrollComponent.objects.create(organisation=self.org,name="Salary",component_type="earning",default_account=self.salary)

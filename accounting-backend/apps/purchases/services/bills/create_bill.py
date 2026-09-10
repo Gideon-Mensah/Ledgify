@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Validate supplier costs and create a draft bill for later approval and posting."""
 
 from decimal import Decimal
@@ -16,7 +17,7 @@ from apps.fx.services import convert_amount, get_effective_rate
 from .helpers import money
 
 
-@transaction.atomic
+@ledger_transaction
 def create_bill(
     *,
     organisation,

@@ -1,3 +1,5 @@
+from common.ledger_integrity import lock_ledger
+from common.ledger_integrity import ledger_transaction
 """Post controlled stock adjustments with inventory and offset-account journals."""
 
 from decimal import Decimal, ROUND_HALF_UP
@@ -27,7 +29,7 @@ def _decimal(value, label):
         raise BusinessRuleError(f"{label} is invalid.") from error
 
 
-@transaction.atomic
+@ledger_transaction
 def create_stock_adjustment(
     *, organisation, product, warehouse, adjustment_date, adjustment_type,
     quantity, unit_cost, offset_account, user, reference="", description="",
@@ -121,6 +123,7 @@ def create_stock_adjustment(
 
 @transaction.atomic
 def reverse_stock_movement(*, movement, user, reversal_date=None):
+    lock_ledger(movement.organisation_id)
     movement = StockMovement.objects.select_for_update().select_related(
         "organisation"
     ).prefetch_related("accounting_journal").get(pk=movement.pk)
@@ -150,6 +153,7 @@ def reverse_stock_movement(*, movement, user, reversal_date=None):
     reversal_journal = None
     if movement.accounting_journal_id:
         reversal_journal = reverse_journal_entry(
+            source_workflow=True,
             journal_entry=movement.accounting_journal, user=user,
             reversal_date=reversal_date, check_permissions=False,
         )
@@ -160,19 +164,22 @@ def reverse_stock_movement(*, movement, user, reversal_date=None):
         total_cost=movement.total_cost, reference=movement.reference,
         description=f"Reversal: {movement.description}",
         source_type=StockMovement.SourceType.MANUAL, source_id=movement.id,
-        status=StockMovement.Status.DRAFT, accounting_journal=reversal_journal,
+        status=StockMovement.Status.DRAFT,
         reversal_of=movement, created_by=user,
     )
     costing = cost_stock_movement(
         organisation=movement.organisation, movement=reversal,
     )
     if opposite == StockMovement.MovementType.ADJUSTMENT_OUT:
+        if costing["cost_used"] != movement.total_cost:
+            raise BusinessRuleError("Stock cost has changed; use an approved stock adjustment instead of reversing at a different value.")
         reversal.unit_cost = costing["unit_cost"]
         reversal.total_cost = costing["cost_used"]
+    reversal.accounting_journal = reversal_journal
     reversal.status = StockMovement.Status.POSTED
     reversal.posted_by = user
     reversal.posted_at = timezone.now()
     reversal.save(update_fields=[
-        "unit_cost", "total_cost", "status", "posted_by", "posted_at", "updated_at",
+        "accounting_journal", "unit_cost", "total_cost", "status", "posted_by", "posted_at", "updated_at",
     ])
     return reversal

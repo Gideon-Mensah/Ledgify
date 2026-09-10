@@ -1,6 +1,7 @@
+from apps.organisations.permissions import REVERSE_JOURNAL
 """Expose organisation purchase actions while service functions enforce accounting rules."""
 
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -80,10 +81,20 @@ class BillViewSet(
 ):
     serializer_class = BillSerializer
     permission_classes = [IsAuthenticated, OrganisationActionPermission]
-    action_permissions = {"list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING,
+    action_permissions = {"reverse": REVERSE_JOURNAL, "list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING,
                           "create": CREATE_BILL, "update": CREATE_BILL,
                           "partial_update": CREATE_BILL, "destroy": CREATE_BILL,
                           "approve": APPROVE_BILL}
+
+    @action(detail=True, methods=["post"])
+    def reverse(self, request, pk=None):
+        from apps.finance.services.corrections.reverse_document import reverse_document
+        class ReversalInput(serializers.Serializer):
+            reversal_date = serializers.DateField()
+            reason = serializers.CharField(allow_blank=False)
+        query = ReversalInput(data=request.data); query.is_valid(raise_exception=True)
+        result = reverse_document(organisation=self.get_organisation(),document=self.get_object(),user=request.user,**query.validated_data)
+        return Response(self.get_serializer(result).data)
 
     def get_queryset(self):
         organisation = self.get_organisation()
@@ -144,16 +155,48 @@ class BillViewSet(
         )
 
 
+from common.idempotency import IdempotentPaymentCreateMixin
+
 class SupplierPaymentViewSet(
+    IdempotentPaymentCreateMixin,
     OrganisationScopedViewSetMixin,
     ModelViewSet,
 ):
+    payment_operation = "supplier_payment"
+    payment_document_field = "bill"
     serializer_class = SupplierPaymentSerializer
     permission_classes = [IsAuthenticated, OrganisationActionPermission]
-    action_permissions = {"list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING,
+    action_permissions = {"unallocate": REVERSE_JOURNAL, "list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING,
+                          "reverse": REVERSE_JOURNAL,
                           "create": CREATE_SUPPLIER_PAYMENT,
                           "allocate": CREATE_SUPPLIER_PAYMENT,
                           "auto_allocate": CREATE_SUPPLIER_PAYMENT}
+
+    @action(detail=True, methods=["post"])
+    def reverse(self, request, pk=None):
+        from apps.finance.services.allocations.reverse_payment import reverse_payment
+        class ReversalInput(serializers.Serializer):
+            reversal_date = serializers.DateField()
+            reason = serializers.CharField(allow_blank=False)
+        query = ReversalInput(data=request.data)
+        query.is_valid(raise_exception=True)
+        payment = reverse_payment(organisation=self.get_organisation(), payment=self.get_object(),
+            user=request.user, **query.validated_data)
+        return Response(self.get_serializer(payment).data)
+
+    @action(detail=True, methods=["post"])
+    def unallocate(self, request, pk=None):
+        from apps.finance.services.allocations.unallocate_payment import unallocate_payment
+        class UnallocationInput(serializers.Serializer):
+            allocation_id = serializers.UUIDField()
+            effective_date = serializers.DateField()
+            reason = serializers.CharField(allow_blank=False)
+        query = UnallocationInput(data=request.data); query.is_valid(raise_exception=True)
+        payment = self.get_object()
+        allocation = payment.allocations.filter(pk=query.validated_data.pop("allocation_id"),organisation=self.get_organisation()).first()
+        if allocation is None: raise serializers.ValidationError("Allocation not found in this payment.")
+        unallocate_payment(organisation=self.get_organisation(),allocation=allocation,user=request.user,**query.validated_data)
+        return Response(self.get_serializer(payment).data)
 
     http_method_names = [
         "get",
@@ -214,6 +257,7 @@ class SupplierPaymentViewSet(
         allocate_supplier_payment(
             organisation=self.get_organisation(), payment=self.get_object(),
             bill=bill, amount=query.validated_data["amount"], user=request.user,
+            effective_date=query.validated_data.get("effective_date"),
         )
         return Response(self.get_serializer(self.get_object()).data)
 

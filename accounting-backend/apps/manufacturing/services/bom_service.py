@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Validate bills of materials used to plan production component requirements."""
 
 from collections import defaultdict
@@ -50,7 +51,7 @@ def calculate_bom_cost(*,organisation,bom_version,warehouse=None,as_of_date=None
   required=c.quantity*(Decimal("1")+c.scrap_percentage/Decimal("100"));cost=get_current_average_cost(organisation=organisation,product=c.component_product,warehouse=warehouse,as_of_date=as_of_date);value=required*cost["average_unit_cost"];total+=value;rows.append({"product":{"id":str(c.component_product_id),"code":c.component_product.code,"name":c.component_product.name},"required_quantity":required,"average_unit_cost":cost["average_unit_cost"],"total_cost":value})
  return {"output_quantity":bom_version.output_quantity,"material_cost":total,"cost_per_output_unit":total/bom_version.output_quantity,"components":rows}
 
-@transaction.atomic
+@ledger_transaction
 def activate_bom_version(*,organisation,bom_version):
  version=BOMVersion.objects.select_for_update().select_related("bom").get(pk=bom_version.pk)
  if version.bom.organisation_id!=organisation.id or version.status!=BOMVersion.Status.DRAFT:raise BusinessRuleError("Only an organisation draft BOM version can be activated.")

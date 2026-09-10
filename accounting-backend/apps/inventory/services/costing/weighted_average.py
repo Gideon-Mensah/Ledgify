@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Append perpetual weighted-average cost layers for inventory receipts and issues."""
 
 from dataclasses import dataclass
@@ -67,7 +68,7 @@ def _lock_scope(product, warehouse):
     Warehouse.objects.select_for_update().get(pk=warehouse.pk)
 
 
-@transaction.atomic
+@ledger_transaction
 def receive_inventory(*, organisation, product, warehouse, quantity, unit_cost, movement):
     _validate_scope(organisation, product, warehouse, movement)
     _lock_scope(product, warehouse)
@@ -101,7 +102,7 @@ def receive_inventory(*, organisation, product, warehouse, quantity, unit_cost, 
     )
 
 
-@transaction.atomic
+@ledger_transaction
 def issue_inventory(*, organisation, product, warehouse, quantity, movement):
     _validate_scope(organisation, product, warehouse, movement)
     _lock_scope(product, warehouse)

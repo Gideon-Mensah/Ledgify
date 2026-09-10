@@ -1,3 +1,5 @@
+from common.rounding import balance_converted_document
+from common.ledger_integrity import lock_ledger
 """Approve a customer credit and reverse the appropriate revenue and tax amounts."""
 
 from decimal import Decimal
@@ -17,6 +19,7 @@ from .helpers import money
 
 @transaction.atomic
 def approve_customer_credit_note(*, credit_note, user):
+    lock_ledger(credit_note.organisation_id)
     credit_note = CustomerCreditNote.objects.select_for_update().select_related(
         "organisation", "customer").prefetch_related("lines__revenue_account", "lines__tax_rate_config__output_tax_account").get(pk=credit_note.pk)
     require_organisation_permission(organisation=credit_note.organisation, user=user,
@@ -49,15 +52,18 @@ def approve_customer_credit_note(*, credit_note, user):
         account = rate.output_tax_account
         if account.organisation_id != credit_note.organisation_id or account.status != Account.Status.ACTIVE:
             raise BusinessRuleError("Output tax account is invalid.")
-        tax_totals.setdefault(account.id, [account, Decimal("0.00")])[1] += line.tax_amount
+        tax_totals.setdefault((rate.id,account.id), [account, Decimal("0.00")])[1] += line.tax_amount
     journal_lines.extend({"account": item[0], "description": f"Output tax reversal - {credit_note.credit_note_number}",
                           "debit": convert_amount(amount=item[1],rate=credit_note.exchange_rate), "credit": Decimal("0.00")} for item in tax_totals.values())
     journal_lines.append({"account": receivables.get(), "description": f"Credit {credit_note.credit_note_number}",
                           "debit": Decimal("0.00"), "credit": convert_amount(amount=credit_note.total,rate=credit_note.exchange_rate)})
+    journal_lines = balance_converted_document(organisation=credit_note.organisation, currency=credit_note.currency, lines=journal_lines)
     journal = create_journal_entry(organisation=credit_note.organisation, date=credit_note.issue_date,
         description=f"Customer credit {credit_note.credit_note_number} - {credit_note.customer.name}",
         lines=journal_lines, user=user, reference=credit_note.credit_note_number,
         source_type=JournalEntry.SourceType.CUSTOMER_CREDIT, source_id=credit_note.id)
+    journal.transaction_currency=credit_note.currency; journal.transaction_amount=credit_note.total; journal.exchange_rate=credit_note.exchange_rate
+    journal.save(update_fields=["transaction_currency","transaction_amount","exchange_rate"])
     post_journal_entry(journal_entry=journal, user=user)
     record_tax_transactions(document=credit_note, lines=list(credit_note.lines.all()), journal_entry=journal,
                             source_type="customer_credit", direction=TaxTransaction.Direction.OUTPUT,

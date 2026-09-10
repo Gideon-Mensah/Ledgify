@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Create a draft customer credit while preserving the original invoice history."""
 
 from decimal import Decimal
@@ -14,7 +15,7 @@ from apps.fx.services import convert_amount,get_effective_rate
 from .helpers import money
 
 
-@transaction.atomic
+@ledger_transaction
 def create_customer_credit_note(*, organisation, customer, credit_note_number,
                                 issue_date, currency, lines, user, invoice=None,
                                 reference="", notes=""):

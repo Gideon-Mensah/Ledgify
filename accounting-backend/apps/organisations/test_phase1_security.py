@@ -245,10 +245,13 @@ class Phase1AttackTests(TestCase):
     def test_admin_login_is_throttled(self):
         from django.test import Client
         client=Client()
-        for expected in (200,200,429):
-            response=client.post('/admin/login/',{'username':'unknown@example.invalid','password':'bad'})
-            self.assertEqual(response.status_code,expected)
-        self.assertIn('Retry-After',response)
+        from unittest.mock import patch
+        # Keep all attempts in one fixed rate-limit window, including slow CI.
+        with patch('common.rate_limits.time.time', return_value=1800000015):
+            for expected in (200,200,429):
+                response=client.post('/admin/login/',{'username':'unknown@example.invalid','password':'bad'})
+                self.assertEqual(response.status_code,expected)
+            self.assertIn('Retry-After',response)
 
     def test_cache_outage_fails_closed(self):
         from unittest.mock import patch

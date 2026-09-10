@@ -1,3 +1,4 @@
+from common.ledger_integrity import lock_ledger
 """Move payroll through calculation, approval, posting, and payment workflows safely."""
 
 from collections import defaultdict
@@ -12,6 +13,7 @@ from apps.payroll.models import PayrollComponent,PayrollPayment,PayrollRun,Paysl
 
 @transaction.atomic
 def approve_pay_run(*,pay_run,user):
+    lock_ledger(pay_run.organisation_id)
     run=PayrollRun.objects.select_for_update().get(pk=pay_run.pk)
     if run.status!=PayrollRun.Status.CALCULATED:raise BusinessRuleError("Only calculated payroll can be approved.")
     if run.organisation.require_separate_approver and run.created_by_id==user.id:raise BusinessRuleError("You cannot approve a payroll run you created.")
@@ -20,6 +22,7 @@ def approve_pay_run(*,pay_run,user):
 
 @transaction.atomic
 def post_pay_run(*,pay_run,user):
+    lock_ledger(pay_run.organisation_id)
     run=PayrollRun.objects.select_for_update().select_related("organisation","payroll_liability_account").prefetch_related("payslips__lines__account","payslips__lines__liability_account").get(pk=pay_run.pk)
     if run.status!=PayrollRun.Status.APPROVED:raise BusinessRuleError("Only approved payroll can be posted.")
     totals=defaultdict(lambda:[None,Decimal("0.00"),Decimal("0.00")]);net=Decimal("0.00")
@@ -41,6 +44,7 @@ def post_pay_run(*,pay_run,user):
 
 @transaction.atomic
 def pay_pay_run(*,pay_run,bank_account,payment_date,amount,user):
+    lock_ledger(pay_run.organisation_id)
     run=PayrollRun.objects.select_for_update().select_related("organisation","payroll_liability_account").get(pk=pay_run.pk)
     if run.status not in {PayrollRun.Status.POSTED,PayrollRun.Status.PAID}:raise BusinessRuleError("Only posted payroll can be paid.")
     if bank_account.organisation_id!=run.organisation_id or bank_account.account_class!=Account.AccountClass.BANK:raise BusinessRuleError("A valid organisation bank account is required.")

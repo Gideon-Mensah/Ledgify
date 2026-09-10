@@ -399,6 +399,9 @@ class SupplierPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerial
                 "bill_id": str(item.bill_id),
                 "amount": item.amount,
                 "allocated_at": item.allocated_at,
+                "effective_date": item.effective_date,
+                "status": item.status,
+                "reversal_effective_date": item.reversal_effective_date,
             }
             for item in obj.allocations.filter(
                 status="active",
@@ -477,6 +480,7 @@ class ApplySupplierCreditSerializer(serializers.Serializer):
 
 
 class SupplierPaymentAllocationRequestSerializer(serializers.Serializer):
+    effective_date = serializers.DateField(required=False)
     bill_id = serializers.UUIDField()
     amount = serializers.DecimalField(max_digits=18, decimal_places=2)
 

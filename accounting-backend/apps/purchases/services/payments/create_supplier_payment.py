@@ -1,3 +1,4 @@
+from apps.finance.services.allocations.carrying import carrying_slice, require_revaluation_reversed
 """Pay a supplier bill, post the bank journal, and allocate the payable balance."""
 
 from decimal import Decimal
@@ -5,6 +6,7 @@ from decimal import Decimal
 from django.db import transaction
 
 from common.exceptions import BusinessRuleError
+from common.ledger_integrity import lock_ledger
 from apps.accounting.models import Account, JournalEntry
 from apps.accounting.services.journals import create_journal_entry, post_journal_entry
 from apps.purchases.models import Bill, SupplierPayment
@@ -14,6 +16,7 @@ from apps.fx.services import convert_amount,get_effective_rate
 @transaction.atomic
 def create_supplier_payment(*, organisation, supplier, bank_account, payment_date,
                             amount, user, currency, bill=None, reference="", notes=""):
+    lock_ledger(organisation.id)
     if supplier.organisation_id != organisation.id or not supplier.is_supplier:
         raise BusinessRuleError("The selected supplier is invalid.")
     if bill is not None:
@@ -51,8 +54,9 @@ def create_supplier_payment(*, organisation, supplier, bank_account, payment_dat
         account_class=Account.AccountClass.PAYABLE, status=Account.Status.ACTIVE)
     if payables.count() != 1:
         raise BusinessRuleError("The organisation must have exactly one active Accounts Payable account.")
+    require_revaluation_reversed(organisation,currency,payable=True)
     rate=get_effective_rate(organisation=organisation,base_currency=currency,target_currency=organisation.base_currency,date=payment_date)
-    base_amount=convert_amount(amount=amount,rate=rate);payable_base=convert_amount(amount=amount,rate=bill.exchange_rate) if bill else base_amount
+    base_amount=convert_amount(amount=amount,rate=rate);payable_base=carrying_slice(bill,amount,payable=True) if bill else base_amount
     fx=payable_base-base_amount
     if fx:
         from apps.fx.account_validation import validate_fx_account
@@ -83,5 +87,5 @@ def create_supplier_payment(*, organisation, supplier, bank_account, payment_dat
     if bill is not None:
         from apps.finance.services.allocations import allocate_supplier_payment
         allocate_supplier_payment(organisation=organisation, payment=payment,
-                                  bill=bill, amount=amount, user=user)
+                                  bill=bill, amount=amount, user=user, effective_date=payment_date)
     return payment

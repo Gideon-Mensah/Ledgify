@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Validate invoice data and create a draft sales document without posting accounting."""
 
 from decimal import Decimal
@@ -16,7 +17,7 @@ from apps.fx.services import convert_amount, get_effective_rate
 from .helpers import money
 
 
-@transaction.atomic
+@ledger_transaction
 def create_invoice(
     *,
     organisation,

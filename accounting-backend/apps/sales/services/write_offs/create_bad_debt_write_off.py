@@ -1,3 +1,4 @@
+from apps.finance.services.allocations.carrying import carrying_slice
 """Write off an authorised unpaid invoice balance through an auditable journal."""
 
 from decimal import Decimal
@@ -5,6 +6,9 @@ from decimal import Decimal
 from django.db import transaction
 
 from common.exceptions import BusinessRuleError
+from common.ledger_integrity import lock_ledger
+from apps.fx.services import convert_amount
+from django.db.models import DateField
 from apps.accounting.models import Account, JournalEntry
 from apps.accounting.services.journals import create_journal_entry, post_journal_entry
 from apps.sales.models import BadDebtWriteOff, Invoice
@@ -15,6 +19,7 @@ from apps.organisations.services import require_organisation_permission
 @transaction.atomic
 def create_bad_debt_write_off(*, organisation, invoice, write_off_date, amount,
                               bad_debt_account, user, reason="", reference=""):
+    lock_ledger(organisation.id)
     require_organisation_permission(
         organisation=organisation, user=user,
         permission=CREATE_BAD_DEBT_WRITE_OFF,
@@ -44,6 +49,9 @@ def create_bad_debt_write_off(*, organisation, invoice, write_off_date, amount,
         raise BusinessRuleError(
             "The organisation must have exactly one active Accounts Receivable account."
         )
+    if DateField().to_python(write_off_date) < invoice.issue_date:
+        raise BusinessRuleError("Write-off date cannot precede the invoice.")
+    base_amount = carrying_slice(invoice,amount)
     write_off = BadDebtWriteOff.objects.create(
         organisation=organisation, invoice=invoice, write_off_date=write_off_date,
         amount=amount, reason=reason, reference=reference,
@@ -57,9 +65,9 @@ def create_bad_debt_write_off(*, organisation, invoice, write_off_date, amount,
         source_type=JournalEntry.SourceType.BAD_DEBT, source_id=write_off.id,
         user=user, lines=[
             {"account": bad_debt_account, "description": "Bad debt write-off",
-             "debit": amount, "credit": Decimal("0.00")},
+             "debit": base_amount, "credit": Decimal("0.00")},
             {"account": receivables.get(), "description": "Bad debt write-off",
-             "debit": Decimal("0.00"), "credit": amount},
+             "debit": Decimal("0.00"), "credit": base_amount},
         ],
     )
     post_journal_entry(journal_entry=journal, user=user)

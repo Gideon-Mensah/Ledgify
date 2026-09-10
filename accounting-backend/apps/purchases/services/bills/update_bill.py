@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Replace validated lines on a draft bill while keeping posted bills immutable."""
 
 from decimal import Decimal
@@ -15,7 +16,7 @@ from common.exceptions import BusinessRuleError
 from .helpers import money
 
 
-@transaction.atomic
+@ledger_transaction
 def update_bill(*, bill, organisation, supplier, lines, **values):
     bill = Bill.objects.select_for_update().get(pk=bill.pk, organisation=organisation)
     if bill.status != Bill.Status.DRAFT:

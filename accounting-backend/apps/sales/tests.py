@@ -1,3 +1,5 @@
+from uuid import uuid4
+from common.accounting_test_fixtures import calendar_periods
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
@@ -16,6 +18,7 @@ class SalesApiWorkflowTests(APITestCase):
         OrganisationMember.objects.create(
             organisation=self.organisation, user=self.user, role=OrganisationMember.Role.OWNER,
         )
+        calendar_periods(self.organisation)
         self.customer = Contact.objects.create(
             organisation=self.organisation, created_by=self.user, name="Demo Customer",
             is_customer=True, currency="GBP",
@@ -75,6 +78,7 @@ class SalesApiWorkflowTests(APITestCase):
         self.assertEqual(response.data["status"], "approved")
 
         for amount, expected in (("400.00", "partly_paid"), ("600.00", "paid")):
+            self.headers["HTTP_IDEMPOTENCY_KEY"] = str(uuid4())
             response = self.client.post("/api/v1/customer-payments/", {
                 "customer_id": str(self.customer.id), "invoice_id": invoice_id,
                 "bank_account_id": str(self.bank.id), "payment_date": "2026-08-13",

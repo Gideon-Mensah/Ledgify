@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Close a financial year and roll its final profit into retained earnings safely."""
 
 from decimal import Decimal
@@ -7,6 +8,7 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from common.exceptions import BusinessRuleError
+from common.ledger_integrity import lock_ledger, period_transition
 from apps.accounting.models import (
     LEDGER_EFFECTIVE_JOURNAL_STATUSES,
     Account,
@@ -33,6 +35,7 @@ ZERO = Decimal("0.00")
 
 
 def _lock_year(organisation, financial_year):
+    lock_ledger(organisation.id)
     financial_year = FinancialYear.objects.select_for_update().get(
         pk=financial_year.pk
     )
@@ -184,7 +187,7 @@ def _closing_lines(financial_year, retained_earnings):
     return lines, net_profit
 
 
-@transaction.atomic
+@ledger_transaction
 def close_financial_year_with_retained_earnings(
     *, organisation, financial_year, user
 ):
@@ -231,9 +234,6 @@ def close_financial_year_with_retained_earnings(
     final_period.status = AccountingPeriod.Status.LOCKED
     final_period.locked_at = now
     final_period.locked_by = user
-    final_period.save(update_fields=[
-        "status", "locked_at", "locked_by", "updated_at",
-    ])
     AccountingPeriodHistory.objects.create(
         organisation=organisation,
         accounting_period=final_period,
@@ -241,6 +241,9 @@ def close_financial_year_with_retained_earnings(
         performed_by=user,
         metadata={"financial_year_id": str(financial_year.id)},
     )
+    with period_transition():
+        final_period.save(update_fields=["status", "locked_at", "locked_by", "updated_at"])
+
 
     financial_year.closing_journal = closing_journal
     financial_year.profit_or_loss = net_profit
@@ -262,7 +265,7 @@ def close_financial_year_with_retained_earnings(
     return financial_year
 
 
-@transaction.atomic
+@ledger_transaction
 def reopen_financial_year(
     *, organisation, financial_year, user, reason, reversal_date=None
 ):
@@ -270,7 +273,7 @@ def reopen_financial_year(
     require_organisation_permission(
         organisation=organisation, user=user, permission=REOPEN_FINANCIAL_YEAR,
     )
-    reason = str(reason).strip()
+    reason = reason.strip() if isinstance(reason, str) else ""
     if not reason:
         raise BusinessRuleError("A reason is required to reopen a financial year.")
     if financial_year.status != FinancialYear.Status.CLOSED:
@@ -285,9 +288,6 @@ def reopen_financial_year(
     final_period.status = AccountingPeriod.Status.OPEN
     final_period.locked_at = None
     final_period.locked_by = None
-    final_period.save(update_fields=[
-        "status", "locked_at", "locked_by", "updated_at",
-    ])
     AccountingPeriodHistory.objects.create(
         organisation=organisation,
         accounting_period=final_period,
@@ -296,7 +296,12 @@ def reopen_financial_year(
         reason=reason,
         metadata={"financial_year_id": str(financial_year.id)},
     )
+    with period_transition():
+        final_period.save(update_fields=["status", "locked_at", "locked_by", "updated_at"])
 
+
+    financial_year.status = FinancialYear.Status.OPEN
+    financial_year.save(update_fields=["status", "updated_at"])
     reversal = None
     if financial_year.closing_journal_id:
         requested_date = reversal_date or financial_year.end_date
@@ -305,6 +310,7 @@ def reopen_financial_year(
                 "The year-end close must be reversed on the financial year end date."
             )
         reversal = reverse_journal_entry(
+            source_workflow=True,
             journal_entry=financial_year.closing_journal,
             user=user,
             reversal_date=requested_date,

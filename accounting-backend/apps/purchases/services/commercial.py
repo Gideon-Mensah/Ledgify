@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import models, transaction
@@ -14,7 +15,7 @@ from apps.purchases.services.bills import create_bill
 def money(value): return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-@transaction.atomic
+@ledger_transaction
 def create_purchase_order(*, organisation, supplier, purchase_order_number,
                           order_date, currency, lines, user,
                           expected_delivery_date=None, supplier_reference="", notes=""):
@@ -39,7 +40,7 @@ def create_purchase_order(*, organisation, supplier, purchase_order_number,
     order.save(update_fields=["subtotal", "total", "updated_at"]); return order
 
 
-@transaction.atomic
+@ledger_transaction
 def approve_purchase_order(*, organisation, purchase_order, user):
     order=PurchaseOrder.objects.select_for_update().get(pk=purchase_order.pk, organisation=organisation)
     if order.status != PurchaseOrder.Status.DRAFT: raise BusinessRuleError("Only draft purchase orders can be approved.")
@@ -47,7 +48,7 @@ def approve_purchase_order(*, organisation, purchase_order, user):
     order.save(update_fields=["status", "approved_by", "approved_at", "updated_at"]); return order
 
 
-@transaction.atomic
+@ledger_transaction
 def receive_purchase_order_line(*, organisation, line, warehouse, quantity,
                                 transaction_date, grni_account, user):
     line=PurchaseOrderLine.objects.select_for_update().select_related("purchase_order", "product").get(pk=line.pk)
@@ -67,7 +68,7 @@ def receive_purchase_order_line(*, organisation, line, warehouse, quantity,
     order.save(update_fields=["status", "updated_at"]); return receipt
 
 
-@transaction.atomic
+@ledger_transaction
 def convert_purchase_order_to_bill(*, organisation, purchase_order, user,
                                    bill_number, issue_date, due_date):
     order=PurchaseOrder.objects.select_for_update().prefetch_related(

@@ -1,3 +1,4 @@
+from common.accounting_test_fixtures import calendar_periods
 from datetime import date
 from decimal import Decimal
 from django.contrib.auth import get_user_model
@@ -12,6 +13,7 @@ from apps.organisations.models import Organisation,OrganisationMember
 class Manufacturing14BTests(TestCase):
  def setUp(self):
   self.user=get_user_model().objects.create_user(username="maker",email="maker@example.com",password="x",first_name="M",last_name="R");self.org=Organisation.objects.create(name="Factory",base_currency="GBP",created_by=self.user);OrganisationMember.objects.create(organisation=self.org,user=self.user,role="owner");self.inv=self.account("1200","Inventory","asset","current_asset");self.wip=self.account("1210","WIP","asset","current_asset");self.cogs=self.account("5000","COGS","expense","cost_of_sales");self.wh=Warehouse.objects.create(organisation=self.org,code="MAIN",name="Main",is_default=True,created_by=self.user);self.a=self.product("A");self.b=self.product("B");self.c=self.product("C")
+  calendar_periods(self.org)
  def account(self,code,name,kind,klass):return Account.objects.create(organisation=self.org,code=code,name=name,account_type=kind,account_class=klass,currency="GBP",created_by=self.user)
  def product(self,code):return Product.objects.create(organisation=self.org,code=code,name=code,product_type="goods",unit="each",currency="GBP",track_inventory=True,inventory_asset_account=self.inv,cost_of_goods_sold_account=self.cogs,created_by=self.user)
  def bom(self,product,code,components,start=date(2026,1,1),end=None):

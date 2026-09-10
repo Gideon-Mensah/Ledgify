@@ -1,3 +1,5 @@
+from common.rounding import balance_converted_document
+from common.ledger_integrity import lock_ledger
 """Approve a supplier credit and reverse the related expense, inventory, or tax value."""
 
 from decimal import Decimal
@@ -17,6 +19,7 @@ from .helpers import money
 
 @transaction.atomic
 def approve_supplier_credit(*, credit, user):
+    lock_ledger(credit.organisation_id)
     credit = SupplierCredit.objects.select_for_update().select_related("organisation", "supplier").prefetch_related("lines__expense_account", "lines__tax_rate_config__input_tax_account").get(pk=credit.pk)
     require_organisation_permission(organisation=credit.organisation, user=user,
                                     permission=APPROVE_SUPPLIER_CREDIT)
@@ -48,13 +51,16 @@ def approve_supplier_credit(*, credit, user):
         account = rate.input_tax_account
         if account.organisation_id != credit.organisation_id or account.status != Account.Status.ACTIVE:
             raise BusinessRuleError("Input tax account is invalid.")
-        tax_totals.setdefault(account.id, [account, Decimal("0.00")])[1] += line.tax_amount
+        tax_totals.setdefault((rate.id,account.id), [account, Decimal("0.00")])[1] += line.tax_amount
     journal_lines.extend({"account": item[0], "description": f"Input tax reversal - {credit.credit_number}",
                           "debit": Decimal("0.00"), "credit": convert_amount(amount=item[1],rate=credit.exchange_rate)} for item in tax_totals.values())
+    journal_lines = balance_converted_document(organisation=credit.organisation, currency=credit.currency, lines=journal_lines)
     journal = create_journal_entry(organisation=credit.organisation, date=credit.issue_date,
         description=f"Supplier credit {credit.credit_number} - {credit.supplier.name}", lines=journal_lines,
         user=user, reference=credit.credit_number, source_type=JournalEntry.SourceType.SUPPLIER_CREDIT,
         source_id=credit.id)
+    journal.transaction_currency=credit.currency; journal.transaction_amount=credit.total; journal.exchange_rate=credit.exchange_rate
+    journal.save(update_fields=["transaction_currency","transaction_amount","exchange_rate"])
     post_journal_entry(journal_entry=journal, user=user)
     recoverable_lines = [line for line in credit.lines.all() if line.tax_rate_config and line.tax_rate_config.recoverable]
     record_tax_transactions(document=credit, lines=recoverable_lines, journal_entry=journal,

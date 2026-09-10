@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Create a draft supplier credit without changing the bill it may later reduce."""
 
 from decimal import Decimal
@@ -12,7 +13,7 @@ from apps.fx.services import convert_amount,get_effective_rate
 from .helpers import money
 
 
-@transaction.atomic
+@ledger_transaction
 def create_supplier_credit(*, organisation, supplier, credit_number, issue_date,
                            currency, lines, user, bill=None, reference="", notes=""):
     if supplier.organisation_id != organisation.id or not supplier.is_supplier:

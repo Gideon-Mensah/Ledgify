@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 """Accept a safe bank match without creating a duplicate payment or journal."""
 
 from decimal import Decimal
@@ -67,7 +68,7 @@ def _mark_reconciled(
     return bank_transaction
 
 
-@transaction.atomic
+@ledger_transaction
 def accept_customer_payment_match(*, organisation, bank_transaction, payment, user):
     bank_transaction = _lock_bank_transaction(organisation, bank_transaction)
     payment = CustomerPayment.objects.select_for_update().select_related(
@@ -91,7 +92,7 @@ def accept_customer_payment_match(*, organisation, bank_transaction, payment, us
     )
 
 
-@transaction.atomic
+@ledger_transaction
 def accept_supplier_payment_match(*, organisation, bank_transaction, payment, user):
     bank_transaction = _lock_bank_transaction(organisation, bank_transaction)
     payment = SupplierPayment.objects.select_for_update().select_related(
@@ -115,7 +116,7 @@ def accept_supplier_payment_match(*, organisation, bank_transaction, payment, us
     )
 
 
-@transaction.atomic
+@ledger_transaction
 def accept_bank_transfer_match(*, organisation, bank_transaction,
                                opposite_transaction, user):
     first_id, second_id = sorted([bank_transaction.id, opposite_transaction.id])
@@ -173,7 +174,7 @@ def accept_bank_transfer_match(*, organisation, bank_transaction,
     return bank_transaction
 
 
-@transaction.atomic
+@ledger_transaction
 def accept_invoice_match(*, organisation, bank_transaction, invoice, user):
     bank_transaction = _lock_bank_transaction(organisation, bank_transaction)
     invoice = Invoice.objects.select_for_update().select_related("customer").get(pk=invoice.pk)
@@ -205,7 +206,7 @@ def accept_invoice_match(*, organisation, bank_transaction, invoice, user):
                             })
 
 
-@transaction.atomic
+@ledger_transaction
 def accept_bill_match(*, organisation, bank_transaction, bill, user):
     bank_transaction = _lock_bank_transaction(organisation, bank_transaction)
     bill = Bill.objects.select_for_update().select_related("supplier").get(pk=bill.pk)
@@ -236,7 +237,7 @@ def accept_bill_match(*, organisation, bank_transaction, bill, user):
                             })
 
 
-@transaction.atomic
+@ledger_transaction
 def accept_reconciliation_suggestion(*, organisation, bank_transaction,
                                      match_type, object_id, user):
     require_organisation_permission(

@@ -4,6 +4,9 @@ from django.db import transaction
 from django.utils import timezone
 
 from common.exceptions import BusinessRuleError
+from common.ledger_integrity import lock_ledger, journal_transition
+
+GENERIC_REVERSAL_SOURCES = frozenset({"manual"})
 
 from apps.accounting.models import JournalEntry, JournalLine
 from apps.accounting.services.journals.post_journal import (
@@ -22,12 +25,14 @@ def reverse_journal_entry(
     user,
     reversal_date=None,
     check_permissions=True,
+    source_workflow=False,
 ):
     """
     Reverse a posted journal by creating and posting
     an equal and opposite journal entry.
     """
 
+    lock_ledger(journal_entry.organisation_id)
     original = (
         JournalEntry.objects
         .select_for_update()
@@ -37,6 +42,9 @@ def reverse_journal_entry(
         )
         .get(pk=journal_entry.pk)
     )
+
+    if original.source_type not in GENERIC_REVERSAL_SOURCES and not source_workflow:
+        raise BusinessRuleError("Reverse this journal through its source-document workflow.")
 
     if check_permissions:
         require_organisation_permission(
@@ -73,6 +81,11 @@ def reverse_journal_entry(
         or timezone.localdate()
     )
 
+    from django.db.models import DateField
+    reversal_date = DateField().to_python(reversal_date)
+    if reversal_date < original.date:
+        raise BusinessRuleError("Reversal date cannot precede the original journal.")
+
     # A reversal is also a new posting,
     # so the target period must be open.
     validate_period_open(
@@ -106,6 +119,9 @@ def reverse_journal_entry(
         status=JournalEntry.Status.DRAFT,
         created_by=user,
         reversal_of=original,
+        transaction_currency=original.transaction_currency,
+        transaction_amount=original.transaction_amount,
+        exchange_rate=original.exchange_rate,
     )
 
     reversal_lines = []
@@ -134,11 +150,7 @@ def reverse_journal_entry(
 
     original.status = JournalEntry.Status.REVERSED
 
-    original.save(
-        update_fields=[
-            "status",
-            "updated_at",
-        ]
-    )
+    with journal_transition():
+        original.save(update_fields=["status", "updated_at"])
 
     return reversal

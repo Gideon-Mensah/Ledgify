@@ -1,12 +1,17 @@
+from apps.finance.services.allocations.carrying import carrying_slice, source_slice, post_allocation_fx
 from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 from common.exceptions import BusinessRuleError
+from common.ledger_integrity import lock_ledger
+from apps.accounting.services.periods.period_service import validate_period_open
+from django.db.models import DateField
 from apps.sales.models import CustomerCreditAllocation, CustomerCreditNote, Invoice
 
 
 @transaction.atomic
-def apply_customer_credit_note(*, credit_note, invoice, amount, user):
+def apply_customer_credit_note(*, credit_note, invoice, amount, user, effective_date=None):
+    lock_ledger(credit_note.organisation_id)
     credit_note = CustomerCreditNote.objects.select_for_update().get(pk=credit_note.pk)
     invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
     if credit_note.organisation_id != invoice.organisation_id or credit_note.customer_id != invoice.customer_id:
@@ -21,8 +26,13 @@ def apply_customer_credit_note(*, credit_note, invoice, amount, user):
     except (ValueError, TypeError, ArithmeticError): raise BusinessRuleError("Credit amount is invalid.")
     if amount <= 0 or amount > credit_note.available_credit or amount > invoice.amount_due:
         raise BusinessRuleError("Credit amount exceeds the available balance.")
+    effective_date = DateField().to_python(effective_date or timezone.localdate())
+    if effective_date < max(credit_note.issue_date, invoice.issue_date):
+        raise BusinessRuleError("Allocation date cannot precede either document.")
+    validate_period_open(invoice.organisation, effective_date)
     allocation = CustomerCreditAllocation.objects.create(organisation=invoice.organisation,
-        credit_note=credit_note, invoice=invoice, amount=amount, applied_at=timezone.now(), applied_by=user)
+        credit_note=credit_note, invoice=invoice, carrying_base_amount=carrying_slice(invoice,amount,payable=False),source_base_amount=source_slice(credit_note,amount,payable=False,credit=True),amount=amount, effective_date=effective_date, applied_at=timezone.now(), applied_by=user)
+    post_allocation_fx(allocation=allocation,source=credit_note,document=invoice,user=user,payable=False,credit=True)
     credit_note.amount_applied += amount
     credit_note.status = credit_note.Status.APPLIED if credit_note.amount_applied == credit_note.total else credit_note.Status.PARTLY_APPLIED
     credit_note.save(update_fields=["amount_applied", "status", "updated_at"])

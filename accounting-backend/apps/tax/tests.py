@@ -1,3 +1,4 @@
+from common.accounting_test_fixtures import calendar_periods
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -20,6 +21,7 @@ class TaxEngineTests(TestCase):
         self.org = Organisation.objects.create(name="Tax Test", base_currency="USD", tax_registered=True, created_by=self.user)
         from apps.organisations.models import OrganisationMember
         OrganisationMember.objects.create(organisation=self.org, user=self.user, role="owner")
+        calendar_periods(self.org)
         self.customer = Contact.objects.create(organisation=self.org, created_by=self.user, name="Customer", is_customer=True, currency="USD")
         self.supplier = Contact.objects.create(organisation=self.org, created_by=self.user, name="Supplier", is_supplier=True, currency="USD")
         self.revenue = self.account("4000", "Revenue", "revenue", "sales")

@@ -1,3 +1,4 @@
+from common.ledger_integrity import lock_ledger
 """Calculate employee earnings, deductions, employer costs, and net pay with Decimal."""
 
 from decimal import Decimal, ROUND_HALF_UP
@@ -11,6 +12,7 @@ def money(value):return Decimal(str(value)).quantize(MONEY,rounding=ROUND_HALF_U
 
 @transaction.atomic
 def calculate_pay_run(*,pay_run):
+    lock_ledger(pay_run.organisation_id)
     run=PayrollRun.objects.select_for_update().get(pk=pay_run.pk)
     if run.status not in {PayrollRun.Status.DRAFT,PayrollRun.Status.CALCULATED}:raise BusinessRuleError("Only draft or calculated payroll can be recalculated.")
     run.payslips.all().delete()

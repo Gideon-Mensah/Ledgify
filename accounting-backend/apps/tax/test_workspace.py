@@ -7,7 +7,7 @@ from apps.tax.models import TaxTransaction
 from apps.tax.services.register_service import tax_register
 from apps.tax.services import tax_summary
 from apps.sales.services.invoices import create_invoice, approve_invoice
-from apps.accounting.services.journals.reverse_journal import reverse_journal_entry
+from apps.finance.services.corrections.reverse_document import reverse_document
 from apps.organisations.models import Organisation, OrganisationMember
 
 
@@ -30,7 +30,7 @@ class TaxWorkspaceTests(TestCase):
 
     def test_dated_reversal_preserves_original_period_and_offsets_later_period(self):
         invoice = self.invoice()
-        reverse_journal_entry(journal_entry=invoice.accounting_journal, user=self.user, reversal_date=date(2026, 9, 1))
+        reverse_document(organisation=self.org,document=invoice,user=self.user,reversal_date=date(2026,9,1),reason="Correct invoice")
         august = tax_summary(organisation=self.org, start_date=date(2026, 8, 1), end_date=date(2026, 8, 31))
         september = tax_summary(organisation=self.org, start_date=date(2026, 9, 1), end_date=date(2026, 9, 30))
         self.assertEqual(august["output_tax"], Decimal("10.00"))
@@ -65,14 +65,14 @@ class TaxWorkspaceTests(TestCase):
             self.assertEqual(self.request("tax-transactions/register/", filters).status_code, 400)
         self.assertEqual(self.request("tax-transactions/", {"start_date": "bad"}).status_code, 400)
 
-    def test_excluded_and_awaiting_journals_do_not_contribute_to_totals(self):
-        invoice = self.invoice()
+    def test_posted_tax_history_cannot_be_changed_to_excluded_or_awaiting(self):
+        from common.exceptions import BusinessRuleError
         from apps.accounting.models import JournalEntry
-        for status, treatment in [("void", "excluded"), ("draft", "awaiting")]:
-            JournalEntry.objects.filter(pk=invoice.accounting_journal_id).update(status=status)
-            result = tax_register(organisation=self.org)
-            self.assertEqual(result["results"][0]["inclusion"], treatment)
-            self.assertEqual(result["summary"]["output_tax"], 0)
+        invoice = self.invoice()
+        for status in ("void", "draft"):
+            with self.assertRaises(BusinessRuleError):
+                JournalEntry.objects.filter(pk=invoice.accounting_journal_id).update(status=status)
+        self.assertEqual(tax_register(organisation=self.org)["summary"]["output_tax"], 10)
 
     def test_rate_validation_permissions_defaults_and_safe_deletion(self):
         invoice = self.invoice()
@@ -87,11 +87,13 @@ class TaxWorkspaceTests(TestCase):
         self.assertEqual(self.request("tax-transactions/register/").status_code, 200)
 
     def test_foreign_amounts_use_stored_journal_rate_and_do_not_rewrite_history(self):
-        invoice = self.invoice()
+        from common.exceptions import BusinessRuleError
         from apps.accounting.models import JournalEntry
-        JournalEntry.objects.filter(pk=invoice.accounting_journal_id).update(exchange_rate=Decimal("2"))
+        invoice = self.invoice()
+        with self.assertRaises(BusinessRuleError):
+            JournalEntry.objects.filter(pk=invoice.accounting_journal_id).update(exchange_rate=Decimal("2"))
         row = tax_register(organisation=self.org)["results"][0]
-        self.assertEqual(row["tax_amount"], 20)
+        self.assertEqual(row["tax_amount"], 10)
         self.assertEqual(row["currency"], self.org.base_currency)
         self.assertEqual(TaxTransaction.objects.get().tax_amount, 10)
 

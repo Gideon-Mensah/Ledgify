@@ -1,3 +1,8 @@
+from common.ledger_integrity import lock_ledger
+from apps.finance.services.allocations.carrying import source_slice
+from apps.fx.services import get_effective_rate, convert_amount
+from apps.fx.account_validation import validate_fx_account
+from django.db.models import DateField
 """Return approved customer credit through a bank journal without changing old entries."""
 
 from decimal import Decimal
@@ -16,6 +21,7 @@ from apps.organisations.services import require_organisation_permission
 def create_customer_refund(*, organisation, customer, bank_account, refund_date,
                            amount, currency, user, credit_note=None,
                            reference="", notes=""):
+    lock_ledger(organisation.pk)
     require_organisation_permission(
         organisation=organisation, user=user, permission=CREATE_CUSTOMER_REFUND,
     )
@@ -61,6 +67,19 @@ def create_customer_refund(*, organisation, customer, bank_account, refund_date,
         raise BusinessRuleError(
             "The organisation must have exactly one active Accounts Receivable account."
         )
+    refund_date=DateField().to_python(refund_date)
+    if credit_note is not None and refund_date < credit_note.issue_date:
+        raise BusinessRuleError("Refund date cannot precede the credit.")
+    rate=get_effective_rate(organisation=organisation,base_currency=currency,target_currency=organisation.base_currency,date=refund_date)
+    cash_base=convert_amount(amount=amount,rate=rate)
+    credit_base=source_slice(credit_note,amount,payable=False,credit=True) if credit_note is not None else cash_base
+    difference=credit_base-cash_base
+    fx_lines=[]
+    if difference:
+        kind="gain" if difference>0 else "loss"
+        fx_account=organisation.fx_gain_account if difference>0 else organisation.fx_loss_account
+        validate_fx_account(organisation,fx_account,kind)
+        fx_lines=[{"account":fx_account,"description":"Realised FX on credit refund","debit":max(-difference,Decimal("0")),"credit":max(difference,Decimal("0"))}]
     refund = CustomerRefund.objects.create(
         organisation=organisation, customer=customer, credit_note=credit_note,
         bank_account=bank_account, refund_date=refund_date, amount=amount,
@@ -74,11 +93,13 @@ def create_customer_refund(*, organisation, customer, bank_account, refund_date,
         source_id=refund.id, user=user,
         lines=[
             {"account": receivables.get(), "description": "Customer refund",
-             "debit": amount, "credit": Decimal("0.00")},
+             "debit": credit_base, "credit": Decimal("0.00")},
             {"account": bank_account, "description": "Customer refund",
-             "debit": Decimal("0.00"), "credit": amount},
-        ],
+             "debit": Decimal("0.00"), "credit": cash_base},
+        ] + fx_lines,
     )
+    journal.transaction_currency=currency;journal.transaction_amount=amount;journal.exchange_rate=rate
+    journal.save(update_fields=["transaction_currency","transaction_amount","exchange_rate"])
     post_journal_entry(journal_entry=journal, user=user)
     refund.accounting_journal = journal
     refund.status = CustomerRefund.Status.POSTED

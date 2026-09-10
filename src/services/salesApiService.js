@@ -122,6 +122,10 @@ export const salesApiService = {
       items: source.items,
     });
   },
+  async reversePayment(invoiceId, paymentId, reason, reversalDate) {
+    await api.post(`customer-payments/${paymentId}/reverse/`, { reason, reversal_date: reversalDate });
+    return this.get(invoiceId);
+  },
   async recordPayment(invoice, payment) {
     await api.post("customer-payments/", {
       customer_id: invoice.customerId,
@@ -132,7 +136,7 @@ export const salesApiService = {
       currency: invoice.currency,
       reference: payment.reference || invoice.invoiceNumber,
       notes: payment.notes || "",
-    });
+    }, { headers: { "Idempotency-Key": payment.idempotencyKey } });
     return this.get(invoice.id);
   },
 };

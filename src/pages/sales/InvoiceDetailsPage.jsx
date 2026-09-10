@@ -1,3 +1,4 @@
+import { getOrganisationToday } from "../../utils/dateUtils.js";
 import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 // Present one invoice, its payments, and links to the accounting records behind it.
@@ -28,7 +29,6 @@ import EmailInvoiceModal from "../../components/invoices/EmailInvoiceModal";
 
 import {
   emailInvoice,
-  reverseInvoicePayment,
 } from "../../services/invoiceService";
 import { salesApiService } from "../../services/salesApiService";
 import { normaliseApiError } from "../../services/apiError";
@@ -500,7 +500,7 @@ function InvoiceDetailsPage() {
 
     const confirmed =
       window.confirm(
-        "This will remove the payment from the invoice and delete its linked bank transaction. Continue?"
+        "This posts a dated reversal and restores the invoice balance. Continue?"
       );
 
     if (!confirmed) {
@@ -513,11 +513,7 @@ function InvoiceDetailsPage() {
 
     try {
       const updatedInvoice =
-        reverseInvoicePayment(
-          invoice.id,
-          payment.id,
-          reason
-        );
+        await salesApiService.reversePayment(invoice.id, payment.id, reason, getOrganisationToday(auth.selectedOrganisation?.timezone));
 
       setInvoice(
         updatedInvoice
@@ -1140,8 +1136,7 @@ function InvoiceDetailsPage() {
                             type="button"
                             className="invoice-secondary-button"
                             disabled={
-                              reversingPaymentId ===
-                              payment.id
+                              !auth.hasPermission("reverse_journal") || payment.status === "reversed" || reversingPaymentId !== null
                             }
                             onClick={() =>
                               handleReversePayment(

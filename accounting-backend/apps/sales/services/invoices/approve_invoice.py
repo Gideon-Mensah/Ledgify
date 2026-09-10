@@ -1,3 +1,5 @@
+from common.rounding import balance_converted_document
+from common.ledger_integrity import lock_ledger
 """Approve an invoice and post revenue, tax, and Accounts Receivable entries."""
 
 from decimal import Decimal
@@ -28,6 +30,7 @@ def approve_invoice(
     invoice,
     user,
 ):
+    lock_ledger(invoice.organisation_id)
     invoice = (
         Invoice.objects
         .select_for_update()
@@ -180,11 +183,12 @@ def approve_invoice(
         account = rate.output_tax_account
         if account.organisation_id != invoice.organisation_id or account.status != Account.Status.ACTIVE:
             raise BusinessRuleError("Output tax account is invalid for this organisation.")
-        tax_totals.setdefault(account.id, [account, Decimal("0.00")])[1] += line.tax_amount
+        tax_totals.setdefault((rate.id,account.id), [account, Decimal("0.00")])[1] += line.tax_amount
     for account, amount in tax_totals.values():
         journal_lines.append({"account": account, "description": f"Output tax - Invoice {invoice.invoice_number}",
-                              "debit": Decimal("0.00"), "credit": convert_amount(amount=amount, rate=invoice.exchange_rate)})
+                              "debit": Decimal("0.00"), "credit": convert_amount(amount=amount,rate=invoice.exchange_rate)})
 
+    journal_lines = balance_converted_document(organisation=invoice.organisation, currency=invoice.currency, lines=journal_lines)
     journal = create_journal_entry(
         organisation=invoice.organisation,
         date=invoice.issue_date,

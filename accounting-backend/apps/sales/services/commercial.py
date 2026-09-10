@@ -1,3 +1,4 @@
+from common.ledger_integrity import ledger_transaction
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import models, transaction
@@ -36,7 +37,7 @@ def _line_values(organisation, line, account_key):
     return quantity, price, discount, total
 
 
-@transaction.atomic
+@ledger_transaction
 def create_quote(*, organisation, customer, quote_number, issue_date, expiry_date,
                  currency, lines, user, reference="", notes=""):
     _validate_party(organisation, customer)
@@ -56,7 +57,7 @@ def create_quote(*, organisation, customer, quote_number, issue_date, expiry_dat
     quote.save(update_fields=["subtotal", "total", "updated_at"]); return quote
 
 
-@transaction.atomic
+@ledger_transaction
 def accept_quote(*, organisation, quote, user):
     quote = Quote.objects.select_for_update().get(pk=quote.pk, organisation=organisation)
     if quote.status not in {Quote.Status.DRAFT, Quote.Status.SENT}: raise BusinessRuleError("Quote cannot be accepted.")
@@ -65,7 +66,7 @@ def accept_quote(*, organisation, quote, user):
     quote.save(update_fields=["status", "accepted_by", "accepted_at", "updated_at"]); return quote
 
 
-@transaction.atomic
+@ledger_transaction
 def convert_quote_to_invoice(*, organisation, quote, user, invoice_number, issue_date, due_date):
     quote = Quote.objects.select_for_update().prefetch_related("lines__revenue_account").get(pk=quote.pk, organisation=organisation)
     if quote.status != Quote.Status.ACCEPTED or quote.converted_invoice_id: raise BusinessRuleError("Only an unconverted accepted quote can be invoiced.")
@@ -79,7 +80,7 @@ def convert_quote_to_invoice(*, organisation, quote, user, invoice_number, issue
     quote.save(update_fields=["status", "converted_invoice", "updated_at"]); return invoice
 
 
-@transaction.atomic
+@ledger_transaction
 def create_sales_order(*, organisation, customer, order_number, order_date, currency,
                        lines, user, expected_delivery_date=None, reference="", notes="",
                        quote=None):
@@ -101,7 +102,7 @@ def create_sales_order(*, organisation, customer, order_number, order_date, curr
     order.save(update_fields=["subtotal", "total", "updated_at"]); return order
 
 
-@transaction.atomic
+@ledger_transaction
 def convert_sales_order_to_invoice(*, organisation, sales_order, user,
                                    invoice_number, issue_date, due_date):
     order = SalesOrder.objects.select_for_update().prefetch_related("lines__revenue_account").get(
@@ -120,7 +121,7 @@ def convert_sales_order_to_invoice(*, organisation, sales_order, user,
     order.save(update_fields=["invoice", "status", "updated_at"]); return invoice
 
 
-@transaction.atomic
+@ledger_transaction
 def approve_sales_order(*, organisation, sales_order, user):
     order = SalesOrder.objects.select_for_update().get(pk=sales_order.pk, organisation=organisation)
     if order.status != SalesOrder.Status.DRAFT: raise BusinessRuleError("Only draft sales orders can be approved.")
@@ -128,7 +129,7 @@ def approve_sales_order(*, organisation, sales_order, user):
     order.save(update_fields=["status", "approved_by", "approved_at", "updated_at"]); return order
 
 
-@transaction.atomic
+@ledger_transaction
 def fulfil_sales_order_line(*, organisation, line, warehouse, quantity, transaction_date, user):
     line = SalesOrderLine.objects.select_for_update().select_related("sales_order", "product").get(pk=line.pk)
     if line.sales_order.organisation_id != organisation.id or line.sales_order.status not in {SalesOrder.Status.APPROVED, SalesOrder.Status.PARTLY_FULFILLED}:

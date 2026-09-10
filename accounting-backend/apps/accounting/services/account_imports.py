@@ -1,3 +1,4 @@
+from common.ledger_integrity import lock_ledger
 """Safe, versioned OOXML generation and atomic Chart of Accounts imports."""
 import hashlib
 import io
@@ -160,6 +161,7 @@ def batch_data(batch):
 
 @transaction.atomic
 def confirm(*, batch, user):
+    lock_ledger(batch.organisation_id)
     batch=AccountImportBatch.objects.select_for_update().get(pk=batch.pk)
     if batch.status==AccountImportBatch.Status.COMPLETED: return batch
     if batch.expires_at<=timezone.now(): batch.status=AccountImportBatch.Status.EXPIRED;batch.save(update_fields=["status"]);raise ValidationError("This import batch has expired. Upload the workbook again.")

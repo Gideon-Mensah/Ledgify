@@ -1,3 +1,4 @@
+from common.ledger_integrity import lock_ledger
 """Code an unmatched bank transaction and post one balanced accounting journal."""
 
 from decimal import Decimal
@@ -24,6 +25,7 @@ def reconcile_bank_transaction_to_account(
     target_account,
     user,
 ):
+    lock_ledger(bank_transaction.organisation_id)
     bank_transaction = (
         BankTransaction.objects
         .select_for_update()

@@ -159,6 +159,7 @@ class FinanceReportViewSet(
             customer_id=query.validated_data.get("customer_id"),
         )
         data = customer_balance_summary(
+            as_of_date=query.validated_data.get("as_of_date"),
             organisation=organisation,
             customer=customer,
         )
@@ -182,6 +183,7 @@ class FinanceReportViewSet(
             supplier_id=query.validated_data.get("supplier_id"),
         )
         data = supplier_balance_summary(
+            as_of_date=query.validated_data.get("as_of_date"),
             organisation=organisation,
             supplier=supplier,
         )

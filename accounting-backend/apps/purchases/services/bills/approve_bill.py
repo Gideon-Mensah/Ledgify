@@ -1,3 +1,5 @@
+from common.rounding import balance_converted_document
+from common.ledger_integrity import lock_ledger
 """Approve a supplier bill and post expense, inventory, tax, and payable entries."""
 
 from decimal import Decimal
@@ -28,6 +30,7 @@ def approve_bill(
     bill,
     user,
 ):
+    lock_ledger(bill.organisation_id)
     bill = (
         Bill.objects
         .select_for_update()
@@ -178,10 +181,10 @@ def approve_bill(
         account = rate.input_tax_account
         if account is None or account.organisation_id != bill.organisation_id or account.status != Account.Status.ACTIVE:
             raise BusinessRuleError("Recoverable purchase tax requires a valid input tax account.")
-        tax_totals.setdefault(account.id, [account, Decimal("0.00")])[1] += line.tax_amount
+        tax_totals.setdefault((rate.id,account.id), [account, Decimal("0.00")])[1] += line.tax_amount
     for account, amount in tax_totals.values():
         journal_lines.append({"account": account, "description": f"Input tax - Bill {bill.bill_number}",
-                              "debit": convert_amount(amount=amount, rate=bill.exchange_rate), "credit": Decimal("0.00")})
+                              "debit": convert_amount(amount=amount,rate=bill.exchange_rate), "credit": Decimal("0.00")})
 
     journal_lines.append(
         {
@@ -195,6 +198,7 @@ def approve_bill(
         }
     )
 
+    journal_lines = balance_converted_document(organisation=bill.organisation, currency=bill.currency, lines=journal_lines)
     journal = create_journal_entry(
         organisation=bill.organisation,
         date=bill.issue_date,

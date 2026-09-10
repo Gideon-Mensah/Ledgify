@@ -1,6 +1,7 @@
 import { getOrganisationCurrencyContext } from "./organisationCurrency.js";
 
-export const SUPPORTED_CURRENCY_CODES = Object.freeze(Intl.supportedValuesOf("currency"));
+import currencyMetadata from "../../accounting-backend/common/currency_metadata.json" with { type: "json" };
+export const SUPPORTED_CURRENCY_CODES = Object.freeze(Object.keys(currencyMetadata));
 const legacyCodes = new Map([["GH¢", "GHS"], ["GH₵", "GHS"], ["GHC", "GHS"]]);
 const warn = () => {
   if (import.meta.env?.DEV) console.warn("Ledgify received invalid currency or monetary data; review the API currency and amount fields.");
@@ -62,5 +63,5 @@ export const CURRENCY_OPTIONS = Object.freeze([
   ["GBP", "GBP — Pound sterling"], ["GHS", "GHS — Ghanaian cedi"],
   ["USD", "USD — US dollar"], ["EUR", "EUR — Euro"],
   ["CAD", "CAD — Canadian dollar"], ["AUD", "AUD — Australian dollar"],
-  ["JPY", "JPY — Japanese yen"], ["NZD", "NZD — New Zealand dollar"],
+  ["NZD", "NZD — New Zealand dollar"],
 ]);

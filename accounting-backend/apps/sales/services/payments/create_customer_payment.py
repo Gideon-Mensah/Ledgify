@@ -1,3 +1,4 @@
+from apps.finance.services.allocations.carrying import carrying_slice, require_revaluation_reversed
 """Record a customer receipt, post its journal, and allocate it to an invoice."""
 
 from decimal import Decimal
@@ -5,6 +6,7 @@ from decimal import Decimal
 from django.db import transaction
 
 from common.exceptions import BusinessRuleError
+from common.ledger_integrity import lock_ledger
 from apps.accounting.models import Account, JournalEntry
 from apps.accounting.services.journals import create_journal_entry, post_journal_entry
 from apps.sales.models import CustomerPayment, Invoice
@@ -15,6 +17,7 @@ from apps.fx.services import convert_amount,get_effective_rate
 def create_customer_payment(*, organisation, customer, bank_account, payment_date,
                             amount, user, currency, invoice=None, reference="",
                             notes=""):
+    lock_ledger(organisation.id)
     if customer.organisation_id != organisation.id or not customer.is_customer:
         raise BusinessRuleError("The selected customer is invalid.")
     if invoice is not None:
@@ -55,8 +58,9 @@ def create_customer_payment(*, organisation, customer, bank_account, payment_dat
         account_class=Account.AccountClass.RECEIVABLE, status=Account.Status.ACTIVE)
     if receivables.count() != 1:
         raise BusinessRuleError("The organisation must have exactly one active Accounts Receivable account.")
+    require_revaluation_reversed(organisation,currency,payable=False)
     rate=get_effective_rate(organisation=organisation,base_currency=currency,target_currency=organisation.base_currency,date=payment_date)
-    base_amount=convert_amount(amount=amount,rate=rate);receivable_base=convert_amount(amount=amount,rate=invoice.exchange_rate) if invoice else base_amount
+    base_amount=convert_amount(amount=amount,rate=rate);receivable_base=carrying_slice(invoice,amount,payable=False) if invoice else base_amount
     fx=base_amount-receivable_base
     if fx:
         from apps.fx.account_validation import validate_fx_account
@@ -87,5 +91,5 @@ def create_customer_payment(*, organisation, customer, bank_account, payment_dat
     if invoice is not None:
         from apps.finance.services.allocations import allocate_customer_payment
         allocate_customer_payment(organisation=organisation, payment=payment,
-                                  invoice=invoice, amount=amount, user=user)
+                                  invoice=invoice, amount=amount, user=user, effective_date=payment_date)
     return payment

@@ -1,3 +1,5 @@
+from common.ledger_integrity import lock_ledger
+from common.ledger_integrity import ledger_transaction
 """Coordinate inventory receipts, issues, returns, transfers, and their journals."""
 
 from decimal import Decimal, ROUND_HALF_UP
@@ -19,7 +21,7 @@ from apps.organisations.services import require_organisation_permission
 ZERO = Decimal("0.00")
 
 
-@transaction.atomic
+@ledger_transaction
 def create_stock_count(*, organisation, warehouse, count_date, reference,
                        offset_account, products, user):
     require_organisation_permission(organisation=organisation, user=user, permission=ADJUST_STOCK)
@@ -49,6 +51,7 @@ def create_stock_count(*, organisation, warehouse, count_date, reference,
 
 @transaction.atomic
 def start_stock_count(*, stock_count, user):
+    lock_ledger(stock_count.organisation_id)
     require_organisation_permission(
         organisation=stock_count.organisation, user=user, permission=ADJUST_STOCK,
     )
@@ -118,7 +121,7 @@ def _journal(*, organisation, date, description, reference, source_id, source_ty
     return journal
 
 
-@transaction.atomic
+@ledger_transaction
 def receive_purchase(*, organisation, product, warehouse, receipt_date, quantity,
                      unit_cost, grni_account, reference, user, description="",
                      source_document_id=None):
@@ -153,7 +156,7 @@ def receive_purchase(*, organisation, product, warehouse, receipt_date, quantity
         accounting_journal=journal, created_by=user)
 
 
-@transaction.atomic
+@ledger_transaction
 def issue_sale(*, organisation, product, warehouse, issue_date, quantity,
                invoice, reference, user, description=""):
     require_organisation_permission(organisation=organisation, user=user, permission=ADJUST_STOCK)
@@ -190,7 +193,7 @@ def issue_sale(*, organisation, product, warehouse, issue_date, quantity,
         primary_movement=movement, accounting_journal=journal, created_by=user)
 
 
-@transaction.atomic
+@ledger_transaction
 def issue_inventory_transaction(*, organisation, product, warehouse, transaction_date,
                                 quantity, source_document_id, reference, user,
                                 description=""):
@@ -231,7 +234,7 @@ def issue_inventory_transaction(*, organisation, product, warehouse, transaction
     )
 
 
-@transaction.atomic
+@ledger_transaction
 def transfer_stock(*, organisation, product, source_warehouse, destination_warehouse,
                    transfer_date, quantity, reference, user, description=""):
     require_organisation_permission(organisation=organisation, user=user, permission=ADJUST_STOCK)
@@ -261,7 +264,7 @@ def transfer_stock(*, organisation, product, source_warehouse, destination_wareh
         primary_movement=outgoing, secondary_movement=incoming, created_by=user)
 
 
-@transaction.atomic
+@ledger_transaction
 def return_customer_stock(*, organisation, product, warehouse, return_date, quantity,
                           invoice, original_issue, reference, user, description=""):
     require_organisation_permission(organisation=organisation, user=user, permission=ADJUST_STOCK)
@@ -314,7 +317,7 @@ def return_customer_stock(*, organisation, product, warehouse, return_date, quan
         accounting_journal=journal, created_by=user)
 
 
-@transaction.atomic
+@ledger_transaction
 def return_supplier_stock(*, organisation, product, warehouse, return_date, quantity,
                           settlement_account, reference, user, description="",
                           original_receipt=None):
@@ -363,6 +366,7 @@ def return_supplier_stock(*, organisation, product, warehouse, return_date, quan
 
 @transaction.atomic
 def post_stock_count(*, stock_count, counts, user):
+    lock_ledger(stock_count.organisation_id)
     require_organisation_permission(organisation=stock_count.organisation, user=user, permission=ADJUST_STOCK)
     if stock_count.status != StockCount.Status.COUNTING:
         raise BusinessRuleError("Only a stock count in counting status can be posted.")
