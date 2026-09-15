@@ -1,0 +1,30 @@
+[
+  {
+    "check": "desktop invoice",
+    "result": "PASS"
+  },
+  {
+    "check": "390px invoice",
+    "result": "PASS"
+  },
+  {
+    "check": "Print after /accounting/journals",
+    "result": "PASS"
+  },
+  {
+    "check": "Print after /accounting/profit-and-loss",
+    "result": "PASS"
+  },
+  {
+    "check": "Print after /banking/accounts",
+    "result": "PASS"
+  },
+  {
+    "check": "Email accepted by local in-memory backend",
+    "result": "PASS"
+  },
+  {
+    "check": "Organisation switch GHS to GBP identity",
+    "result": "PASS"
+  }
+]

@@ -1,3 +1,4 @@
+from apps.tax.document_tax import validate_document_snapshot, tax_ledger_totals, nonrecoverable
 from common.rounding import balance_converted_document
 from common.ledger_integrity import lock_ledger
 """Approve a customer credit and reverse the appropriate revenue and tax amounts."""
@@ -43,16 +44,8 @@ def approve_customer_credit_note(*, credit_note, user):
         totals.setdefault(account.id, [account, Decimal("0.00")])[1] += money(line.line_total - line.tax_amount)
     journal_lines = [{"account": item[0], "description": f"Credit {credit_note.credit_note_number}",
                       "debit": convert_amount(amount=item[1],rate=credit_note.exchange_rate), "credit": Decimal("0.00")} for item in totals.values()]
-    tax_totals = {}
-    for line in credit_note.lines.all():
-        if not line.tax_amount: continue
-        rate = line.tax_rate_config
-        if not rate or not rate.output_tax_account:
-            raise BusinessRuleError("Taxed credit lines require a configured output tax account.")
-        account = rate.output_tax_account
-        if account.organisation_id != credit_note.organisation_id or account.status != Account.Status.ACTIVE:
-            raise BusinessRuleError("Output tax account is invalid.")
-        tax_totals.setdefault((rate.id,account.id), [account, Decimal("0.00")])[1] += line.tax_amount
+    validate_document_snapshot(credit_note)
+    tax_totals = tax_ledger_totals(credit_note, list(credit_note.lines.all()), "OUTPUT")
     journal_lines.extend({"account": item[0], "description": f"Output tax reversal - {credit_note.credit_note_number}",
                           "debit": convert_amount(amount=item[1],rate=credit_note.exchange_rate), "credit": Decimal("0.00")} for item in tax_totals.values())
     journal_lines.append({"account": receivables.get(), "description": f"Credit {credit_note.credit_note_number}",

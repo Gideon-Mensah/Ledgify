@@ -1,0 +1,122 @@
+[
+  {
+    "check": "Desktop trial-balance direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop trial-balance actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop profit-and-loss direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop profit-and-loss actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop balance-sheet direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop balance-sheet actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop cash-flow direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop cash-flow actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop general-ledger actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop aged-receivables actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop aged-payables actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop tax direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop tax actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop bank actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop account actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px trial-balance direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "390px trial-balance actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px profit-and-loss direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "390px profit-and-loss actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px balance-sheet direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "390px balance-sheet actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px cash-flow direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "390px cash-flow actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px general-ledger actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px aged-receivables actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px aged-payables actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px tax direct Print matches export Print",
+    "result": "PASS"
+  },
+  {
+    "check": "390px tax actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px bank actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px account actual print document",
+    "result": "PASS"
+  }
+]

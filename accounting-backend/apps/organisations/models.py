@@ -30,6 +30,8 @@ class Organisation(models.Model):
         max_length=100,
         blank=True,
     )
+    tax_structure_type = models.CharField(max_length=30, blank=True, default="", choices=[(v,v) for v in ("GHANA_GRA", "CUSTOM_INTERNATIONAL", "NO_TAX")])
+    tax_configuration_version = models.PositiveIntegerField(default=0)
     tax_registered = models.BooleanField(default=False)
     tax_registration_number = models.CharField(max_length=100, blank=True)
     tax_scheme = models.CharField(max_length=50, blank=True)
@@ -100,6 +102,11 @@ class Organisation(models.Model):
     website = models.URLField(
         blank=True,
     )
+
+    ghana_post_gps = models.CharField(max_length=30, blank=True)
+    payment_instructions = models.TextField(blank=True, max_length=2000)
+    # Canonical PNG data, private to authenticated organisation responses; no remote fetches.
+    logo_data = models.TextField(blank=True)
 
     require_separate_approver = models.BooleanField(default=False)
 

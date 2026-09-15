@@ -13,3 +13,5 @@ export function parseBooleanFlag(value, fallback = false) {
 export const AI_ENABLED = parseBooleanFlag(import.meta.env?.VITE_AI_ENABLED, false);
 
 export const CONSOLIDATION_ENABLED = parseBooleanFlag(import.meta.env?.VITE_ENABLE_CONSOLIDATION, false);
+
+export const GRA_EVAT_ENABLED = parseBooleanFlag(import.meta.env?.VITE_ENABLE_GRA_EVAT, false);

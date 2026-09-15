@@ -150,6 +150,7 @@ export const purchasesApiService = {
       currency: bill.currency,
       reference: payment.reference || bill.billNumber,
       notes: payment.notes || "",
+      withholdings: payment.withholdings || [],
     }, { headers: { "Idempotency-Key": payment.idempotencyKey } });
     return this.get(bill.id);
   },

@@ -1,3 +1,4 @@
+import WithholdingFields from "../documents/WithholdingFields";
 import { createPaymentSubmission } from "../../utils/paymentSubmission.js";
 import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
@@ -24,6 +25,7 @@ const formatCurrency = centralFormatCurrency;
 function RecordPaymentModal({
   isOpen,
   invoiceNumber,
+  invoiceId,
   balanceDue,
   invoiceCurrency = getOrganisationCurrency(),
   onClose,
@@ -31,6 +33,7 @@ function RecordPaymentModal({
 }) {
   const auth = useAuth();
   const [submission] = useState(createPaymentSubmission);
+  const [withholdings,setWithholdings] = useState([]);
   const today = getOrganisationToday(auth.selectedOrganisation?.timezone);
   const [
     bankAccounts,
@@ -162,6 +165,7 @@ function RecordPaymentModal({
       notes: "",
     });
 
+    setWithholdings([]);
     setErrors({});
     setIsRecording(false);
     });
@@ -290,13 +294,14 @@ function RecordPaymentModal({
       return;
     }
 
-    const idempotencyKey = submission.begin({ paymentDetails, document: invoiceNumber });
+    const idempotencyKey = submission.begin({ paymentDetails, withholdings, document: invoiceNumber });
     if (!idempotencyKey) return;
     setIsRecording(true);
 
     try {
       await onSave({
         idempotencyKey,
+        withholdings,
         amount: paymentDetails.amount,
 
         paymentDate:
@@ -627,6 +632,7 @@ function RecordPaymentModal({
             />
           </div>
         </div>
+        <WithholdingFields items={withholdings} onChange={setWithholdings} supplier={false} sourceId={invoiceId} date={paymentDetails.paymentDate} amount={paymentDetails.amount}/>
       </form>
     </Modal>
   );

@@ -1,0 +1,33 @@
+(node:23398) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Excel export is a genuine OOXML ZIP with the correct MIME type (12.699333ms)
+✔ Profit and Loss workbook keeps numeric totals (0.582584ms)
+✔ Trial Balance shows totals and a visible balance result (0.403875ms)
+✔ Balance Sheet exposes, rather than masks, the accounting equation (0.799708ms)
+✔ Cash Flow workbook preserves the backend hierarchy and cash reconciliation (0.3685ms)
+✔ comparison columns are not invented and filenames are safe (0.358667ms)
+✔ journal print rules restore journal visibility and protect empty entries (2.473208ms)
+✔ shared financial statement presents all required report hierarchies and print data (0.47875ms)
+✔ Cash Flow drill-down exposes backend audit fields without recalculating amounts (1.048084ms)
+✔ currency exports retain numeric money, ISO metadata and appropriate minor units (1.863ms)
+✔ mixed-currency document rows keep their own Excel currency styles (0.230125ms)
+✔ trial balance exposes only human fields and preserves exact supplied amounts and totals (0.876459ms)
+✔ money formatting preserves decimal precision, zero and negative balances without binary arithmetic (0.157459ms)
+✔ Profit and Loss retains explicit sections, comparisons and backend totals (0.223917ms)
+✔ Balance Sheet retains explicit sections, comparisons and backend totals (0.127666ms)
+✔ Cash Flow Statement retains explicit sections, comparisons and backend totals (0.20875ms)
+✔ ledger has account sections, opening and closing values without internal references (0.086917ms)
+✔ aging separates party, transaction currency, base currency and reconciliation sections (0.161ms)
+✔ metadata retains currency labels but never raw report objects or account IDs (0.826667ms)
+✔ large reports preserve every row and full long names (0.3455ms)
+✔ tax export labels use configured names instead of internal version codes (0.749833ms)
+✔ P&L category subtotals retain the on-screen hierarchy without floating-point loss (0.20725ms)
+✔ Balance Sheet preserves current and non-current asset and liability groups (0.125167ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 103.574667

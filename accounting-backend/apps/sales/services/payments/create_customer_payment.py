@@ -16,7 +16,7 @@ from apps.fx.services import convert_amount,get_effective_rate
 @transaction.atomic
 def create_customer_payment(*, organisation, customer, bank_account, payment_date,
                             amount, user, currency, invoice=None, reference="",
-                            notes=""):
+                            notes="", withholdings=None):
     lock_ledger(organisation.id)
     if customer.organisation_id != organisation.id or not customer.is_customer:
         raise BusinessRuleError("The selected customer is invalid.")
@@ -65,6 +65,10 @@ def create_customer_payment(*, organisation, customer, bank_account, payment_dat
     if fx:
         from apps.fx.account_validation import validate_fx_account
         validate_fx_account(organisation, organisation.fx_gain_account if fx>0 else organisation.fx_loss_account, "gain" if fx>0 else "loss")
+    from apps.tax.withholding import prepare_withholding, withholding_journal_lines, record_withholding
+    withheld, withheld_total = prepare_withholding(organisation=organisation,contact=customer,point=payment_date,
+        gross=amount,currency=currency,exchange_rate=rate,items=withholdings,supplier_payment=False,source=invoice)
+    cash_base = base_amount - sum((item['base_withheld'] for item in withheld), Decimal('0.00'))
     payment = CustomerPayment.objects.create(
         organisation=organisation, customer=customer, invoice=invoice,
         bank_account=bank_account, payment_date=payment_date, amount=amount,
@@ -79,15 +83,16 @@ def create_customer_payment(*, organisation, customer, bank_account, payment_dat
         source_type=JournalEntry.SourceType.PAYMENT, source_id=payment.id, user=user,
         lines=[
             {"account": bank_account, "description": "Payment received",
-             "debit": base_amount, "credit": Decimal("0.00")},
+             "debit": cash_base, "credit": Decimal("0.00")},
             {"account": receivables.get(), "description": "Payment received",
              "debit": Decimal("0.00"), "credit": receivable_base},
-        ] + ([{"account":organisation.fx_gain_account if fx>0 else organisation.fx_loss_account,
+        ] + withholding_journal_lines(withheld, False) + ([{"account":organisation.fx_gain_account if fx>0 else organisation.fx_loss_account,
                "description":"Realised FX","debit":Decimal("0.00") if fx>0 else abs(fx),"credit":fx if fx>0 else Decimal("0.00")}] if fx else []),
     )
     post_journal_entry(journal_entry=journal, user=user)
     payment.accounting_journal = journal; payment.status = CustomerPayment.Status.POSTED
     payment.save(update_fields=["accounting_journal", "status", "updated_at"])
+    record_withholding(payment, withheld, False, user)
     if invoice is not None:
         from apps.finance.services.allocations import allocate_customer_payment
         allocate_customer_payment(organisation=organisation, payment=payment,

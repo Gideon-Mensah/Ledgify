@@ -158,7 +158,7 @@
 
 @page { size: A4 portrait; margin: 13mm 12mm 15mm; }
 @media print {
-  body * { visibility: hidden; }
+  body:has(.financial-statement) *:not(.financial-statement):not(.financial-statement *) { visibility: hidden; }
   .financial-statement, .financial-statement * { visibility: visible; }
   .financial-statement { position: absolute; inset: 0; width: 100%; max-width: none; margin: 0; padding: 0; border: 0; box-shadow: none; }
   .financial-report-filters, .financial-report-print-button, .report-export, .table-pagination { display: none !important; }

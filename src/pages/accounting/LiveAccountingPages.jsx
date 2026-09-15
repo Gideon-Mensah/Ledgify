@@ -1,3 +1,6 @@
+import { OrganisationIdentity } from "../../components/documents/DocumentView";
+import { documentIdentity } from "../../utils/documentIdentity";
+import { ledgerDocumentRows } from "../../utils/ledgerDocumentRows";
 import { isMonetaryField } from "../../utils/monetaryFields.js";
 import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
@@ -5,7 +8,7 @@ import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Calculator, CircleDollarSign, Ellipsis, FileUp, Landmark, Plus, Printer, Search, ShieldCheck } from "lucide-react";
+import { Calculator, CircleDollarSign, Ellipsis, FileUp, Landmark, Plus, Search, ShieldCheck } from "lucide-react";
 
 import PageHeader from "../../components/layout/PageHeader";
 import ReportExportMenu from "../../components/reports/ReportExportMenu";
@@ -268,7 +271,7 @@ function FinancialStatement({ report, data, filters, organisation, currency }) {
   const context = new URLSearchParams({ source: "trial-balance", as_of_date: filters.as_of_date || "" });
   const balanced = data.balanced !== false;
   return <article className="financial-statement" aria-label={`${title} report`}>
-    <header className="financial-statement-header"><strong>{organisation || "Ledgify"}</strong><h2>{title}</h2><p>{reportPeriod(filters)}</p><div><span>Currency: {currency}</span><span>Generated: {new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date())}</span></div></header>
+    <header className="financial-statement-header"><OrganisationIdentity identity={documentIdentity(organisation)}/><h2>{title}</h2><p>{reportPeriod(filters)}</p><div><span>Currency: {currency}</span><span>Generated: {new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short" }).format(new Date())}</span></div></header>
     <div className="financial-statement-table-wrap"><table className={`financial-statement-table${isTrial ? " is-trial-balance" : ""}`}>
       <thead>{isTrial ? <tr><th>Account Code</th><th>Account Name</th><th>Account Type</th><th className="is-money">Debit</th><th className="is-money">Credit</th></tr> : <tr><th>Line Item or Account</th><th className="is-money">{filters.as_of_date || filters.end_date || "Amount"}</th></tr>}</thead>
       {isTrial ? <><tbody>{(data.rows || []).length ? data.rows.map((row) => <tr className="financial-statement-account" key={row.account.id}><td><Link to={`/accounting/accounts/${row.account.id}?${context}`}>{row.account.code}</Link></td><td><Link to={`/accounting/accounts/${row.account.id}?${context}`}>{row.account.name}</Link></td><td>{humaniseReportValue(row.account.account_type)}</td><td className="is-money">{Number(row.debit) ? reportMoney(row.debit, currency) : ""}</td><td className="is-money">{Number(row.credit) ? reportMoney(row.credit, currency) : ""}</td></tr>) : <tr><td className="financial-statement-empty" colSpan="5">No Trial Balance accounts were found as at this date.</td></tr>}</tbody><tfoot><tr className="financial-statement-grand-total"><td/><td>Total</td><td/><td className="is-money">{reportMoney(data.total_debit, currency)}</td><td className="is-money">{reportMoney(data.total_credit, currency)}</td></tr></tfoot></> : <tbody>{rows.map((row, index) => <tr className={`financial-statement-${row.kind}`} key={`${row.kind}-${row.label}-${index}`}><td>{row.href ? <Link to={row.href}>{row.label}</Link> : row.label}</td><td className="is-money">{row.amount === undefined ? "" : reportMoney(row.amount, currency)}</td></tr>)}</tbody>}
@@ -299,15 +302,16 @@ export function LiveReportPage({ report }) {
   const totals = data && !Array.isArray(data)
     ? Object.fromEntries(Object.entries(data).filter(([, value]) => !Array.isArray(value)))
         : {};
-  const exportRows = [...sections.flatMap(([section, rows]) => rows.map((row) => ({ section, ...row }))), ...(Object.keys(totals).length ? [{ section: "Totals", ...totals }] : [])];
+  const exportRows = report === "general-ledger" ? ledgerDocumentRows(Array.isArray(data)?data:[]) : [...sections.flatMap(([section, rows]) => rows.map((row) => ({ section, ...row }))), ...(Object.keys(totals).length ? [{ section: "Totals", ...totals }] : [])];
   const isStatement = ["profit-and-loss", "trial-balance", "balance-sheet", "cash-flow"].includes(report);
   const currency = auth.selectedOrganisation?.base_currency || getOrganisationCurrency();
-  return <div className={definition.className}><PageHeader eyebrow="Financial reports" title={definition.title} description="Review financial performance and position from posted accounting entries." action={<>{auth.hasPermission("use_ai_assistant") && <AskAIButton prompt={`Explain my ${definition.title} for the selected period and highlight anything I should review.`}/>}<ReportExportMenu title={definition.title} rows={exportRows} metadata={{ ...filters, organisation: auth.selectedOrganisation?.name, currency }} disabled={state.loading || Boolean(state.error)}/>{isStatement && <button className="invoice-secondary-button financial-report-print-button" disabled={!data || state.loading || Boolean(state.error)} onClick={() => window.print()}><Printer size={16}/>Print</button>}</>} />
+  return <div className={definition.className}><PageHeader eyebrow="Financial reports" title={definition.title} description="Review financial performance and position from posted accounting entries." action={<>{auth.hasPermission("use_ai_assistant") && <AskAIButton prompt={`Explain my ${definition.title} for the selected period and highlight anything I should review.`}/>}<ReportExportMenu title={definition.title} rows={exportRows} metadata={{ ...filters, organisation: auth.selectedOrganisation?.name, currency, report_data: data }} disabled={state.loading || Boolean(state.error)}/>{isStatement && <ReportExportMenu printOnly title={definition.title} rows={exportRows} metadata={{...filters,currency,report_data:data}} disabled={!data || state.loading || Boolean(state.error)}/>}</>} />
     <div className="invoice-form-card financial-report-filters">{Object.keys(filters).map((field) => field === "account_id" ? <input key={field} type="hidden" value={filters[field]}/> : <label key={field}>{field.replaceAll("_", " ")} <input type="date" value={filters[field]} onChange={(event) => setFilters((current) => ({ ...current, [field]: event.target.value }))} /></label>)}<button className="page-primary-button" onClick={load}>Refresh</button></div>
-    <StatePanel {...state}>{data && (isStatement ? <FinancialStatement report={report} data={data} filters={filters} organisation={auth.selectedOrganisation?.name} currency={currency}/> : report === "general-ledger" ? <GeneralLedgerDisplay ledgers={Array.isArray(data) ? data : []} filters={filters} currency={currency}/> : <>{data.balanced === false && <div className="invoice-form-alert">This report is out of balance by {displayValue(data.difference)}. Review the underlying posted entries.</div>}{Object.keys(totals).length > 0 && <div className="invoice-form-card report-totals-card"><DataTable reportTable rows={[totals]} /></div>}{sections.map(([name, rows]) => <section className="invoice-form-card report-section" key={name}><h2>{humaniseReportValue(name)}</h2><DataTable reportTable rows={rows} /></section>)}</>)}</StatePanel></div>;
+    <StatePanel {...state}>{data && (isStatement ? <FinancialStatement report={report} data={data} filters={filters} organisation={auth.selectedOrganisation} currency={currency}/> : report === "general-ledger" ? <GeneralLedgerDisplay ledgers={Array.isArray(data) ? data : []} filters={filters} currency={currency}/> : <>{data.balanced === false && <div className="invoice-form-alert">This report is out of balance by {displayValue(data.difference)}. Review the underlying posted entries.</div>}{Object.keys(totals).length > 0 && <div className="invoice-form-card report-totals-card"><DataTable reportTable rows={[totals]} /></div>}{sections.map(([name, rows]) => <section className="invoice-form-card report-section" key={name}><h2>{humaniseReportValue(name)}</h2><DataTable reportTable rows={rows} /></section>)}</>)}</StatePanel></div>;
 }
 
 export function LiveStatementPage({ type }) {
+  const auth=useAuth();
   const params = useParams();
   const id = type === "customer" ? params.customerId : params.supplierId;
   const [filters, setFilters] = useState({ [`${type}_id`]: id, start_date: "", end_date: today() });
@@ -322,7 +326,7 @@ export function LiveStatementPage({ type }) {
     const initialLoad = window.requestAnimationFrame(() => { void load(); });
     return () => window.cancelAnimationFrame(initialLoad);
   }, [load]);
-  return <div className="invoice-details-page"><PageHeader eyebrow="Finance" title={`${type === "customer" ? "Customer" : "Supplier"} statement`} description="Review opening balance, transactions, and closing balance for the selected period." />
+  return <div className="invoice-details-page"><PageHeader eyebrow="Finance" title={`${type === "customer" ? "Customer" : "Supplier"} statement`} description="Review opening balance, transactions, and closing balance for the selected period." action={<><Link to={`/documents/${type}-statement/${id}?${new URLSearchParams(Object.entries(filters).filter(([,v])=>v))}`}>Statement / Print / PDF</Link><ReportExportMenu title={`${type} statement`} rows={data?.transactions || []} metadata={{...filters,currency:data?.currency||auth.selectedOrganisation?.base_currency,opening_balance:data?.opening_balance,closing_balance:data?.closing_balance}} disabled={state.loading||Boolean(state.error)||!data}/></>}/>
     <div className="invoice-form-card">{["start_date", "end_date"].map((field) => <label key={field}>{field.replaceAll("_", " ")} <input type="date" value={filters[field]} onChange={(event) => setFilters((current) => ({ ...current, [field]: event.target.value }))} /></label>)}</div>
     <StatePanel {...state}>{data && <>{<DataTable rows={[Object.fromEntries(Object.entries(data).filter(([, value]) => !Array.isArray(value)))]} />}{Object.entries(data).filter(([, value]) => Array.isArray(value)).map(([name, rows]) => <section className="invoice-form-card" key={name}><h2>{name.replaceAll("_", " ")}</h2><DataTable rows={rows} /></section>)}</>}</StatePanel></div>;
 }

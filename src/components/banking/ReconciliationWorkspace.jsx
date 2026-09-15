@@ -1,3 +1,4 @@
+import ReportExportMenu from "../reports/ReportExportMenu";
 import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -118,7 +119,7 @@ export default function ReconciliationWorkspace() {
   const difference = summary?.difference;
 
   return <div className="reconciliation-workspace">
-    <PageHeader eyebrow="Banking" title={selectedAccount ? `Reconcile ${selectedAccount.name}` : "Bank reconciliation"} description="Match statement transactions to records already in Ledgify, or create the accounting entry when one does not exist." />
+    <PageHeader eyebrow="Banking" title={selectedAccount ? `Reconcile ${selectedAccount.name}` : "Bank reconciliation"} description="Match statement transactions to records already in Ledgify, or create the accounting entry when one does not exist." action={<ReportExportMenu title="Bank reconciliation" rows={[...transactions.map(row=>({date:row.transaction_date,description:row.description,reference:row.reference,amount:row.amount,currency:row.currency,status:row.status})),...(summary?[{section:"Summary",...summary}]:[])]} metadata={{as_of_date:reconciliationDate,bank_account:selectedAccount?.name,currency:selectedAccount?.currency||auth.selectedOrganisation?.base_currency}} disabled={!summary||state.loading||Boolean(state.error)}/>} />
 
     <section className="reconciliation-controls" aria-label="Reconciliation scope"><label>Bank account<select value={accountId} onChange={(event) => setAccountId(event.target.value)}><option value="">Select a bank account</option>{accounts.map((account) => <option key={account.id} value={account.id}>{account.name} · {account.currency}</option>)}</select></label><label>Statement date<input type="date" value={reconciliationDate} max={today()} onChange={(event) => setReconciliationDate(event.target.value)} /></label>{summary?.bank_account?.ledger_account && <div><span>Linked ledger</span><Link to={`/accounting/accounts/${summary.bank_account.ledger_account.id}`}>{summary.bank_account.ledger_account.code} · {summary.bank_account.ledger_account.name}</Link></div>}</section>
 

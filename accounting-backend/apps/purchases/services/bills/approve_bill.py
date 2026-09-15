@@ -1,3 +1,4 @@
+from apps.tax.document_tax import validate_document_snapshot, tax_ledger_totals, nonrecoverable
 from common.rounding import balance_converted_document
 from common.ledger_integrity import lock_ledger
 """Approve a supplier bill and post expense, inventory, tax, and payable entries."""
@@ -131,8 +132,7 @@ def approve_bill(
         if line.tax_amount and rate is None:
             raise BusinessRuleError("Taxed bill lines require a configured tax rate.")
         expense_amount = money(line.line_total - line.tax_amount)
-        if line.tax_amount and not rate.recoverable:
-            expense_amount = money(expense_amount + line.tax_amount)
+        expense_amount = money(expense_amount + nonrecoverable(line))
 
         if account.id not in expense_totals:
             expense_totals[account.id] = {
@@ -166,25 +166,22 @@ def approve_bill(
 
     total_expense = money(total_expense)
 
-    nonrecoverable = money(sum((line.tax_amount for line in lines
-                                if line.tax_rate_config and not line.tax_rate_config.recoverable), Decimal("0.00")))
-    if total_expense != money(bill.subtotal + nonrecoverable):
+    nonrecoverable_total = money(sum((nonrecoverable(line) for line in lines), Decimal("0.00")))
+    if total_expense != money(bill.subtotal + nonrecoverable_total):
         raise BusinessRuleError(
             "Bill expense total does not match the bill subtotal."
         )
 
-    tax_totals = {}
-    for line in lines:
-        rate = line.tax_rate_config
-        if not line.tax_amount or not rate.recoverable:
-            continue
-        account = rate.input_tax_account
-        if account is None or account.organisation_id != bill.organisation_id or account.status != Account.Status.ACTIVE:
-            raise BusinessRuleError("Recoverable purchase tax requires a valid input tax account.")
-        tax_totals.setdefault((rate.id,account.id), [account, Decimal("0.00")])[1] += line.tax_amount
+    validate_document_snapshot(bill)
+    tax_totals = tax_ledger_totals(bill, lines, "INPUT")
     for account, amount in tax_totals.values():
         journal_lines.append({"account": account, "description": f"Input tax - Bill {bill.bill_number}",
                               "debit": convert_amount(amount=amount,rate=bill.exchange_rate), "credit": Decimal("0.00")})
+
+    self_assessed = [line for line in lines if line.tax_snapshot.get('self_assessed')]
+    for account, amount in tax_ledger_totals(bill, self_assessed, "OUTPUT").values():
+        journal_lines.append({"account": account, "description": "Reverse-charge output tax",
+                              "debit": Decimal("0.00"), "credit": convert_amount(amount=amount, rate=bill.exchange_rate)})
 
     journal_lines.append(
         {
@@ -219,7 +216,7 @@ def approve_bill(
         journal_entry=journal,
         user=user,
     )
-    recoverable_lines = [line for line in lines if line.tax_rate_config and line.tax_rate_config.recoverable]
+    recoverable_lines = lines
     record_tax_transactions(document=bill, lines=recoverable_lines, journal_entry=journal,
                             source_type="bill", direction=TaxTransaction.Direction.INPUT,
                             document_number=bill.bill_number, contact=bill.supplier)

@@ -21,6 +21,16 @@ class TaxRateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         from decimal import Decimal
+        from apps.tax.models import OrganisationTaxProfile, TaxAccountMapping
+        organisation = self.context["organisation"]
+        if OrganisationTaxProfile.objects.filter(organisation=organisation, status='ACTIVE').exists():
+            raise serializers.ValidationError("Use reviewed, effective-dated tax versions for this organisation.")
+        if self.instance and TaxAccountMapping.objects.filter(organisation=organisation, legacy_rate=self.instance).exists():
+            raise serializers.ValidationError("Managed component rates can only change through a new tax version.")
+        if self.instance and TaxTransaction.objects.filter(organisation=organisation, tax_rate=self.instance).exists():
+            changed = [key for key, value in attrs.items() if key != 'status' and getattr(self.instance, key) != value]
+            if changed:
+                raise serializers.ValidationError("Used tax rates are immutable. Create a future rate instead.")
         rate = attrs.get("rate", getattr(self.instance, "rate", None))
         if rate is not None and not Decimal("0") <= rate <= Decimal("100"):
             raise serializers.ValidationError({"rate": "Enter a percentage between 0 and 100."})
@@ -48,6 +58,8 @@ class TaxRateSerializer(serializers.ModelSerializer):
 
 class TaxPeriodSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
+        if self.instance and self.instance.status in {"FILED", "LOCKED"}:
+            raise serializers.ValidationError("A filed or locked tax period cannot be edited.")
         start = attrs.get("start_date", getattr(self.instance, "start_date", None))
         end = attrs.get("end_date", getattr(self.instance, "end_date", None))
         if start and end and end < start:

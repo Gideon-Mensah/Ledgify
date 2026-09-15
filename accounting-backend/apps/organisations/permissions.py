@@ -72,6 +72,23 @@ MANAGE_AI_SETTINGS="manage_ai_settings"
 MANAGE_OPENING_BALANCES="manage_opening_balances"
 APPROVE_OPENING_BALANCES="approve_opening_balances"
 
+CONFIGURE_TAX = "configure_tax"
+ASSIGN_TAX_CODES = "assign_tax_codes"
+REVIEW_TAX_RETURNS = "review_tax_returns"
+APPROVE_TAX_RETURNS = "approve_tax_returns"
+EXPORT_GRA_SCHEDULES = "export_gra_schedules"
+RECORD_TAX_FILING = "record_tax_filing"
+RECORD_TAX_PAYMENT = "record_tax_payment"
+MANAGE_GRA_CREDENTIALS = "manage_gra_credentials"
+REOPEN_TAX_PERIOD = "reopen_tax_period"
+DRAFT_TAX_CHANGES = "draft_tax_changes"
+APPROVE_TAX_CHANGES = "approve_tax_changes"
+ACTIVATE_TAX_CHANGES = "activate_tax_changes"
+EMERGENCY_ACTIVATE_TAX = "emergency_activate_tax"
+MAP_TAX_ACCOUNTS = "map_tax_accounts"
+ADOPT_TAX_PRESETS = "adopt_tax_presets"
+RETIRE_TAX_COMPONENTS = "retire_tax_components"
+
 ALL_PERMISSIONS = frozenset(
     value for name, value in globals().copy().items()
     if name.isupper() and isinstance(value, str)
@@ -140,3 +157,8 @@ ROLE_PERMISSIONS = {
     "viewer": {VIEW_ACCOUNTING, VIEW_INVENTORY, VIEW_FIXED_ASSETS, VIEW_TAX, VIEW_PAYROLL, VIEW_MANUFACTURING, EXPORT_REPORTS},
     "employee": {VIEW_ACCOUNTING},
 }
+
+# Jurisdiction configuration permissions do not imply GRA certification.
+ROLE_PERMISSIONS["accountant"] = set(ROLE_PERMISSIONS["accountant"]) | {CONFIGURE_TAX, ASSIGN_TAX_CODES, REVIEW_TAX_RETURNS, APPROVE_TAX_RETURNS, EXPORT_GRA_SCHEDULES, RECORD_TAX_FILING, RECORD_TAX_PAYMENT, REOPEN_TAX_PERIOD, DRAFT_TAX_CHANGES, APPROVE_TAX_CHANGES, ACTIVATE_TAX_CHANGES, MAP_TAX_ACCOUNTS, ADOPT_TAX_PRESETS, RETIRE_TAX_COMPONENTS}
+ROLE_PERMISSIONS["bookkeeper"] = set(ROLE_PERMISSIONS["bookkeeper"]) | {ASSIGN_TAX_CODES, PREPARE_TAX_RETURN}
+ROLE_PERMISSIONS["approver"] = set(ROLE_PERMISSIONS["approver"]) | {REVIEW_TAX_RETURNS, APPROVE_TAX_RETURNS, APPROVE_TAX_CHANGES}

@@ -1,3 +1,5 @@
+from datetime import date
+from unittest.mock import patch
 from uuid import uuid4
 from common.accounting_test_fixtures import calendar_periods
 from django.contrib.auth import get_user_model
@@ -88,7 +90,8 @@ class SalesApiWorkflowTests(APITestCase):
             invoice = self.client.get(f"/api/v1/invoices/{invoice_id}/", **self.headers)
             self.assertEqual(invoice.data["status"], expected)
 
-    def test_quote_acceptance_and_invoice_conversion(self):
+    @patch("apps.sales.services.commercial.timezone.localdate", return_value=date(2026, 8, 13))
+    def test_quote_acceptance_and_invoice_conversion(self, _localdate):
         response = self.client.post("/api/v1/quotes/", {
             "quote_number": "QUO-1", "customer_id": str(self.customer.id),
             "issue_date": "2026-08-13", "expiry_date": "2026-09-13", "currency": "GBP",

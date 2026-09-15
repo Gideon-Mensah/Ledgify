@@ -136,6 +136,7 @@ export const salesApiService = {
       currency: invoice.currency,
       reference: payment.reference || invoice.invoiceNumber,
       notes: payment.notes || "",
+      withholdings: payment.withholdings || [],
     }, { headers: { "Idempotency-Key": payment.idempotencyKey } });
     return this.get(invoice.id);
   },

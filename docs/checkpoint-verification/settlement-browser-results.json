@@ -1,0 +1,22 @@
+[
+  {
+    "check": "390px return approval and manual filing acknowledgement",
+    "result": "PASS"
+  },
+  {
+    "check": "Private PDF filing evidence upload",
+    "result": "PASS"
+  },
+  {
+    "check": "Reviewed control allocations settle filed return",
+    "result": "PASS"
+  },
+  {
+    "check": "390px audited remittance reversal restores filed/unsettled state",
+    "result": "PASS"
+  },
+  {
+    "check": "Separate amendment draft preserves original return",
+    "result": "PASS"
+  }
+]

@@ -43,6 +43,12 @@ def reverse_journal_entry(
         .get(pk=journal_entry.pk)
     )
 
+    from apps.tax.models import TaxAdjustment, TaxPayment
+    if TaxAdjustment.objects.filter(organisation=original.organisation, journal=original).exists():
+        raise BusinessRuleError("Correct a tax adjustment with an opposite adjustment in an open tax period, preserving the return audit trail.")
+    if TaxPayment.objects.filter(organisation=original.organisation, journal=original).exists() and not source_workflow:
+        raise BusinessRuleError("Tax return payments cannot be reversed through the generic journal workflow.")
+
     if original.source_type not in GENERIC_REVERSAL_SOURCES and not source_workflow:
         raise BusinessRuleError("Reverse this journal through its source-document workflow.")
 

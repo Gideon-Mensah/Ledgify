@@ -83,7 +83,9 @@ class TaxEngineTests(TestCase):
             currency="USD", user=self.user, lines=[{"description": "Historical", "quantity": 1,
             "unit_price": 100, "revenue_account": self.revenue, "tax_rate_config": rate}])
         approve_invoice(invoice=invoice, user=self.user)
-        rate.rate = Decimal("12.0000"); rate.save()
+        rate.rate = Decimal("12.0000")
+        from django.core.exceptions import ValidationError
+        with self.assertRaises(ValidationError): rate.save()
         invoice.refresh_from_db(); transaction = TaxTransaction.objects.get(source_id=invoice.id)
         self.assertEqual(invoice.lines.get().tax_rate, Decimal("10.0000"))
         self.assertEqual(invoice.lines.get().tax_amount, Decimal("10.00"))

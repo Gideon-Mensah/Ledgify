@@ -95,7 +95,7 @@ export async function apiRequest(path, options = {}) {
     }
   }
   if (!skipAuth) assertCurrentSession(generation);
-  const data = responseType === "blob" ? await response.blob() : await parseResponse(response);
+  const data = responseType === "blob" && response.ok ? await response.blob() : await parseResponse(response);
   if (!skipAuth) assertCurrentSession(generation);
   if (!skipAuth && stored.selectedOrganisation?.id !== loadAuthStorage().selectedOrganisation?.id) {
     throw new DOMException("Organisation changed while loading data.", "AbortError");

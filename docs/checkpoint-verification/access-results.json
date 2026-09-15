@@ -1,0 +1,26 @@
+[
+  {
+    "check": "foreign invoice PDF",
+    "status": 404,
+    "result": "PASS"
+  },
+  {
+    "check": "foreign invoice email",
+    "status": 404,
+    "result": "PASS"
+  },
+  {
+    "check": "foreign tax return",
+    "status": 404,
+    "result": "PASS"
+  },
+  {
+    "check": "foreign tax version draft",
+    "status": 404,
+    "result": "PASS"
+  },
+  {
+    "check": "E-VAT certification call rejected",
+    "result": "PASS"
+  }
+]

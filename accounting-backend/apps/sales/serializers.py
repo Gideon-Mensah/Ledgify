@@ -97,6 +97,10 @@ class FulfilSalesOrderSerializer(serializers.Serializer):
 
 
 class InvoiceLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
+    source_line_id = serializers.UUIDField(write_only=True, required=False)
+    tax_code_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    tax_reason = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=1000)
+    tax_snapshot = serializers.JSONField(read_only=True)
     tax_inclusive = serializers.BooleanField(write_only=True, required=False, default=False)
     tax_rate_id = serializers.PrimaryKeyRelatedField(
         source="tax_rate_config", queryset=TaxRate.objects.all(), required=False, allow_null=True,
@@ -119,7 +123,7 @@ class InvoiceLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer
             "quantity",
             "unit_price",
             "discount_amount",
-            "tax_rate",
+            "source_line_id", "tax_code_id", "tax_reason", "tax_snapshot", "tax_rate",
             "tax_rate_id",
             "tax_inclusive",
             "tax_amount",
@@ -257,6 +261,8 @@ class InvoiceSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
                 "Only draft invoices can be edited. Use a credit note or another correction workflow."
             )
         organisation = self.context.get("organisation")
+        from apps.tax.document_tax import debit_original_for_draft, debit_source_line, mark_debit_snapshot
+        original_document = debit_original_for_draft(instance)
         customer = validated_data.pop("customer", instance.customer)
         lines = validated_data.pop("lines", None)
         if customer.organisation_id != organisation.id:
@@ -271,6 +277,10 @@ class InvoiceSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
                     raise serializers.ValidationError("Each revenue account must be active.")
                 if tax_rate is not None and tax_rate.organisation_id != organisation.id:
                     raise serializers.ValidationError("Tax rate does not belong to this organisation.")
+        if original_document and lines is None and any(key in validated_data for key in ('issue_date','currency')):
+            raise serializers.ValidationError('Resubmit the reviewed debit-note lines when changing its date or currency.')
+        if original_document and customer.pk != original_document.customer_id:
+            raise serializers.ValidationError('A debit note retains the original customer.')
         for field, value in validated_data.items():
             setattr(instance, field, value)
         instance.customer = customer
@@ -288,13 +298,16 @@ class InvoiceSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
                 unit_price = line["unit_price"]
                 discount_amount = line.get("discount_amount", Decimal("0"))
                 tax_rate = line.get("tax_rate", Decimal("0"))
-                calculated = calculate_tax(quantity=quantity, unit_price=unit_price, discount=discount_amount,
-                                           tax_rate=tax_rate, tax_inclusive=bool(line.get("tax_inclusive", False)))
-                net_amount, tax_amount, line_total = calculated.values()
+                from apps.tax.document_tax import prepare_line_tax
+                source_line=debit_source_line(organisation=organisation, original=original_document, line=line, contact=customer, point=instance.issue_date, currency=instance.currency)
+                prepared_tax = prepare_line_tax(organisation=organisation, line=line, scope="SALES", point=instance.issue_date, source_line=source_line)
+                mark_debit_snapshot(prepared_tax, original_document)
+                tax_rate = prepared_tax['tax_rate']
+                net_amount, tax_amount, line_total = (prepared_tax[k] for k in ('net_amount','tax_amount','gross_amount'))
                 InvoiceLine.objects.create(
                     invoice=instance, description=line["description"], quantity=quantity,
                     unit_price=unit_price, discount_amount=discount_amount, tax_rate=tax_rate,
-                    tax_rate_config=line.get("tax_rate_config"), tax_amount=tax_amount,
+                    tax_rate_config=prepared_tax["tax_rate_config"], tax_snapshot=prepared_tax["snapshot"], tax_amount=tax_amount,
                     line_total=line_total, revenue_account=line["revenue_account"],
                 )
                 subtotal += net_amount
@@ -310,6 +323,7 @@ class InvoiceSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
         
 class CustomerPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     payment_date = accounting_date("payment date")
+    withholdings = serializers.ListField(child=serializers.DictField(), write_only=True, required=False, max_length=2)
     customer_id = serializers.PrimaryKeyRelatedField(
         source="customer", queryset=Contact.objects.all(), write_only=True
     )
@@ -346,7 +360,7 @@ class CustomerPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerial
 
     class Meta:
         model = CustomerPayment
-        fields = [
+        fields = ["withholdings", "cash_amount", "withholding_amount",
             "id",
             "customer_id",
             "invoice_id",
@@ -367,7 +381,7 @@ class CustomerPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerial
             "updated_at",
         ]
 
-        read_only_fields = [
+        read_only_fields = ["cash_amount", "withholding_amount",
             "id",
             "status",
             "accounting_journal",
@@ -440,6 +454,9 @@ class CustomerPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerial
 
 
 class CustomerCreditNoteLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
+    tax_code_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    tax_reason = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=1000)
+    tax_snapshot = serializers.JSONField(read_only=True)
     source_line_id = serializers.UUIDField(write_only=True, required=False)
     tax_inclusive = serializers.BooleanField(write_only=True, required=False, default=False)
     tax_rate_id = serializers.PrimaryKeyRelatedField(
@@ -452,7 +469,7 @@ class CustomerCreditNoteLineSerializer(CurrencySerializerMixin, serializers.Mode
     class Meta:
         model = CustomerCreditNoteLine
         fields = ["id", "description", "quantity", "unit_price", "discount_amount",
-                  "tax_rate", "tax_rate_id", "source_line_id", "tax_inclusive", "tax_amount", "line_total", "revenue_account_id"]
+                  "tax_code_id", "tax_reason", "tax_snapshot", "tax_rate", "tax_rate_id", "source_line_id", "tax_inclusive", "tax_amount", "line_total", "revenue_account_id"]
         read_only_fields = ["id", "tax_amount", "line_total"]
 
 

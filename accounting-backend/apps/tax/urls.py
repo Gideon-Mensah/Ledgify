@@ -7,3 +7,8 @@ router.register("tax-periods", TaxPeriodViewSet, basename="tax-period")
 router.register("tax-transactions", TaxTransactionViewSet, basename="tax-transaction")
 router.register("tax/reports", TaxReportViewSet, basename="tax-report")
 urlpatterns = router.urls
+
+from .api import TaxConfigurationViewSet, TaxReturnViewSet
+router.register('tax/configuration', TaxConfigurationViewSet, basename='tax-configuration')
+router.register('tax/returns', TaxReturnViewSet, basename='tax-return')
+urlpatterns = router.urls

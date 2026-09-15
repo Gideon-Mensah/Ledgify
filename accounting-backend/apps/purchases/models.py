@@ -54,7 +54,7 @@ class PurchaseOrderLine(models.Model):
     quantity_billed = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
     unit_price = models.DecimalField(max_digits=18, decimal_places=4)
     discount_amount = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
-    tax_rate = models.DecimalField(max_digits=7, decimal_places=4, default=Decimal("0"))
+    tax_rate = models.DecimalField(max_digits=12, decimal_places=4, default=Decimal("0"))
     tax_amount = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
     line_total = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
     expense_account = models.ForeignKey(Account, on_delete=models.PROTECT, null=True, blank=True, related_name="purchase_order_lines")
@@ -262,6 +262,7 @@ class Bill(models.Model):
 
 
 class BillLine(models.Model):
+    tax_snapshot = models.JSONField(default=dict, blank=True)
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -297,7 +298,7 @@ class BillLine(models.Model):
     )
 
     tax_rate = models.DecimalField(
-        max_digits=7,
+        max_digits=12,
         decimal_places=4,
         default=Decimal("0.0000"),
     )
@@ -474,13 +475,14 @@ class SupplierCredit(models.Model):
 
 
 class SupplierCreditLine(models.Model):
+    tax_snapshot = models.JSONField(default=dict, blank=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     credit = models.ForeignKey(SupplierCredit, on_delete=models.CASCADE, related_name="lines")
     description = models.CharField(max_length=255)
     quantity = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("1.0000"))
     unit_price = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0.0000"))
     discount_amount = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0.00"))
-    tax_rate = models.DecimalField(max_digits=7, decimal_places=4, default=Decimal("0.0000"))
+    tax_rate = models.DecimalField(max_digits=12, decimal_places=4, default=Decimal("0.0000"))
     tax_rate_config = models.ForeignKey(
         "tax.TaxRate", on_delete=models.PROTECT, related_name="supplier_credit_lines",
         null=True, blank=True,
@@ -761,6 +763,16 @@ class SupplierPayment(models.Model):
             from common.exceptions import BusinessRuleError
             raise BusinessRuleError("Reversed supplier payments cannot be deleted.")
         return super().delete(*args, **kwargs)
+
+
+    @property
+    def withholding_amount(self):
+        from apps.tax.models import WithholdingTransaction
+        return sum(WithholdingTransaction.objects.filter(organisation_id=self.organisation_id, payment_id=self.pk).values_list('withheld_amount', flat=True), Decimal('0.00'))
+
+    @property
+    def cash_amount(self):
+        return self.amount - self.withholding_amount
 
 
 class SupplierPaymentAllocation(models.Model):

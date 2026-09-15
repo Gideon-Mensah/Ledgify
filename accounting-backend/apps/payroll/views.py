@@ -42,6 +42,10 @@ class PayrollComponentViewSet(OrganisationScopedViewSetMixin,ModelViewSet):
         serializer.save()
 
 class PayrollRunViewSet(OrganisationScopedViewSetMixin,ModelViewSet):
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        if request.method not in ("GET", "HEAD", "OPTIONS") and self.get_organisation().country_code == "GH":
+            raise BusinessRuleError("Ghana statutory payroll is tracking only; calculation and filing are unavailable.")
     serializer_class=PayrollRunSerializer;permission_classes=[IsAuthenticated,OrganisationActionPermission]
     action_permissions={"list":VIEW_PAYROLL,"retrieve":VIEW_PAYROLL,"create":PROCESS_PAYROLL,"update":PROCESS_PAYROLL,"partial_update":PROCESS_PAYROLL,"destroy":PROCESS_PAYROLL,"calculate":PROCESS_PAYROLL,"approve":APPROVE_PAYROLL,"post":PROCESS_PAYROLL,"pay":PAY_PAYROLL}
     def get_queryset(self):return PayrollRun.objects.filter(organisation=self.get_organisation()).select_related("payroll_liability_account").prefetch_related("payslips__employee","payslips__lines")

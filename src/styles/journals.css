@@ -530,7 +530,7 @@
 
 @media print {
   @page { size: A4 portrait; margin: 13mm 10mm 15mm; }
-  body * { visibility: hidden !important; }
+  body:has(.general-journal-page) *:not(.general-journal-page):not(.general-journal-page *) { visibility: hidden !important; }
   .general-journal-page,.general-journal-page * { visibility: visible !important; }
   .general-journal-page { position: absolute; inset: 0; display: block; max-width: none; color: #111; }
   .general-journal-page > :not(.general-journal-report-header):not(.general-journal-print-register):not(.general-journal-totals) { display: none !important; }

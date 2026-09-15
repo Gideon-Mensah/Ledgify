@@ -1,0 +1,49 @@
+{
+  "date": "2026-09-15",
+  "backend_full": {
+    "passed": 241,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 88.144
+  },
+  "phase3": {
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 5.505
+  },
+  "phase4": {
+    "passed": 43,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 15.913
+  },
+  "concurrency": {
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 7.286
+  },
+  "frontend": {
+    "passed": 63,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 55,
+    "failed": 0,
+    "skipped": 0
+  },
+  "pdfs": 39,
+  "pages": 81,
+  "blank_pages": 0,
+  "out_of_bounds_pages": 0,
+  "existing_files_preserved": 137,
+  "scope_unrelated_files": 0,
+  "deployment_check": "passed with synthetic secure settings",
+  "unresolved": [
+    "Report export print serializes nested account objects as JSON",
+    "Build chunks exceed 500 kB",
+    "Official WHT template/schedules and accountant production-migration sign-off remain pending"
+  ]
+}

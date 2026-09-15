@@ -28,7 +28,7 @@ class TaxRate(models.Model):
     organisation = models.ForeignKey("organisations.Organisation", on_delete=models.CASCADE, related_name="tax_rates")
     code = models.CharField(max_length=30)
     name = models.CharField(max_length=100)
-    rate = models.DecimalField(max_digits=7, decimal_places=4)
+    rate = models.DecimalField(max_digits=12, decimal_places=4)
     tax_type = models.CharField(max_length=20, choices=TaxType.choices)
     scope = models.CharField(max_length=20, choices=Scope.choices, default=Scope.BOTH)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
@@ -56,6 +56,12 @@ class TaxRate(models.Model):
                 raise ValidationError("Tax accounts must belong to the same organisation.")
 
     def save(self, *args, **kwargs):
+        if not self._state.adding:
+            old = TaxRate.objects.get(pk=self.pk)
+            used = old.transactions.exists() or TaxAccountMapping.objects.filter(legacy_rate=old).exists()
+            protected = ['organisation_id','code','name','rate','tax_type','scope','effective_from','effective_to','input_tax_account_id','output_tax_account_id','recoverable']
+            if used and any(getattr(old, key) != getattr(self, key) for key in protected):
+                raise ValidationError('Used tax rates are immutable; create a new effective-dated version.')
         self.code = self.code.strip().upper()
         self.full_clean()
         return super().save(*args, **kwargs)
@@ -72,7 +78,8 @@ class TaxTransaction(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organisation = models.ForeignKey("organisations.Organisation", on_delete=models.CASCADE, related_name="tax_transactions")
     tax_rate = models.ForeignKey(TaxRate, on_delete=models.PROTECT, related_name="transactions")
-    tax_rate_percent = models.DecimalField(max_digits=7, decimal_places=4)
+    component_snapshot = models.JSONField(default=dict, blank=True)
+    tax_rate_percent = models.DecimalField(max_digits=12, decimal_places=4)
     transaction_date = models.DateField()
     source_type = models.CharField(max_length=30)
     source_id = models.UUIDField()
@@ -122,3 +129,11 @@ class TaxPeriod(models.Model):
             models.UniqueConstraint(fields=["organisation", "start_date", "end_date"], name="unique_tax_period_per_org"),
             models.CheckConstraint(condition=models.Q(end_date__gte=models.F("start_date")), name="tax_period_dates_valid"),
         ]
+
+# Django discovers these additional models through the existing tax app.
+from .jurisdiction_models import (TaxRegimeVersion, OrganisationTaxProfile,
+    OrganisationTaxRegistration, TaxCode, TaxRateVersion, TaxApplicabilityRule,
+    TaxAccountMapping, DocumentTaxSnapshot, DocumentLineTaxSnapshot,
+    TaxConfigurationAudit, TaxReturnDraft, TaxFilingEvidence, TaxAdjustment,
+    TaxPayment, WithholdingTransaction, TaxExport, TaxCalendarEntry,
+    TaxClassification, EvatCertification)

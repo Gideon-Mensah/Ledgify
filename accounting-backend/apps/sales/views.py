@@ -113,10 +113,21 @@ class InvoiceViewSet(
 ):
     serializer_class = InvoiceSerializer
     permission_classes = [IsAuthenticated, OrganisationActionPermission]
-    action_permissions = {"reverse": REVERSE_JOURNAL, "list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING,
+    action_permissions = {"email": CREATE_INVOICE, "email_attempts": CREATE_INVOICE, "reverse": REVERSE_JOURNAL, "list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING,
                           "create": CREATE_INVOICE, "update": CREATE_INVOICE,
                           "partial_update": CREATE_INVOICE, "destroy": CREATE_INVOICE,
                           "approve": APPROVE_INVOICE}
+
+    @action(detail=True, methods=["post"])
+    def email(self, request, pk=None):
+        from .services.documents.email_invoice import send_invoice
+        result=send_invoice(organisation=self.get_organisation(),invoice=self.get_object(),user=request.user,data=request.data,key=request.headers.get("Idempotency-Key"))
+        return Response(result,status=200 if result["status"]=="sent" else 202 if result["status"]=="pending" else 502)
+
+    @action(detail=True, methods=["get"], url_path="email-attempts")
+    def email_attempts(self,request,pk=None):
+        from .services.documents.email_invoice import safe_result
+        return Response([safe_result(row) for row in self.get_object().email_attempts.filter(organisation=self.get_organisation()).order_by("-created_at")[:50]])
 
     @action(detail=True, methods=["post"])
     def reverse(self, request, pk=None):

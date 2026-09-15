@@ -286,3 +286,11 @@ for cidr in TRUSTED_PROXY_CIDRS:
             raise ValueError()
     except ValueError:
         raise RuntimeError("TRUSTED_PROXY_CIDRS must contain specific, valid proxy networks.") from None
+
+# Bounded document/email operations; production still requires a real configured backend.
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", "20"))
+INVOICE_EMAIL_USER_RATE = os.environ.get("INVOICE_EMAIL_USER_RATE", "20/h")
+INVOICE_EMAIL_ORGANISATION_RATE = os.environ.get("INVOICE_EMAIL_ORGANISATION_RATE", "100/h")
+
+# No authorised GRA connector is shipped; flags alone cannot enable network calls.
+ENABLE_GRA_EVAT = env_bool("ENABLE_GRA_EVAT", False)

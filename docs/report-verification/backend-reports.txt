@@ -1,0 +1,23 @@
+Creating test database for alias 'default'...
+{"timestamp": "2026-09-15T10:22:55.654161+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/accounts/import/9b7d7078-6a4d-43b3-80cd-386ba002e8fb/confirm/"}
+.{"timestamp": "2026-09-15T10:22:55.884800+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/accounts/import/preview/"}
+{"timestamp": "2026-09-15T10:22:55.887360+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/accounts/import/preview/"}
+{"timestamp": "2026-09-15T10:22:55.888905+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/accounts/import/preview/"}
+.{"timestamp": "2026-09-15T10:22:56.121605+00:00", "level": "WARNING", "module": "django.request", "message": "Not Found: /api/v1/accounts/import/9d88ed7b-ecea-41fd-b63f-d978c4837d33/status/"}
+....{"timestamp": "2026-09-15T10:22:57.482789+00:00", "level": "WARNING", "module": "django.request", "message": "Not Found: /api/v1/journals/register/"}
+..{"timestamp": "2026-09-15T10:22:58.158601+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/opening-balances/8d925a18-1212-4127-9f91-07f7b4bc860e/submit/"}
+{"timestamp": "2026-09-15T10:22:58.161661+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/opening-balances/"}
+...................{"timestamp": "2026-09-15T10:23:03.137589+00:00", "level": "WARNING", "module": "django.request", "message": "Unauthorized: /api/v1/reports/cash-flow/"}
+{"timestamp": "2026-09-15T10:23:03.142720+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/reports/cash-flow/"}
+...........{"timestamp": "2026-09-15T10:23:05.956839+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/journals/0cb1ec56-a979-4b3f-ba54-8cdb1306ad25/"}
+{"timestamp": "2026-09-15T10:23:05.964805+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/journals/manual/"}
+{"timestamp": "2026-09-15T10:23:05.967708+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/journals/manual/"}
+..........................{"timestamp": "2026-09-15T10:23:15.542896+00:00", "level": "WARNING", "module": "django.request", "message": "Conflict: /api/v1/customer-payments/"}
+.....
+----------------------------------------------------------------------
+Ran 69 tests in 18.686s
+
+OK
+Destroying test database for alias 'default'...
+Found 69 test(s).
+System check identified no issues (0 silenced).

@@ -30,6 +30,7 @@ def create_bill(
     user,
     supplier_reference="",
     notes="",
+    original_document=None,
 ):
     if supplier.organisation_id != organisation.id:
         raise BusinessRuleError(
@@ -164,10 +165,14 @@ def create_bill(
                 "Discount cannot exceed the line amount."
             )
 
-        calculated = calculate_tax(quantity=quantity, unit_price=unit_price,
-                                   discount=discount_amount, tax_rate=tax_rate,
-                                   tax_inclusive=bool(line.get("tax_inclusive", False)))
-        net, tax, total = calculated.values()
+        from apps.tax.document_tax import prepare_line_tax
+        from apps.tax.document_tax import debit_source_line, mark_debit_snapshot
+        source_line = debit_source_line(organisation=organisation, original=original_document, line=line, contact=supplier, point=issue_date, currency=currency)
+        prepared_tax = prepare_line_tax(organisation=organisation, line=line, scope="PURCHASES", point=issue_date, source_line=source_line)
+        mark_debit_snapshot(prepared_tax, original_document)
+        tax_rate = prepared_tax['tax_rate']
+        tax_rate_config = prepared_tax['tax_rate_config']
+        net, tax, total = (prepared_tax[k] for k in ('net_amount', 'tax_amount', 'gross_amount'))
 
         subtotal += net
         tax_total += tax
@@ -181,7 +186,7 @@ def create_bill(
                 unit_price=unit_price,
                 discount_amount=discount_amount,
                 tax_rate=tax_rate,
-                tax_rate_config=tax_rate_config,
+                tax_rate_config=tax_rate_config, tax_snapshot=prepared_tax["snapshot"],
                 tax_amount=tax,
                 line_total=total,
                 expense_account=expense_account,

@@ -1,3 +1,4 @@
+from common.document_views import DocumentView
 """
 URL configuration for config project.
 
@@ -27,6 +28,8 @@ class ThrottledTokenObtainPairView(TokenObtainPairView):
 
 
 urlpatterns = [
+    path("api/v1/documents/<str:kind>/<uuid:pk>/", DocumentView.as_view()),
+    path("api/v1/documents/<str:kind>/<uuid:pk>/pdf/", DocumentView.as_view(), {"pdf": True}),
     path("health/", health),
     path("ready/", ready),
     path(

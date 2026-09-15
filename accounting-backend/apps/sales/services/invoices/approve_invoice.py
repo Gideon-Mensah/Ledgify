@@ -1,3 +1,4 @@
+from apps.tax.document_tax import validate_document_snapshot, tax_ledger_totals, nonrecoverable
 from common.rounding import balance_converted_document
 from common.ledger_integrity import lock_ledger
 """Approve an invoice and post revenue, tax, and Accounts Receivable entries."""
@@ -173,17 +174,8 @@ def approve_invoice(
             "Invoice revenue does not match the invoice subtotal."
         )
 
-    tax_totals = {}
-    for line in lines:
-        if not line.tax_amount:
-            continue
-        rate = line.tax_rate_config
-        if rate is None or rate.output_tax_account is None:
-            raise BusinessRuleError("Taxed invoice lines require a configured output tax account.")
-        account = rate.output_tax_account
-        if account.organisation_id != invoice.organisation_id or account.status != Account.Status.ACTIVE:
-            raise BusinessRuleError("Output tax account is invalid for this organisation.")
-        tax_totals.setdefault((rate.id,account.id), [account, Decimal("0.00")])[1] += line.tax_amount
+    validate_document_snapshot(invoice)
+    tax_totals = tax_ledger_totals(invoice, lines, "OUTPUT")
     for account, amount in tax_totals.values():
         journal_lines.append({"account": account, "description": f"Output tax - Invoice {invoice.invoice_number}",
                               "debit": Decimal("0.00"), "credit": convert_amount(amount=amount,rate=invoice.exchange_rate)})

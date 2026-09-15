@@ -1,4 +1,4 @@
-import { isMonetaryField } from "./monetaryFields.js";
+import { presentReport } from "./reportPresentation.js";
 import { parseMonetaryAmount } from "./currency.js";
 import { currencyNumberFormat, resolveCurrencyCode } from "./currency.js";
 // Minimal Office Open XML writer for browser-side report exports.
@@ -109,14 +109,17 @@ function financialRows(title, rows, metadata) {
 }
 
 function genericRows(title, rows, metadata) {
-  const columns = [...new Set(rows.flatMap((row) => Object.keys(row || {})))];
-  const display = (value) => value && typeof value === "object" ? value.name || value.code || JSON.stringify(value) : value ?? "";
+  const sections = presentReport(rows, title, metadata);
   return [
-    { values: [metadata.organisation || "Ledgify"], style: 1 }, { values: [title], style: 2 }, { values: [periodText(metadata)], style: 3 },
-    { values: [`Currency: ${metadata.currency || "—"}`], style: 3 },
-    ...(title === "Indirect Tax Report" ? [{ values: [`Generated: ${metadata.generated || generated()}`, `Filters: ${metadata.filters || "All"}`], style: 3 }, ...(metadata.tax_position ? [{ values: [metadata.tax_position], style: 3 }] : [])] : []),
-    { values: columns.map(humanise), style: 4 },
-    ...rows.map((row) => ({ currency: resolveCurrencyCode(row.currency, metadata.currency), values: columns.map((key) => isMonetaryField(key) && row[key] !== null && row[key] !== undefined ? number(row[key]) : display(row[key])), styles: columns.map((key) => title === "Indirect Tax Report" && row.document === "Included totals" ? isMonetaryField(key) ? 7 : 5 : isMonetaryField(key) ? 6 : key.includes("code") ? 10 : 0) })),
+    {values:[metadata.organisation || "Ledgify"],style:1},
+    {values:[title],style:2},
+    {values:[periodText(metadata), `Currency: ${metadata.currency}`],style:3},
+    ...(title === "Indirect Tax Report" ? [{values:[`Generated: ${metadata.generated || generated()}`, `Filters: ${metadata.filters || "All"}`, metadata.tax_position || ""],style:3}] : []),
+    ...sections.flatMap(section=>[
+      ...(section.heading?[{values:[section.heading],style:5}]:[]),
+      {values:section.columns.map(c=>c.label),style:4},
+      ...section.rows.map(row=>({values:section.columns.map(c=>c.money&&row[c.key]!==''?number(row[c.key]):row[c.key]),styles:section.columns.map(c=>c.money?6:3),currency:row.currency})),
+    ]),
   ];
 }
 

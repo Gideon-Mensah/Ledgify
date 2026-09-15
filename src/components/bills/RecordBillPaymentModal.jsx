@@ -1,3 +1,4 @@
+import WithholdingFields from "../documents/WithholdingFields";
 import { createPaymentSubmission } from "../../utils/paymentSubmission.js";
 import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
@@ -36,6 +37,7 @@ function RecordBillPaymentModal({
 }) {
   const auth = useAuth();
   const [submission] = useState(createPaymentSubmission);
+  const [withholdings,setWithholdings] = useState([]);
   const today = getOrganisationToday(auth.selectedOrganisation?.timezone);
   const [
     bankAccounts,
@@ -165,6 +167,7 @@ function RecordBillPaymentModal({
       notes: "",
     });
 
+    setWithholdings([]);
     setErrors({});
     setIsRecording(false);
     });
@@ -277,13 +280,14 @@ function RecordBillPaymentModal({
       return;
     }
 
-    const idempotencyKey = submission.begin({ details, document: bill.id });
+    const idempotencyKey = submission.begin({ details, withholdings, document: bill.id });
     if (!idempotencyKey) return;
     setIsRecording(true);
 
     try {
       await onRecord({
         idempotencyKey,
+        withholdings,
         amount: details.amount,
 
         paymentDate:
@@ -584,6 +588,7 @@ function RecordBillPaymentModal({
             onChange={handleChange}
           />
         </div>
+        <WithholdingFields items={withholdings} onChange={setWithholdings} supplier={true} sourceId={bill?.id} date={details.paymentDate} amount={details.amount}/>
       </form>
     </Modal>
   );

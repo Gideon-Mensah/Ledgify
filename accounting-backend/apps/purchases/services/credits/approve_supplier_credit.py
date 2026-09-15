@@ -1,3 +1,4 @@
+from apps.tax.document_tax import validate_document_snapshot, tax_ledger_totals, nonrecoverable
 from common.rounding import balance_converted_document
 from common.ledger_integrity import lock_ledger
 """Approve a supplier credit and reverse the related expense, inventory, or tax value."""
@@ -37,23 +38,20 @@ def approve_supplier_credit(*, credit, user):
         if account.organisation_id != credit.organisation_id or account.status != Account.Status.ACTIVE or account.account_type != Account.AccountType.EXPENSE:
             raise BusinessRuleError("Supplier credit contains an invalid expense account.")
         amount = line.line_total - line.tax_amount
-        if line.tax_rate_config and not line.tax_rate_config.recoverable: amount += line.tax_amount
+        amount += nonrecoverable(line)
         totals.setdefault(account.id, [account, Decimal("0.00")])[1] += money(amount)
     journal_lines = [{"account": payables.get(), "description": f"Supplier credit {credit.credit_number}",
                       "debit": convert_amount(amount=credit.total,rate=credit.exchange_rate), "credit": Decimal("0.00")}]
     journal_lines.extend({"account": item[0], "description": f"Supplier credit {credit.credit_number}",
                           "debit": Decimal("0.00"), "credit": convert_amount(amount=item[1],rate=credit.exchange_rate)} for item in totals.values())
-    tax_totals = {}
-    for line in credit.lines.all():
-        rate = line.tax_rate_config
-        if not line.tax_amount or (rate and not rate.recoverable): continue
-        if not rate or not rate.input_tax_account: raise BusinessRuleError("Taxed supplier credit lines require an input tax account.")
-        account = rate.input_tax_account
-        if account.organisation_id != credit.organisation_id or account.status != Account.Status.ACTIVE:
-            raise BusinessRuleError("Input tax account is invalid.")
-        tax_totals.setdefault((rate.id,account.id), [account, Decimal("0.00")])[1] += line.tax_amount
+    validate_document_snapshot(credit)
+    tax_totals = tax_ledger_totals(credit, list(credit.lines.all()), "INPUT")
     journal_lines.extend({"account": item[0], "description": f"Input tax reversal - {credit.credit_number}",
                           "debit": Decimal("0.00"), "credit": convert_amount(amount=item[1],rate=credit.exchange_rate)} for item in tax_totals.values())
+    self_assessed = [line for line in credit.lines.all() if line.tax_snapshot.get('self_assessed')]
+    for account, amount in tax_ledger_totals(credit, self_assessed, "OUTPUT").values():
+        journal_lines.append({"account": account, "description": "Reverse-charge output tax credit",
+                              "debit": convert_amount(amount=amount, rate=credit.exchange_rate), "credit": Decimal("0.00")})
     journal_lines = balance_converted_document(organisation=credit.organisation, currency=credit.currency, lines=journal_lines)
     journal = create_journal_entry(organisation=credit.organisation, date=credit.issue_date,
         description=f"Supplier credit {credit.credit_number} - {credit.supplier.name}", lines=journal_lines,
@@ -62,7 +60,7 @@ def approve_supplier_credit(*, credit, user):
     journal.transaction_currency=credit.currency; journal.transaction_amount=credit.total; journal.exchange_rate=credit.exchange_rate
     journal.save(update_fields=["transaction_currency","transaction_amount","exchange_rate"])
     post_journal_entry(journal_entry=journal, user=user)
-    recoverable_lines = [line for line in credit.lines.all() if line.tax_rate_config and line.tax_rate_config.recoverable]
+    recoverable_lines = list(credit.lines.all())
     record_tax_transactions(document=credit, lines=recoverable_lines, journal_entry=journal,
                             source_type="supplier_credit", direction=TaxTransaction.Direction.INPUT,
                             document_number=credit.credit_number, contact=credit.supplier)

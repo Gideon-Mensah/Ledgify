@@ -54,7 +54,7 @@ class QuoteLine(models.Model):
     quantity = models.DecimalField(max_digits=18, decimal_places=4)
     unit_price = models.DecimalField(max_digits=18, decimal_places=4)
     discount_amount = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
-    tax_rate = models.DecimalField(max_digits=7, decimal_places=4, default=Decimal("0"))
+    tax_rate = models.DecimalField(max_digits=12, decimal_places=4, default=Decimal("0"))
     tax_amount = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
     line_total = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
     revenue_account = models.ForeignKey(Account, on_delete=models.PROTECT, null=True, blank=True, related_name="quote_lines")
@@ -113,7 +113,7 @@ class SalesOrderLine(models.Model):
     quantity_fulfilled = models.DecimalField(max_digits=18, decimal_places=4, default=Decimal("0"))
     unit_price = models.DecimalField(max_digits=18, decimal_places=4)
     discount_amount = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
-    tax_rate = models.DecimalField(max_digits=7, decimal_places=4, default=Decimal("0"))
+    tax_rate = models.DecimalField(max_digits=12, decimal_places=4, default=Decimal("0"))
     tax_amount = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
     line_total = models.DecimalField(max_digits=18, decimal_places=2, default=Decimal("0"))
     revenue_account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name="sales_order_lines")
@@ -334,6 +334,7 @@ class Invoice(models.Model):
 
 
 class InvoiceLine(models.Model):
+    tax_snapshot = models.JSONField(default=dict, blank=True)
     id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
@@ -369,7 +370,7 @@ class InvoiceLine(models.Model):
     )
 
     tax_rate = models.DecimalField(
-        max_digits=7,
+        max_digits=12,
         decimal_places=4,
         default=Decimal("0.0000"),
     )
@@ -549,6 +550,7 @@ class CustomerCreditNote(models.Model):
 
 
 class CustomerCreditNoteLine(models.Model):
+    tax_snapshot = models.JSONField(default=dict, blank=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     credit_note = models.ForeignKey(
         CustomerCreditNote, on_delete=models.CASCADE, related_name="lines"
@@ -564,7 +566,7 @@ class CustomerCreditNoteLine(models.Model):
         max_digits=18, decimal_places=2, default=Decimal("0.00")
     )
     tax_rate = models.DecimalField(
-        max_digits=7, decimal_places=4, default=Decimal("0.0000")
+        max_digits=12, decimal_places=4, default=Decimal("0.0000")
     )
     tax_rate_config = models.ForeignKey(
         "tax.TaxRate", on_delete=models.PROTECT, related_name="customer_credit_lines",
@@ -919,6 +921,16 @@ class CustomerPayment(models.Model):
         return super().delete(*args, **kwargs)
 
 
+    @property
+    def withholding_amount(self):
+        from apps.tax.models import WithholdingTransaction
+        return sum(WithholdingTransaction.objects.filter(organisation_id=self.organisation_id, payment_id=self.pk).values_list('withheld_amount', flat=True), Decimal('0.00'))
+
+    @property
+    def cash_amount(self):
+        return self.amount - self.withholding_amount
+
+
 class CustomerPaymentAllocation(models.Model):
     class Status(models.TextChoices):
         ACTIVE = "active", "Active"
@@ -993,3 +1005,23 @@ class CustomerPaymentAllocation(models.Model):
             from common.exceptions import BusinessRuleError
             raise BusinessRuleError("Reversed payment allocations cannot be deleted.")
         return super().delete(*args, **kwargs)
+
+
+class InvoiceEmailAttempt(models.Model):
+    """One durable submission; sent means accepted by the configured mail backend."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organisation = models.ForeignKey(Organisation, on_delete=models.PROTECT)
+    invoice = models.ForeignKey(Invoice, on_delete=models.PROTECT, related_name="email_attempts")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    key = models.UUIDField()
+    payload_hash = models.CharField(max_length=64)
+    document_hash = models.CharField(max_length=64)
+    recipient = models.EmailField()
+    subject = models.CharField(max_length=200)
+    status = models.CharField(max_length=10, choices=[("pending","Pending"),("sent","Sent"),("failed","Failed")], default="pending")
+    failure_category = models.CharField(max_length=40, blank=True)
+    message_id = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True)
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["organisation","key"], name="unique_invoice_email_key")]

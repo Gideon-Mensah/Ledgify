@@ -1,0 +1,90 @@
+[
+  {
+    "check": "Desktop invoice 0",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop bill 1",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop customer-credit 2",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop supplier-credit 3",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop invoice 4",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop journal 5",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop customer-statement 6",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop supplier-statement 7",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop trial-balance actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop profit-and-loss actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop general-ledger actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px invoice 0",
+    "result": "PASS"
+  },
+  {
+    "check": "390px bill 1",
+    "result": "PASS"
+  },
+  {
+    "check": "390px customer-credit 2",
+    "result": "PASS"
+  },
+  {
+    "check": "390px supplier-credit 3",
+    "result": "PASS"
+  },
+  {
+    "check": "390px invoice 4",
+    "result": "PASS"
+  },
+  {
+    "check": "390px journal 5",
+    "result": "PASS"
+  },
+  {
+    "check": "390px customer-statement 6",
+    "result": "PASS"
+  },
+  {
+    "check": "390px supplier-statement 7",
+    "result": "PASS"
+  },
+  {
+    "check": "390px trial-balance actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px profit-and-loss actual print document",
+    "result": "PASS"
+  },
+  {
+    "check": "390px general-ledger actual print document",
+    "result": "PASS"
+  }
+]

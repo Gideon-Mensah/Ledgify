@@ -1,0 +1,18 @@
+[
+  {
+    "check": "Desktop UI organisation switch 1",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop UI organisation switch 0",
+    "result": "PASS"
+  },
+  {
+    "check": "390px UI organisation switch 1",
+    "result": "PASS"
+  },
+  {
+    "check": "390px UI organisation switch 0",
+    "result": "PASS"
+  }
+]

@@ -71,7 +71,7 @@ test("shared financial statement presents all required report hierarchies and pr
   const [page, css, reportBase] = await Promise.all([readFile("src/pages/accounting/LiveAccountingPages.jsx", "utf8"), readFile("src/styles/liveReports.css", "utf8"), readFile("accounting-backend/apps/accounting/services/reports/base.py", "utf8")]);
   for (const label of ["Income", "Cost of Sales", "Gross Profit", "Operating Expenses", "Net Profit", "Current Assets", "Non-current Assets", "Total Liabilities and Equity", "Cash Flows from Operating Activities", "Opening Cash Balance", "Closing Cash Balance"]) assert.match(page, new RegExp(label));
   assert.match(page, /Currency: \{currency\}/); assert.match(page, /financial-statement-table/); assert.match(page, /financial-statement-grand-total/);
-  assert.match(css, /financial-statement-table thead \{ display: table-header-group; \}/); assert.match(css, /body \* \{ visibility: hidden; \}/); assert.match(css, /\.financial-statement, \.financial-statement \* \{ visibility: visible; \}/);
+  assert.match(css, /financial-statement-table thead \{ display: table-header-group; \}/); assert.match(css, /body:has\(\.financial-statement\)/);assert.match(css, /:not\(\.financial-statement \*\)/); assert.match(css, /\.financial-statement, \.financial-statement \* \{ visibility: visible; \}/);
   assert.match(reportBase, /LEDGER_EFFECTIVE_JOURNAL_STATUSES/); assert.match(reportBase, /journal_entry__organisation=self\.organisation/);
 });
 

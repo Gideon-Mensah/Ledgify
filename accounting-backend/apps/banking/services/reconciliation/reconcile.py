@@ -80,7 +80,7 @@ def accept_customer_payment_match(*, organisation, bank_transaction, payment, us
         raise BusinessRuleError("Only posted payments can be reconciled.")
     if bank_transaction.transaction_type != BankTransaction.TransactionType.MONEY_IN:
         raise BusinessRuleError("Customer payments require a money-in transaction.")
-    if payment.currency != bank_transaction.currency or payment.amount != bank_transaction.amount:
+    if payment.currency != bank_transaction.currency or payment.cash_amount != bank_transaction.amount:
         raise BusinessRuleError("Payment currency and amount must match exactly.")
     if payment.bank_account_id != bank_transaction.bank_account.ledger_account_id:
         raise BusinessRuleError("Payment bank account does not match the bank transaction account.")
@@ -104,7 +104,7 @@ def accept_supplier_payment_match(*, organisation, bank_transaction, payment, us
         raise BusinessRuleError("Only posted payments can be reconciled.")
     if bank_transaction.transaction_type != BankTransaction.TransactionType.MONEY_OUT:
         raise BusinessRuleError("Supplier payments require a money-out transaction.")
-    if payment.currency != bank_transaction.currency or payment.amount != bank_transaction.amount:
+    if payment.currency != bank_transaction.currency or payment.cash_amount != bank_transaction.amount:
         raise BusinessRuleError("Payment currency and amount must match exactly.")
     if payment.bank_account_id != bank_transaction.bank_account.ledger_account_id:
         raise BusinessRuleError("Payment bank account does not match the bank transaction account.")

@@ -59,8 +59,8 @@ test("production screens centralise currency formatting and contain no pound sym
   }
   for (const name of ["invoice", "bill", "quote", "creditNote"]) {
     const source = await readFile(`src/utils/${name}Pdf.js`, "utf8");
-    assert.match(source, /safeFormatCurrency/);
-    assert.match(source, /currencyDisplay: "code"/);
+    assert.match(source, /fetchDocumentPdf/);
+    assert.doesNotMatch(source, /calculate.*Totals|company\.name/);
     assert.doesNotMatch(source, /"GBP"/);
   }
   const layout = await readFile("src/components/layout/MainLayout.jsx", "utf8");

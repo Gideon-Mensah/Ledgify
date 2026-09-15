@@ -35,6 +35,8 @@ def update_bill(*, bill, organisation, supplier, lines, **values):
     if not lines:
         raise BusinessRuleError("A bill must contain at least one line.")
 
+    from apps.tax.document_tax import debit_original_for_draft, debit_source_line, mark_debit_snapshot
+    original_document=debit_original_for_draft(bill)
     prepared = []
     subtotal = tax_total = grand_total = Decimal("0.00")
     for line in lines:
@@ -70,15 +72,19 @@ def update_bill(*, bill, organisation, supplier, lines, **values):
             tax_rate = Decimal(str(line.get("tax_rate", "0")))
             if tax_rate:
                 raise BusinessRuleError("Select a configured tax rate for a taxed bill line.")
-        calculated = calculate_tax(quantity=quantity, unit_price=unit_price, discount=discount,
-                                   tax_rate=tax_rate, tax_inclusive=bool(line.get("tax_inclusive", False)))
-        net, tax, total = calculated.values()
+        from apps.tax.document_tax import prepare_line_tax
+        source_line=debit_source_line(organisation=organisation, original=original_document, line=line, contact=supplier, point=issue_date, currency=currency)
+        prepared_tax = prepare_line_tax(organisation=organisation, line=line, scope="PURCHASES", point=issue_date, source_line=source_line)
+        mark_debit_snapshot(prepared_tax, original_document)
+        tax_rate = prepared_tax['tax_rate']
+        tax_rate_config = prepared_tax['tax_rate_config']
+        net, tax, total = (prepared_tax[k] for k in ('net_amount', 'tax_amount', 'gross_amount'))
         subtotal += net
         tax_total += tax
         grand_total += total
         prepared.append(BillLine(bill=bill, description=description, quantity=quantity,
                                  unit_price=unit_price, discount_amount=discount, tax_rate=tax_rate,
-                                 tax_rate_config=rate_config, tax_amount=tax, line_total=total,
+                                 tax_rate_config=tax_rate_config, tax_snapshot=prepared_tax["snapshot"], tax_amount=tax, line_total=total,
                                  expense_account=account, inventory_receipt=receipt))
 
     bill.lines.all().delete()

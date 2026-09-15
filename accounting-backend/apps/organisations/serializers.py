@@ -19,6 +19,10 @@ class OrganisationSerializer(serializers.ModelSerializer):
                 except serializers.ValidationError as error: raise serializers.ValidationError({field: error.detail}) from None
         return attrs
 
+    def validate_logo_data(self, value):
+        from common.documents import validate_logo
+        return validate_logo(value)
+
     role = serializers.SerializerMethodField()
 
     class Meta:
@@ -29,6 +33,7 @@ class OrganisationSerializer(serializers.ModelSerializer):
             "legal_name",
             "registration_number",
             "tax_number",
+            "tax_structure_type", "tax_configuration_version",
             "tax_registered",
             "tax_registration_number",
             "tax_scheme",
@@ -49,14 +54,14 @@ class OrganisationSerializer(serializers.ModelSerializer):
             "postal_code",
             "phone",
             "email",
-            "website",
+            "website", "ghana_post_gps", "payment_instructions", "logo_data",
             "is_active",
             "role",
             "created_at",
             "updated_at",
         ]
 
-        read_only_fields = [
+        read_only_fields = ["tax_structure_type", "tax_configuration_version",
             "id",
             "is_active",
             "role",

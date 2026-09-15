@@ -13,6 +13,8 @@ from apps.payroll.models import PayrollComponent,PayrollPayment,PayrollRun,Paysl
 
 @transaction.atomic
 def approve_pay_run(*,pay_run,user):
+    if pay_run.organisation.country_code == "GH":
+        raise BusinessRuleError("Ghana PAYE/SSNIT are tracking only; verified statutory payroll calculation is unavailable.")
     lock_ledger(pay_run.organisation_id)
     run=PayrollRun.objects.select_for_update().get(pk=pay_run.pk)
     if run.status!=PayrollRun.Status.CALCULATED:raise BusinessRuleError("Only calculated payroll can be approved.")
@@ -22,6 +24,8 @@ def approve_pay_run(*,pay_run,user):
 
 @transaction.atomic
 def post_pay_run(*,pay_run,user):
+    if pay_run.organisation.country_code == "GH":
+        raise BusinessRuleError("Ghana PAYE/SSNIT are tracking only; verified statutory payroll calculation is unavailable.")
     lock_ledger(pay_run.organisation_id)
     run=PayrollRun.objects.select_for_update().select_related("organisation","payroll_liability_account").prefetch_related("payslips__lines__account","payslips__lines__liability_account").get(pk=pay_run.pk)
     if run.status!=PayrollRun.Status.APPROVED:raise BusinessRuleError("Only approved payroll can be posted.")
@@ -44,6 +48,8 @@ def post_pay_run(*,pay_run,user):
 
 @transaction.atomic
 def pay_pay_run(*,pay_run,bank_account,payment_date,amount,user):
+    if pay_run.organisation.country_code == "GH":
+        raise BusinessRuleError("Ghana PAYE/SSNIT are tracking only; verified statutory payroll calculation is unavailable.")
     lock_ledger(pay_run.organisation_id)
     run=PayrollRun.objects.select_for_update().select_related("organisation","payroll_liability_account").get(pk=pay_run.pk)
     if run.status not in {PayrollRun.Status.POSTED,PayrollRun.Status.PAID}:raise BusinessRuleError("Only posted payroll can be paid.")

@@ -43,6 +43,15 @@ class TaxPeriodViewSet(OrganisationScopedViewSetMixin, ModelViewSet):
                           "destroy": PREPARE_TAX_RETURN}
     def get_queryset(self): return TaxPeriod.objects.filter(organisation=self.get_organisation())
     def perform_create(self, serializer): serializer.save(organisation=self.get_organisation())
+    def perform_destroy(self, instance):
+        from rest_framework.exceptions import ValidationError
+        from django.db.models.deletion import ProtectedError
+        if instance.status in {'FILED','LOCKED'}:
+            raise ValidationError('Filed/locked tax periods cannot be deleted.')
+        try:instance.delete()
+        except ProtectedError as error:
+            raise ValidationError('This period has tax history and cannot be deleted.') from error
+
 
 
 class TaxTransactionViewSet(OrganisationScopedViewSetMixin, ReadOnlyModelViewSet):

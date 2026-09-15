@@ -642,7 +642,7 @@
 }
 
 @media print {
-    body * { visibility: hidden; }
+    body:has(.journal-details-page) *:not(.journal-details-page):not(.journal-details-page *) { visibility: hidden; }
 
     .journal-details-page,
     .journal-details-page * { visibility: visible; }

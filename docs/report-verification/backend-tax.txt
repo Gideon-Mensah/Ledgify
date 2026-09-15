@@ -1,0 +1,31 @@
+Creating test database for alias 'default'...
+{"timestamp": "2026-09-15T11:03:42.062530+00:00", "level": "WARNING", "module": "django.request", "message": "Not Found: /api/v1/tax/configuration/codes/c5d97c43-e4c3-47d5-84f5-e3f6a10dd047/versions/"}
+..........{"timestamp": "2026-09-15T11:03:46.301781+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-rates/c23b3ea2-6194-4f9c-b48e-308246b6c820/"}
+.............{"timestamp": "2026-09-15T11:03:56.257561+00:00", "level": "WARNING", "module": "django.request", "message": "Not Found: /api/v1/tax/configuration/versions/b9bda02c-e540-4306-9e97-3fda3bd5fcc8/emergency/"}
+{"timestamp": "2026-09-15T11:03:56.261095+00:00", "level": "WARNING", "module": "django.request", "message": "Not Found: /api/v1/tax/configuration/versions/b9bda02c-e540-4306-9e97-3fda3bd5fcc8/emergency/"}
+{"timestamp": "2026-09-15T11:03:56.263440+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/tax/configuration/versions/b9bda02c-e540-4306-9e97-3fda3bd5fcc8/emergency/"}
+{"timestamp": "2026-09-15T11:03:56.265740+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/tax/configuration/versions/b9bda02c-e540-4306-9e97-3fda3bd5fcc8/emergency/"}
+{"timestamp": "2026-09-15T11:03:56.268201+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/tax/configuration/versions/b9bda02c-e540-4306-9e97-3fda3bd5fcc8/emergency/"}
+{"timestamp": "2026-09-15T11:03:56.270370+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/tax/configuration/versions/b9bda02c-e540-4306-9e97-3fda3bd5fcc8/emergency/"}
+{"timestamp": "2026-09-15T11:03:56.272364+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/tax/configuration/versions/b9bda02c-e540-4306-9e97-3fda3bd5fcc8/emergency/"}
+.{"timestamp": "2026-09-15T11:03:57.004152+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax/returns/not-a-uuid/"}
+.......{"timestamp": "2026-09-15T11:04:00.982838+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-rates/b9d5ef80-15c0-4537-b7ea-24f7cb444456/"}
+{"timestamp": "2026-09-15T11:04:01.003169+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/tax-transactions/register/"}
+....{"timestamp": "2026-09-15T11:04:03.309496+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-transactions/register/"}
+{"timestamp": "2026-09-15T11:04:03.328846+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-transactions/register/"}
+{"timestamp": "2026-09-15T11:04:03.348348+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-transactions/register/"}
+{"timestamp": "2026-09-15T11:04:03.367642+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-transactions/register/"}
+{"timestamp": "2026-09-15T11:04:03.388659+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-transactions/"}
+..{"timestamp": "2026-09-15T11:04:04.429085+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-rates/730bad88-1fb9-472e-a7c2-17b284f96886/"}
+{"timestamp": "2026-09-15T11:04:04.450860+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-rates/730bad88-1fb9-472e-a7c2-17b284f96886/"}
+{"timestamp": "2026-09-15T11:04:04.472855+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-rates/730bad88-1fb9-472e-a7c2-17b284f96886/"}
+{"timestamp": "2026-09-15T11:04:04.496413+00:00", "level": "WARNING", "module": "django.request", "message": "Bad Request: /api/v1/tax-rates/730bad88-1fb9-472e-a7c2-17b284f96886/"}
+{"timestamp": "2026-09-15T11:04:04.544089+00:00", "level": "WARNING", "module": "django.request", "message": "Forbidden: /api/v1/tax-rates/730bad88-1fb9-472e-a7c2-17b284f96886/"}
+......
+----------------------------------------------------------------------
+Ran 43 tests in 24.568s
+
+OK
+Destroying test database for alias 'default'...
+Found 43 test(s).
+System check identified no issues (0 silenced).

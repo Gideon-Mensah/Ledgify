@@ -4451,7 +4451,7 @@
 }
 
 @media print {
-  body * {
+  body:has(.customer-statement-print-area) *:not(.customer-statement-print-area):not(.customer-statement-print-area *) {
     visibility: hidden;
   }
 

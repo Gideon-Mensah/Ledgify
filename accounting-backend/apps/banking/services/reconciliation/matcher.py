@@ -76,7 +76,7 @@ class BankReconciliationMatcher:
         for payment in candidates:
             customer_name = payment.customer.name if payment.customer_id else "Customer"
             score, reasons = self._score(
-                amount=payment.amount, date=payment.payment_date,
+                amount=payment.cash_amount, date=payment.payment_date,
                 reference=payment.reference, party_name=customer_name,
             )
             allocations = [
@@ -89,7 +89,7 @@ class BankReconciliationMatcher:
             ]
             suggestions.append(ReconciliationSuggestion(
                 match_type="customer_payment", object_id=str(payment.id),
-                label=f"Customer payment - {customer_name}", amount=payment.amount,
+                label=f"Customer payment - {customer_name}", amount=payment.cash_amount,
                 confidence=score, reasons=reasons,
                 metadata={
                     "customer_id": str(payment.customer_id) if payment.customer_id else None,
@@ -123,7 +123,7 @@ class BankReconciliationMatcher:
         for payment in candidates:
             supplier_name = payment.supplier.name if payment.supplier_id else "Supplier"
             score, reasons = self._score(
-                amount=payment.amount, date=payment.payment_date,
+                amount=payment.cash_amount, date=payment.payment_date,
                 reference=payment.reference, party_name=supplier_name,
             )
             allocations = [
@@ -133,7 +133,7 @@ class BankReconciliationMatcher:
             ]
             suggestions.append(ReconciliationSuggestion(
                 match_type="supplier_payment", object_id=str(payment.id),
-                label=f"Supplier payment - {supplier_name}", amount=payment.amount,
+                label=f"Supplier payment - {supplier_name}", amount=payment.cash_amount,
                 confidence=score, reasons=reasons,
                 metadata={
                     "supplier_id": str(payment.supplier_id) if payment.supplier_id else None,

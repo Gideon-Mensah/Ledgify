@@ -1,0 +1,14 @@
+[
+  {
+    "check": "large-trial",
+    "result": "PASS"
+  },
+  {
+    "check": "comparative-pnl",
+    "result": "PASS"
+  },
+  {
+    "check": "mixed-aging",
+    "result": "PASS"
+  }
+]

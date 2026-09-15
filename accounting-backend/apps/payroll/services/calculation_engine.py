@@ -12,6 +12,8 @@ def money(value):return Decimal(str(value)).quantize(MONEY,rounding=ROUND_HALF_U
 
 @transaction.atomic
 def calculate_pay_run(*,pay_run):
+    if pay_run.organisation.country_code == "GH":
+        raise BusinessRuleError("Ghana PAYE/SSNIT are tracking only; verified statutory payroll calculation is unavailable.")
     lock_ledger(pay_run.organisation_id)
     run=PayrollRun.objects.select_for_update().get(pk=pay_run.pk)
     if run.status not in {PayrollRun.Status.DRAFT,PayrollRun.Status.CALCULATED}:raise BusinessRuleError("Only draft or calculated payroll can be recalculated.")

@@ -60,6 +60,10 @@ def create_customer_credit_note(*, organisation, customer, credit_note_number,
         unit_price = Decimal(str(line.get("unit_price", "0")))
         discount = money(line.get("discount_amount", "0"))
         source_line = invoice.lines.filter(id=line.get("source_line_id")).first() if invoice and line.get("source_line_id") else None
+        if line.get('source_line_id') and source_line is None:
+            raise BusinessRuleError('Select an original line belonging to the linked document.')
+        if invoice and invoice.lines.exclude(tax_snapshot={}).exists() and source_line is None:
+            raise BusinessRuleError('Select the original document line so its tax snapshot is preserved.')
         tax_rate_config = source_line.tax_rate_config if source_line else line.get("tax_rate_config")
         if source_line:
             tax_rate = source_line.tax_rate
@@ -74,13 +78,15 @@ def create_customer_credit_note(*, organisation, customer, credit_note_number,
         gross = money(quantity * unit_price)
         if discount > gross:
             raise BusinessRuleError("Discount cannot exceed the line amount.")
-        calculated = calculate_tax(quantity=quantity, unit_price=unit_price, discount=discount,
-                                   tax_rate=tax_rate, tax_inclusive=bool(line.get("tax_inclusive", False)))
-        net, tax, line_total = calculated.values()
+        from apps.tax.document_tax import prepare_line_tax
+        prepared_tax = prepare_line_tax(organisation=organisation, line=line, scope="SALES", point=issue_date, source_line=source_line)
+        tax_rate = prepared_tax['tax_rate']
+        tax_rate_config = prepared_tax['tax_rate_config']
+        net, tax, line_total = (prepared_tax[k] for k in ('net_amount', 'tax_amount', 'gross_amount'))
         subtotal += net; tax_total += tax; total += line_total
         credit_lines.append(CustomerCreditNoteLine(
             credit_note=credit, description=description, quantity=quantity,
-            unit_price=unit_price, discount_amount=discount, tax_rate=tax_rate, tax_rate_config=tax_rate_config,
+            unit_price=unit_price, discount_amount=discount, tax_rate=tax_rate, tax_rate_config=tax_rate_config, tax_snapshot=prepared_tax["snapshot"],
             tax_amount=tax, line_total=line_total, revenue_account=account,
         ))
     CustomerCreditNoteLine.objects.bulk_create(credit_lines)

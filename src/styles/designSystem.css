@@ -74,10 +74,13 @@ td { font-variant-numeric: tabular-nums; }
 }
 
 @media print {
-  .sidebar, .header, .page-header-action, button, .report-tabs { display: none !important; }
+  .sidebar, .header, .page-header-action, button, .report-tabs, .modal-overlay, [role="dialog"] { display: none !important; }
   .app-content { margin: 0 !important; }
   .main-content { max-width: none; padding: 0; background: #fff; }
   .invoice-form-card, .placeholder-card, .manufacturing-card { break-inside: avoid; border-color: #bbb; box-shadow: none; }
   table { font-size: 9pt; }
   thead { display: table-header-group; }
+}
+@media print {
+  .app-layout, .app-content, .main-content { min-height:0!important; height:auto!important; }
 }

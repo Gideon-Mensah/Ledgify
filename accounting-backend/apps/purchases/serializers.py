@@ -75,6 +75,10 @@ class ConvertPurchaseOrderSerializer(serializers.Serializer):
 
 
 class BillLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
+    source_line_id = serializers.UUIDField(write_only=True, required=False)
+    tax_code_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    tax_reason = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=1000)
+    tax_snapshot = serializers.JSONField(read_only=True)
     tax_inclusive = serializers.BooleanField(write_only=True, required=False, default=False)
     tax_rate_id = serializers.PrimaryKeyRelatedField(
         source="tax_rate_config", queryset=TaxRate.objects.all(), required=False, allow_null=True,
@@ -106,7 +110,7 @@ class BillLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
             "quantity",
             "unit_price",
             "discount_amount",
-            "tax_rate",
+            "source_line_id", "tax_code_id", "tax_reason", "tax_snapshot", "tax_rate",
             "tax_rate_id",
             "tax_inclusive",
             "tax_amount",
@@ -280,6 +284,7 @@ class BillSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
         
 class SupplierPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     payment_date = accounting_date("payment date")
+    withholdings = serializers.ListField(child=serializers.DictField(), write_only=True, required=False, max_length=2)
     supplier_id = serializers.PrimaryKeyRelatedField(
         source="supplier", queryset=Contact.objects.all(), write_only=True
     )
@@ -316,7 +321,7 @@ class SupplierPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerial
 
     class Meta:
         model = SupplierPayment
-        fields = [
+        fields = ["withholdings", "cash_amount", "withholding_amount",
             "id",
             "supplier_id",
             "bill_id",
@@ -337,7 +342,7 @@ class SupplierPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerial
             "updated_at",
         ]
 
-        read_only_fields = [
+        read_only_fields = ["cash_amount", "withholding_amount",
             "id",
             "status",
             "accounting_journal",
@@ -410,6 +415,9 @@ class SupplierPaymentSerializer(CurrencySerializerMixin, serializers.ModelSerial
 
 
 class SupplierCreditLineSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
+    tax_code_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    tax_reason = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=1000)
+    tax_snapshot = serializers.JSONField(read_only=True)
     source_line_id = serializers.UUIDField(write_only=True, required=False)
     tax_inclusive = serializers.BooleanField(write_only=True, required=False, default=False)
     tax_rate_id = serializers.PrimaryKeyRelatedField(
@@ -422,7 +430,7 @@ class SupplierCreditLineSerializer(CurrencySerializerMixin, serializers.ModelSer
     class Meta:
         model = SupplierCreditLine
         fields = ["id", "description", "quantity", "unit_price", "discount_amount",
-                  "tax_rate", "tax_rate_id", "source_line_id", "tax_inclusive", "tax_amount", "line_total", "expense_account_id"]
+                  "tax_code_id", "tax_reason", "tax_snapshot", "tax_rate", "tax_rate_id", "source_line_id", "tax_inclusive", "tax_amount", "line_total", "expense_account_id"]
         read_only_fields = ["id", "tax_amount", "line_total"]
 
 

@@ -44,6 +44,10 @@ def create_supplier_credit(*, organisation, supplier, credit_number, issue_date,
         description = str(line.get("description", "")).strip()
         quantity = Decimal(str(line.get("quantity", "1"))); unit_price = Decimal(str(line.get("unit_price", "0")))
         discount = money(line.get("discount_amount", "0")); source_line = bill.lines.filter(id=line.get("source_line_id")).first() if bill and line.get("source_line_id") else None
+        if line.get('source_line_id') and source_line is None:
+            raise BusinessRuleError('Select an original line belonging to the linked document.')
+        if bill and bill.lines.exclude(tax_snapshot={}).exists() and source_line is None:
+            raise BusinessRuleError('Select the original document line so its tax snapshot is preserved.')
         tax_rate_config = source_line.tax_rate_config if source_line else line.get("tax_rate_config")
         if source_line:
             tax_rate = source_line.tax_rate
@@ -57,12 +61,14 @@ def create_supplier_credit(*, organisation, supplier, credit_number, issue_date,
             raise BusinessRuleError("Supplier credit line is invalid.")
         gross = money(quantity * unit_price)
         if discount > gross: raise BusinessRuleError("Discount cannot exceed the line amount.")
-        calculated = calculate_tax(quantity=quantity, unit_price=unit_price, discount=discount,
-                                   tax_rate=tax_rate, tax_inclusive=bool(line.get("tax_inclusive", False)))
-        net, tax, line_total = calculated.values(); subtotal += net; tax_total += tax; total += line_total
+        from apps.tax.document_tax import prepare_line_tax
+        prepared_tax = prepare_line_tax(organisation=organisation, line=line, scope="PURCHASES", point=issue_date, source_line=source_line)
+        tax_rate = prepared_tax['tax_rate']
+        tax_rate_config = prepared_tax['tax_rate_config']
+        net, tax, line_total = (prepared_tax[k] for k in ('net_amount', 'tax_amount', 'gross_amount')); subtotal += net; tax_total += tax; total += line_total
         credit_lines.append(SupplierCreditLine(credit=credit, description=description,
             quantity=quantity, unit_price=unit_price, discount_amount=discount,
-            tax_rate=tax_rate, tax_rate_config=tax_rate_config, tax_amount=tax, line_total=line_total, expense_account=account))
+            tax_rate=tax_rate, tax_rate_config=tax_rate_config, tax_snapshot=prepared_tax["snapshot"], tax_amount=tax, line_total=line_total, expense_account=account))
     SupplierCreditLine.objects.bulk_create(credit_lines)
     credit.subtotal = money(subtotal); credit.tax_total = money(tax_total); credit.total = money(total);credit.base_currency_amount=convert_amount(amount=credit.total,rate=credit.exchange_rate)
     credit.save(update_fields=["subtotal", "tax_total", "total","base_currency_amount", "updated_at"])

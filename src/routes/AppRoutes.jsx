@@ -1,3 +1,5 @@
+import PayrollJurisdictionRoute from "./PayrollJurisdictionRoute";
+import SavedDocument from "../components/documents/SavedDocument";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "../store/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
@@ -12,12 +14,11 @@ import MainLayout from "../components/layout/MainLayout";
 import DashboardPage from "../pages/dashboard/DashboardPage";
 
 import InvoicesPage from "../pages/sales/InvoicesPage";
-import NewInvoicePage from "../pages/sales/NewInvoicePage";
+import TaxDocumentEditor from "../components/documents/TaxDocumentEditor";
 import InvoiceDetailsPage from "../pages/sales/InvoiceDetailsPage";
 
 import BillsPage from "../pages/purchases/BillsPage";
 import { LiveCommercialDetailPage, LiveCommercialListPage } from "../pages/commercial/LiveCommercialPages";
-import LiveTaxCreditPage from "../pages/commercial/LiveTaxCreditPage";
 
 import {
     LiveBankAccountsPage,
@@ -51,7 +52,7 @@ import { LiveDepreciationPage, LiveFixedAssetDetailPage, LiveFixedAssetsPage } f
 import ReportsPage from "../pages/reports/ReportsPage";
 import FinancialAnalysisPage from "../pages/reports/FinancialAnalysisPage";
 import VatReturnsPage from "../pages/tax/VatReturnsPage";
-import TaxSettingsPage from "../pages/tax/TaxSettingsPage";
+import TaxSettingsPage from "../pages/tax/JurisdictionTaxSettings";
 import PayrollPage from "../pages/payroll/PayrollPage";
 import FXPage from "../pages/accounting/FXPage";
 import ConsolidationPage from "../pages/accounting/ConsolidationPage";
@@ -64,9 +65,7 @@ import CashFlowBreakdownPage from "../pages/accounting/CashFlowBreakdownPage";
 
 import NotFoundPage from "../pages/NotFoundPage";
 
-import NewBillPage from "../pages/purchases/NewBillPage";
 import BillDetailsPage from "../pages/purchases/BillDetailsPage";
-import EditBillPage from "../pages/purchases/EditBillPage";
 import NewSupplierPage from "../pages/purchases/NewSupplierPage";
 import SupplierDetailsPage from "../pages/purchases/SupplierDetailsPage";
 import EditSupplierPage from "../pages/purchases/EditSupplierPage";
@@ -101,15 +100,16 @@ function AppRoutes() {
                 <Route element={<ProtectedRoute />}>
                   <Route element={<MainLayout />}>
                     <Route index element={<DashboardPage />} />
+                    <Route path="documents/:kind/:documentId" element={<SavedDocument />} />
 
                     <Route path="sales/invoices" element={<InvoicesPage />} />
                     <Route
                         path="sales/invoices/new"
-                        element={<NewInvoicePage />}
+                        element={<TaxDocumentEditor />}
                     />
                     <Route
                         path="sales/invoices/:invoiceId/edit"
-                        element={<NewInvoicePage editMode />}
+                        element={<TaxDocumentEditor editMode />}
                     />
                     <Route
                         path="sales/invoices/:invoiceId"
@@ -133,7 +133,7 @@ function AppRoutes() {
 
                     <Route
                         path="sales/credit-notes/new"
-                        element={<LiveTaxCreditPage />}
+                        element={<TaxDocumentEditor credit />}
                     />
 
                     <Route
@@ -154,15 +154,15 @@ function AppRoutes() {
 
                     <Route
                         path="purchases/bills/new"
-                        element={<NewBillPage />}
+                        element={<TaxDocumentEditor supplier />}
                     />
                     <Route path="purchases/supplier-credits" element={<LiveCommercialListPage type="supplier-credits" />} />
-                    <Route path="purchases/supplier-credits/new" element={<LiveTaxCreditPage supplier />} />
+                    <Route path="purchases/supplier-credits/new" element={<TaxDocumentEditor supplier credit />} />
                     <Route path="purchases/supplier-credits/:creditNoteId" element={<LiveCommercialDetailPage type="supplier-credits" />} />
 
                     <Route
                         path="purchases/bills/:billId/edit"
-                        element={<EditBillPage />}
+                        element={<TaxDocumentEditor supplier editMode />}
                     />
 
                     <Route
@@ -362,7 +362,7 @@ function AppRoutes() {
                     <Route path="tax" element={<VatReturnsPage />} />
                     <Route path="tax/vat-returns" element={<VatReturnsPage />} />
                     <Route path="tax/settings" element={<TaxSettingsPage />} />
-                    <Route path="payroll" element={<PayrollPage />} />
+                    <Route path="payroll" element={<PayrollJurisdictionRoute><PayrollPage /></PayrollJurisdictionRoute>} />
                     <Route path="accounting/fx" element={<FXPage />} />
                     <Route path="accounting/consolidation" element={<ConsolidationFeatureRoute><ConsolidationPage /></ConsolidationFeatureRoute>} />
                     <Route path="ai" element={<AIFeatureRoute><AIAssistantPage /></AIFeatureRoute>} />

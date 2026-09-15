@@ -1,0 +1,373 @@
+[
+  {
+    "file": "comparative-pnl-print.pdf",
+    "page": 1,
+    "characters": 399,
+    "out_of_bounds": [],
+    "image": "comparative-pnl-print-page-1.png"
+  },
+  {
+    "file": "desktop-report-account.pdf",
+    "page": 1,
+    "characters": 562,
+    "out_of_bounds": [],
+    "image": "desktop-report-account-page-1.png"
+  },
+  {
+    "file": "desktop-report-aged-payables.pdf",
+    "page": 1,
+    "characters": 901,
+    "out_of_bounds": [],
+    "image": "desktop-report-aged-payables-page-1.png"
+  },
+  {
+    "file": "desktop-report-aged-receivables.pdf",
+    "page": 1,
+    "characters": 941,
+    "out_of_bounds": [],
+    "image": "desktop-report-aged-receivables-page-1.png"
+  },
+  {
+    "file": "desktop-report-balance-sheet.pdf",
+    "page": 1,
+    "characters": 745,
+    "out_of_bounds": [],
+    "image": "desktop-report-balance-sheet-page-1.png"
+  },
+  {
+    "file": "desktop-report-bank.pdf",
+    "page": 1,
+    "characters": 338,
+    "out_of_bounds": [],
+    "image": "desktop-report-bank-page-1.png"
+  },
+  {
+    "file": "desktop-report-cash-flow.pdf",
+    "page": 1,
+    "characters": 304,
+    "out_of_bounds": [],
+    "image": "desktop-report-cash-flow-page-1.png"
+  },
+  {
+    "file": "desktop-report-general-ledger.pdf",
+    "page": 1,
+    "characters": 820,
+    "out_of_bounds": [],
+    "image": "desktop-report-general-ledger-page-1.png"
+  },
+  {
+    "file": "desktop-report-general-ledger.pdf",
+    "page": 2,
+    "characters": 1063,
+    "out_of_bounds": [],
+    "image": "desktop-report-general-ledger-page-2.png"
+  },
+  {
+    "file": "desktop-report-general-ledger.pdf",
+    "page": 3,
+    "characters": 1045,
+    "out_of_bounds": [],
+    "image": "desktop-report-general-ledger-page-3.png"
+  },
+  {
+    "file": "desktop-report-general-ledger.pdf",
+    "page": 4,
+    "characters": 983,
+    "out_of_bounds": [],
+    "image": "desktop-report-general-ledger-page-4.png"
+  },
+  {
+    "file": "desktop-report-general-ledger.pdf",
+    "page": 5,
+    "characters": 696,
+    "out_of_bounds": [],
+    "image": "desktop-report-general-ledger-page-5.png"
+  },
+  {
+    "file": "desktop-report-profit-and-loss.pdf",
+    "page": 1,
+    "characters": 500,
+    "out_of_bounds": [],
+    "image": "desktop-report-profit-and-loss-page-1.png"
+  },
+  {
+    "file": "desktop-report-tax.pdf",
+    "page": 1,
+    "characters": 1041,
+    "out_of_bounds": [],
+    "image": "desktop-report-tax-page-1.png"
+  },
+  {
+    "file": "desktop-report-tax.pdf",
+    "page": 2,
+    "characters": 1032,
+    "out_of_bounds": [],
+    "image": "desktop-report-tax-page-2.png"
+  },
+  {
+    "file": "desktop-report-tax.pdf",
+    "page": 3,
+    "characters": 503,
+    "out_of_bounds": [],
+    "image": "desktop-report-tax-page-3.png"
+  },
+  {
+    "file": "desktop-report-trial-balance.pdf",
+    "page": 1,
+    "characters": 554,
+    "out_of_bounds": [],
+    "image": "desktop-report-trial-balance-page-1.png"
+  },
+  {
+    "file": "large-trial-print.pdf",
+    "page": 1,
+    "characters": 1432,
+    "out_of_bounds": [],
+    "image": "large-trial-print-page-1.png"
+  },
+  {
+    "file": "large-trial-print.pdf",
+    "page": 2,
+    "characters": 1655,
+    "out_of_bounds": [],
+    "image": "large-trial-print-page-2.png"
+  },
+  {
+    "file": "large-trial-print.pdf",
+    "page": 3,
+    "characters": 1655,
+    "out_of_bounds": [],
+    "image": "large-trial-print-page-3.png"
+  },
+  {
+    "file": "large-trial-print.pdf",
+    "page": 4,
+    "characters": 1655,
+    "out_of_bounds": [],
+    "image": "large-trial-print-page-4.png"
+  },
+  {
+    "file": "large-trial-print.pdf",
+    "page": 5,
+    "characters": 1655,
+    "out_of_bounds": [],
+    "image": "large-trial-print-page-5.png"
+  },
+  {
+    "file": "large-trial-print.pdf",
+    "page": 6,
+    "characters": 1655,
+    "out_of_bounds": [],
+    "image": "large-trial-print-page-6.png"
+  },
+  {
+    "file": "large-trial-print.pdf",
+    "page": 7,
+    "characters": 1476,
+    "out_of_bounds": [],
+    "image": "large-trial-print-page-7.png"
+  },
+  {
+    "file": "mixed-aging-print.pdf",
+    "page": 1,
+    "characters": 508,
+    "out_of_bounds": [],
+    "image": "mixed-aging-print-page-1.png"
+  },
+  {
+    "file": "mobile-report-account.pdf",
+    "page": 1,
+    "characters": 562,
+    "out_of_bounds": [],
+    "image": "mobile-report-account-page-1.png"
+  },
+  {
+    "file": "mobile-report-aged-payables.pdf",
+    "page": 1,
+    "characters": 901,
+    "out_of_bounds": [],
+    "image": "mobile-report-aged-payables-page-1.png"
+  },
+  {
+    "file": "mobile-report-aged-receivables.pdf",
+    "page": 1,
+    "characters": 941,
+    "out_of_bounds": [],
+    "image": "mobile-report-aged-receivables-page-1.png"
+  },
+  {
+    "file": "mobile-report-balance-sheet.pdf",
+    "page": 1,
+    "characters": 745,
+    "out_of_bounds": [],
+    "image": "mobile-report-balance-sheet-page-1.png"
+  },
+  {
+    "file": "mobile-report-bank.pdf",
+    "page": 1,
+    "characters": 338,
+    "out_of_bounds": [],
+    "image": "mobile-report-bank-page-1.png"
+  },
+  {
+    "file": "mobile-report-cash-flow.pdf",
+    "page": 1,
+    "characters": 304,
+    "out_of_bounds": [],
+    "image": "mobile-report-cash-flow-page-1.png"
+  },
+  {
+    "file": "mobile-report-general-ledger.pdf",
+    "page": 1,
+    "characters": 820,
+    "out_of_bounds": [],
+    "image": "mobile-report-general-ledger-page-1.png"
+  },
+  {
+    "file": "mobile-report-general-ledger.pdf",
+    "page": 2,
+    "characters": 1063,
+    "out_of_bounds": [],
+    "image": "mobile-report-general-ledger-page-2.png"
+  },
+  {
+    "file": "mobile-report-general-ledger.pdf",
+    "page": 3,
+    "characters": 1045,
+    "out_of_bounds": [],
+    "image": "mobile-report-general-ledger-page-3.png"
+  },
+  {
+    "file": "mobile-report-general-ledger.pdf",
+    "page": 4,
+    "characters": 983,
+    "out_of_bounds": [],
+    "image": "mobile-report-general-ledger-page-4.png"
+  },
+  {
+    "file": "mobile-report-general-ledger.pdf",
+    "page": 5,
+    "characters": 696,
+    "out_of_bounds": [],
+    "image": "mobile-report-general-ledger-page-5.png"
+  },
+  {
+    "file": "mobile-report-profit-and-loss.pdf",
+    "page": 1,
+    "characters": 500,
+    "out_of_bounds": [],
+    "image": "mobile-report-profit-and-loss-page-1.png"
+  },
+  {
+    "file": "mobile-report-tax.pdf",
+    "page": 1,
+    "characters": 1041,
+    "out_of_bounds": [],
+    "image": "mobile-report-tax-page-1.png"
+  },
+  {
+    "file": "mobile-report-tax.pdf",
+    "page": 2,
+    "characters": 1032,
+    "out_of_bounds": [],
+    "image": "mobile-report-tax-page-2.png"
+  },
+  {
+    "file": "mobile-report-tax.pdf",
+    "page": 3,
+    "characters": 503,
+    "out_of_bounds": [],
+    "image": "mobile-report-tax-page-3.png"
+  },
+  {
+    "file": "mobile-report-trial-balance.pdf",
+    "page": 1,
+    "characters": 554,
+    "out_of_bounds": [],
+    "image": "mobile-report-trial-balance-page-1.png"
+  },
+  {
+    "file": "reviewed-tax-workpaper.pdf",
+    "page": 1,
+    "characters": 793,
+    "out_of_bounds": [],
+    "image": "reviewed-tax-workpaper-page-1.png"
+  },
+  {
+    "file": "switch-desktop-0.pdf",
+    "page": 1,
+    "characters": 554,
+    "out_of_bounds": [],
+    "image": "switch-desktop-0-page-1.png"
+  },
+  {
+    "file": "switch-desktop-1.pdf",
+    "page": 1,
+    "characters": 259,
+    "out_of_bounds": [],
+    "image": "switch-desktop-1-page-1.png"
+  },
+  {
+    "file": "switch-mobile-0.pdf",
+    "page": 1,
+    "characters": 554,
+    "out_of_bounds": [],
+    "image": "switch-mobile-0-page-1.png"
+  },
+  {
+    "file": "switch-mobile-1.pdf",
+    "page": 1,
+    "characters": 259,
+    "out_of_bounds": [],
+    "image": "switch-mobile-1-page-1.png"
+  },
+  {
+    "file": "synthetic-report-inspection-aged-receivables-2026-09-15.pdf",
+    "page": 1,
+    "characters": 503,
+    "out_of_bounds": [],
+    "image": "synthetic-report-inspection-aged-receivables-2026-09-15-page-1.png"
+  },
+  {
+    "file": "synthetic-report-inspection-profit-and-loss-2026-09-15.pdf",
+    "page": 1,
+    "characters": 395,
+    "out_of_bounds": [],
+    "image": "synthetic-report-inspection-profit-and-loss-2026-09-15-page-1.png"
+  },
+  {
+    "file": "synthetic-report-inspection-trial-balance-2026-09-15.pdf",
+    "page": 1,
+    "characters": 2343,
+    "out_of_bounds": [],
+    "image": "synthetic-report-inspection-trial-balance-2026-09-15-page-1.png"
+  },
+  {
+    "file": "synthetic-report-inspection-trial-balance-2026-09-15.pdf",
+    "page": 2,
+    "characters": 2560,
+    "out_of_bounds": [],
+    "image": "synthetic-report-inspection-trial-balance-2026-09-15-page-2.png"
+  },
+  {
+    "file": "synthetic-report-inspection-trial-balance-2026-09-15.pdf",
+    "page": 3,
+    "characters": 2560,
+    "out_of_bounds": [],
+    "image": "synthetic-report-inspection-trial-balance-2026-09-15-page-3.png"
+  },
+  {
+    "file": "synthetic-report-inspection-trial-balance-2026-09-15.pdf",
+    "page": 4,
+    "characters": 2560,
+    "out_of_bounds": [],
+    "image": "synthetic-report-inspection-trial-balance-2026-09-15-page-4.png"
+  },
+  {
+    "file": "synthetic-report-inspection-trial-balance-2026-09-15.pdf",
+    "page": 5,
+    "characters": 825,
+    "out_of_bounds": [],
+    "image": "synthetic-report-inspection-trial-balance-2026-09-15-page-5.png"
+  }
+]

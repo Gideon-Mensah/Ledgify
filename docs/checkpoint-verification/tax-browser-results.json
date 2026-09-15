@@ -1,0 +1,86 @@
+[
+  {
+    "check": "Desktop Profile",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop Dashboard",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop Codes & versions",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop Returns",
+    "result": "PASS"
+  },
+  {
+    "check": "Desktop History",
+    "result": "PASS"
+  },
+  {
+    "check": "390px Profile",
+    "result": "PASS"
+  },
+  {
+    "check": "390px Dashboard",
+    "result": "PASS"
+  },
+  {
+    "check": "390px Codes & versions",
+    "result": "PASS"
+  },
+  {
+    "check": "390px Returns",
+    "result": "PASS"
+  },
+  {
+    "check": "390px History",
+    "result": "PASS"
+  },
+  {
+    "check": "390px authoritative preset comparison",
+    "result": "PASS"
+  },
+  {
+    "check": "390px future-version old/new calculation",
+    "result": "PASS"
+  },
+  {
+    "check": "Future override saved as unactivated draft",
+    "result": "PASS"
+  },
+  {
+    "check": "390px VAT workpaper preview",
+    "result": "PASS"
+  },
+  {
+    "check": "Return preparation and review through rendered controls",
+    "result": "PASS"
+  },
+  {
+    "check": "Mobile invoice authoritative common-base preview",
+    "result": "PASS"
+  },
+  {
+    "check": "Mobile invoice draft save",
+    "result": "PASS"
+  },
+  {
+    "check": "Posted invoice print layout",
+    "result": "PASS"
+  },
+  {
+    "check": "Tax invoice email accepted by local in-memory backend",
+    "result": "PASS"
+  },
+  {
+    "check": "International profile has no Ghana/GRA branding",
+    "result": "PASS"
+  },
+  {
+    "check": "Unfinished AI inaccessible through direct route",
+    "result": "PASS"
+  }
+]

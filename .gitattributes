@@ -1,0 +1,4 @@
+# Preserve verification PDF bytes; they are binary document artifacts.
+docs/tax-verification/*.pdf binary
+docs/checkpoint-verification/*.pdf binary
+docs/report-verification/*.pdf binary
