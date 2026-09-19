@@ -8,6 +8,8 @@ function ProtectedRoute() {
   if (!auth.isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
+  if (!auth.user?.is_email_verified) return <Navigate to="/resend-verification" replace />;
+  if (!auth.organisations.length) return <Navigate to="/onboarding" replace />;
   if (!auth.selectedOrganisation) {
     return <Navigate to="/select-organisation" replace />;
   }

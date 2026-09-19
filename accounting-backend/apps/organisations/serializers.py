@@ -17,6 +17,8 @@ class OrganisationSerializer(serializers.ModelSerializer):
             if account:
                 try: validate_fx_account(self.instance, account, kind)
                 except serializers.ValidationError as error: raise serializers.ValidationError({field: error.detail}) from None
+        if self.instance and "financial_year_start_month" in attrs and attrs["financial_year_start_month"] != self.instance.financial_year_start_month and self.instance.journal_entries.exists():
+            raise serializers.ValidationError({"financial_year_start_month":"Use the controlled financial-year workflow after transactions exist."})
         return attrs
 
     def validate_logo_data(self, value):
@@ -30,7 +32,7 @@ class OrganisationSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "legal_name",
+            "legal_name", "business_type", "locale", "accounting_start_date",
             "registration_number",
             "tax_number",
             "tax_structure_type", "tax_configuration_version",

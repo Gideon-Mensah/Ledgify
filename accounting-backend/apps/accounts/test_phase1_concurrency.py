@@ -12,7 +12,7 @@ from rest_framework.test import APIClient
 class TokenConcurrencyTests(TransactionTestCase):
     def setUp(self):
         cache.clear()
-        self.user=get_user_model().objects.create_user(username='race',email='race@example.invalid',password='Race-password-839!')
+        self.user=get_user_model().objects.create_user(is_email_verified=True, username='race',email='race@example.invalid',password='Race-password-839!')
         self.tokens=APIClient().post('/api/v1/auth/token/',{'email':self.user.email,'password':'Race-password-839!'},format='json').data
 
     def simultaneous(self, operations):

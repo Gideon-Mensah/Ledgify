@@ -16,6 +16,10 @@ class Organisation(models.Model):
         max_length=255,
     )
 
+    business_type = models.CharField(max_length=80, blank=True)
+    locale = models.CharField(max_length=30, default="en-GB")
+    accounting_start_date = models.DateField(null=True, blank=True)
+
     legal_name = models.CharField(
         max_length=255,
         blank=True,
@@ -198,3 +202,52 @@ class OrganisationMember(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.organisation} ({self.role})"
+
+
+class OrganisationInvitation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="invitations")
+    email = models.EmailField()
+    role = models.CharField(max_length=20, choices=OrganisationMember.Role.choices)
+    invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="invitations_sent")
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(db_index=True)
+    status = models.CharField(max_length=16, default="pending", choices=[(s,s.title()) for s in ("pending","accepted","expired","revoked")])
+    token_hash = models.CharField(max_length=64, unique=True, null=True)
+    accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, related_name="invitations_accepted")
+    accepted_at = models.DateTimeField(null=True)
+    revoked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, related_name="invitations_revoked")
+    revoked_at = models.DateTimeField(null=True)
+    message = models.CharField(max_length=500, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(models.functions.Lower("email"), "organisation", condition=models.Q(status="pending"), name="one_pending_invitation_per_org_email")]
+
+
+class AccessAuditEvent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organisation = models.ForeignKey(Organisation, on_delete=models.PROTECT, null=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True)
+    event = models.CharField(max_length=80)
+    subject_id = models.UUIDField(null=True)
+    details = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class OnboardingDraft(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="onboarding_draft")
+    data = models.JSONField(default=dict)
+    step = models.PositiveSmallIntegerField(default=0)
+    organisation = models.OneToOneField(Organisation, on_delete=models.PROTECT, null=True)
+    idempotency_key = models.UUIDField(null=True)
+    payload_hash = models.CharField(max_length=64, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class OrganisationSetup(models.Model):
+    organisation = models.OneToOneField(Organisation, on_delete=models.CASCADE, primary_key=True, related_name="setup")
+    policy_acceptance = models.ForeignKey("accounts.PolicyAcceptance", on_delete=models.PROTECT)
+    opening_choice = models.CharField(max_length=30)
+    checklist = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)

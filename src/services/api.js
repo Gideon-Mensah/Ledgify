@@ -118,5 +118,8 @@ export const api = {
   patch: (path, body, options) => apiRequest(path, {
     ...options, method: "PATCH", body: JSON.stringify(body),
   }),
+  put: (path, body, options) => apiRequest(path, {
+    ...options, method: "PUT", body: JSON.stringify(body),
+  }),
   delete: (path, options) => apiRequest(path, { ...options, method: "DELETE" }),
 };

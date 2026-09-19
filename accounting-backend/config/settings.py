@@ -258,7 +258,8 @@ LOGGING = {"version": 1, "disable_existing_loggers": False, "formatters": {"json
 SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
 if SENTRY_DSN:
     import sentry_sdk
-    sentry_sdk.init(dsn=SENTRY_DSN,environment=os.environ.get("SENTRY_ENVIRONMENT","production"),send_default_pii=False,traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE","0")))
+    from common.identity_telemetry import scrub_identity_event
+    sentry_sdk.init(dsn=SENTRY_DSN,environment=os.environ.get("SENTRY_ENVIRONMENT","production"),send_default_pii=False,before_send=scrub_identity_event,before_send_transaction=scrub_identity_event,include_local_variables=False,traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE","0")))
 
 # Atomic Redis counters are shared by every production Gunicorn worker.
 CACHE_URL = os.environ.get("DJANGO_CACHE_URL", "")
@@ -294,3 +295,28 @@ INVOICE_EMAIL_ORGANISATION_RATE = os.environ.get("INVOICE_EMAIL_ORGANISATION_RAT
 
 # No authorised GRA connector is shipped; flags alone cannot enable network calls.
 ENABLE_GRA_EVAT = env_bool("ENABLE_GRA_EVAT", False)
+
+# Phase 5 public access. Approved policies and real email are mandatory in production.
+AUTHENTICATION_BACKENDS = ["apps.accounts.backends.VerifiedEmailBackend"]
+REGISTRATION_ENABLED = env_bool("REGISTRATION_ENABLED", DEBUG)
+TERMS_VERSION = os.environ.get("TERMS_VERSION", "development-draft" if DEBUG else "")
+PRIVACY_VERSION = os.environ.get("PRIVACY_VERSION", "development-draft" if DEBUG else "")
+TERMS_URL = os.environ.get("TERMS_URL", FRONTEND_URL.rstrip('/') + '/legal/terms' if DEBUG else '')
+PRIVACY_URL = os.environ.get("PRIVACY_URL", FRONTEND_URL.rstrip('/') + '/legal/privacy' if DEBUG else '')
+POLICY_RECORD_IP = env_bool("POLICY_RECORD_IP", False)
+VERIFICATION_EXPIRY_SECONDS = int(os.environ.get("VERIFICATION_EXPIRY_SECONDS", "86400"))
+INVITATION_EXPIRY_SECONDS = int(os.environ.get("INVITATION_EXPIRY_SECONDS", "604800"))
+IDENTITY_EMAIL_COOLDOWN_SECONDS = int(os.environ.get("IDENTITY_EMAIL_COOLDOWN_SECONDS", "120"))
+IDENTITY_RETENTION_DAYS = int(os.environ.get("IDENTITY_RETENTION_DAYS", "90"))
+ONBOARDING_DRAFT_RETENTION_DAYS = int(os.environ.get("ONBOARDING_DRAFT_RETENTION_DAYS", "90"))
+REGISTRATION_IP_RATE = os.environ.get("REGISTRATION_IP_RATE", "20/hour")
+REGISTRATION_EMAIL_RATE = os.environ.get("REGISTRATION_EMAIL_RATE", "5/hour")
+VERIFICATION_IP_RATE = os.environ.get("VERIFICATION_IP_RATE", "30/hour")
+VERIFICATION_EMAIL_RATE = os.environ.get("VERIFICATION_EMAIL_RATE", "5/hour")
+INVITATION_USER_RATE = os.environ.get("INVITATION_USER_RATE", "30/hour")
+INVITATION_ORGANISATION_RATE = os.environ.get("INVITATION_ORGANISATION_RATE", "100/hour")
+for rate in (REGISTRATION_IP_RATE, REGISTRATION_EMAIL_RATE, VERIFICATION_IP_RATE, VERIFICATION_EMAIL_RATE, INVITATION_USER_RATE, INVITATION_ORGANISATION_RATE):
+    if not re.fullmatch(r"[1-9][0-9]*/(second|minute|hour|day)", rate):
+        raise RuntimeError("Identity rate limits require a positive count and time unit.")
+if min(VERIFICATION_EXPIRY_SECONDS, INVITATION_EXPIRY_SECONDS, IDENTITY_EMAIL_COOLDOWN_SECONDS, IDENTITY_RETENTION_DAYS, ONBOARDING_DRAFT_RETENTION_DAYS) < 1:
+    raise RuntimeError("Identity expiry and retention values must be positive.")

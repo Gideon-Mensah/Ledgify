@@ -1,3 +1,7 @@
+import { RegisterPage, CheckEmailPage, ResendVerificationPage, VerifyEmailPage, DevelopmentPolicyPage } from '../pages/auth/PublicRegistration';
+import AcceptInvitationPage from '../pages/auth/AcceptInvitationPage';
+import OnboardingPage from '../pages/onboarding/OnboardingPage';
+import SetupChecklist from '../components/auth/SetupChecklist';
 import PayrollJurisdictionRoute from "./PayrollJurisdictionRoute";
 import SavedDocument from "../components/documents/SavedDocument";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
@@ -93,6 +97,14 @@ function AppRoutes() {
         <BrowserRouter>
           <AuthProvider>
             <Routes>
+                <Route path="register" element={<RegisterPage />} />
+                <Route path="check-email" element={<CheckEmailPage />} />
+                <Route path="verify-email" element={<VerifyEmailPage />} />
+                <Route path="resend-verification" element={<ResendVerificationPage />} />
+                <Route path="accept-invitation" element={<AcceptInvitationPage />} />
+                <Route path="onboarding" element={<OnboardingPage />} />
+                <Route path="legal/terms" element={<DevelopmentPolicyPage kind="terms" />} />
+                <Route path="legal/privacy" element={<DevelopmentPolicyPage kind="privacy" />} />
                 <Route path="login" element={<LoginPage />} />
                 <Route path="forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="reset-password/:uid/:token" element={<ResetPasswordPage />} />
@@ -100,6 +112,7 @@ function AppRoutes() {
                 <Route element={<ProtectedRoute />}>
                   <Route element={<MainLayout />}>
                     <Route index element={<DashboardPage />} />
+                    <Route path="welcome" element={<SetupChecklist welcome />} />
                     <Route path="documents/:kind/:documentId" element={<SavedDocument />} />
 
                     <Route path="sales/invoices" element={<InvoicesPage />} />

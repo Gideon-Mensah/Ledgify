@@ -28,6 +28,15 @@ class AccountSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+        read_only_fields = ["id", "is_system_account", "created_at", "updated_at"]
+
+    def validate(self, attrs):
+        if self.instance and self.instance.is_system_account:
+            for key in ('account_type', 'account_class', 'status'):
+                if key in attrs and attrs[key] != getattr(self.instance, key):
+                    raise serializers.ValidationError({key: "Required system/control account classification and active status cannot change."})
+        return attrs
+
     def get_bank_account(self, obj):
         try:
             profile = obj.bank_profile
@@ -39,13 +48,6 @@ class AccountSerializer(serializers.ModelSerializer):
         from common.currencies import validate_currency_code
         return validate_currency_code(value, allow_blank=True)
 
-        read_only_fields = [
-            "id",
-            "is_system_account",
-            "created_at",
-            "updated_at",
-        ]
-        
 class JournalLineSerializer(serializers.ModelSerializer):
     account = serializers.SerializerMethodField()
 

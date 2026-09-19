@@ -18,7 +18,7 @@ class AuthenticationIntegrationTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="demo", email="demo@example.com", password="demo-password",
-            first_name="Demo", last_name="User",
+            first_name="Demo", last_name="User", is_email_verified=True,
         )
         self.organisation = Organisation.objects.create(
             base_currency="GBP",
@@ -70,7 +70,7 @@ class PasswordResetTests(TestCase):
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="reset-user", email="Reset.User@example.com", password="OldPassword123!",
-            first_name="Reset", last_name="User", is_active=True,
+            first_name="Reset", last_name="User", is_active=True, is_email_verified=True,
         )
 
     def request_reset(self, email="reset.user@EXAMPLE.com"):

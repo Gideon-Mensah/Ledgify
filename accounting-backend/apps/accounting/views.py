@@ -80,6 +80,11 @@ class AccountViewSet(
                           "import_status": MANAGE_ACCOUNTS, "import_confirm": MANAGE_ACCOUNTS,
                           "import_errors": MANAGE_ACCOUNTS}
 
+    def perform_destroy(self, instance):
+        if instance.is_system_account:
+            raise serializers.ValidationError("Required system/control accounts cannot be deleted.")
+        instance.delete()
+
     def get_queryset(self):
         organisation = self.get_organisation()
 

@@ -70,7 +70,7 @@ class PasswordResetRequestView(APIView):
                 message.send(fail_silently=False)
             except Exception:
                 # Never include an address, UID, token, or rendered email in logs.
-                logger.exception("Password reset email delivery failed")
+                logger.warning("Password reset email backend did not accept the message")
         return Response({"detail": PUBLIC_RESET_RESPONSE})
 
 

@@ -13,8 +13,8 @@ from apps.fx.models import Currency
 class Phase1AttackTests(TestCase):
     def setUp(self):
         cache.clear()
-        self.user = get_user_model().objects.create_user(username='phase1', email='phase1@example.invalid', password='Strong-test-pass-837!')
-        self.other = get_user_model().objects.create_user(username='other', email='other@example.invalid', password='Strong-test-pass-837!')
+        self.user = get_user_model().objects.create_user(is_email_verified=True, username='phase1', email='phase1@example.invalid', password='Strong-test-pass-837!')
+        self.other = get_user_model().objects.create_user(is_email_verified=True, username='other', email='other@example.invalid', password='Strong-test-pass-837!')
         self.a = Organisation.objects.create(name='A', base_currency='GHS', created_by=self.user)
         self.b = Organisation.objects.create(name='B', base_currency='GHS', created_by=self.other)
         OrganisationMember.objects.create(organisation=self.a, user=self.user, role='owner')

@@ -49,7 +49,7 @@ class SessionTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
-        attrs["email"] = attrs.get("email", "").strip()
+        attrs["email"] = attrs.get("email", "").strip().lower()
         return super().validate(attrs)
 
 
@@ -64,7 +64,7 @@ class PasswordAwareTokenRefreshSerializer(TokenRefreshSerializer):
                 **{api_settings.USER_ID_FIELD: user_id})
         except (get_user_model().DoesNotExist, TypeError, ValueError, DjangoValidationError):
             raise AuthenticationFailed("This session is no longer valid.") from None
-        if (not user.is_active or refresh.get("auth_version") != user.auth_version
+        if (not user.is_active or not user.is_email_verified or refresh.get("auth_version") != user.auth_version
                 or refresh.get(api_settings.REVOKE_TOKEN_CLAIM) != get_md5_hash_password(user.password)):
             raise AuthenticationFailed("This session is no longer valid.")
         return super().validate(attrs)

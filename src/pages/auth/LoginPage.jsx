@@ -37,6 +37,8 @@ export default function LoginPage() {
     <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" /></label>
     <div className="auth-label-row"><span>Password</span><Link to="/forgot-password">Forgot password?</Link></div>
     <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" aria-label="Password" />
+    <p><Link to="/resend-verification">Request email verification</Link></p>
     <button type="submit" disabled={submitting}>{submitting ? "Signing in…" : "Sign in"}</button>
+    <p>New to Ledgify? <Link to="/register">Create an account</Link></p>
   </form></main>;
 }

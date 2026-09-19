@@ -1,3 +1,4 @@
+import SetupChecklist from '../../components/auth/SetupChecklist';
 import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 // Summarise the selected organisation's live financial and operational activity.
@@ -79,6 +80,7 @@ function DashboardPage() {
   ] : [];
 
   return <div className="dashboard-page"><PageHeader eyebrow="Overview" title="Dashboard" description={`Financial overview for ${auth.selectedOrganisation?.name || "your organisation"}.`} action={AI_ENABLED && auth.hasPermission("use_ai_assistant") ? <AskAIButton prompt="Explain the key trends and risks on my dashboard." /> : null} />
+    <SetupChecklist/>
     {state.loading && <div className="dashboard-panel dashboard-state">Loading your financial overview…</div>}
     {state.error && <div className="invoice-form-alert dashboard-state">{state.error}</div>}
     {data && <><div className="summary-card-grid">{cards.map((card) => <SummaryCard key={card.title} {...card} />)}</div>

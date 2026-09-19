@@ -35,6 +35,7 @@ class OrganisationViewSet(ModelViewSet):
             permission=MANAGE_ORGANISATION_USERS,
         )
 
+    @transaction.atomic
     def perform_update(self, serializer):
         tax_fields = {"tax_registered", "tax_registration_number", "tax_scheme",
                       "tax_reporting_currency", "tax_period_frequency", "tax_effective_date"}
@@ -45,24 +46,20 @@ class OrganisationViewSet(ModelViewSet):
                                             permission=MANAGE_TAX_RATES)
         else:
             self._require_user_management(self.get_object())
-        serializer.save()
+        from apps.accounts.identity import audit
+        before = {key: str(getattr(serializer.instance, key, '')) for key in serializer.validated_data if key != 'logo_data'}
+        obj = serializer.save()
+        audit('ORGANISATION_DETAILS_UPDATED', self.request.user, obj, obj, before=before,
+              after={key:str(value) for key,value in serializer.validated_data.items() if key != 'logo_data'}, logo_changed='logo_data' in serializer.validated_data)
 
     def perform_destroy(self, instance):
         self._require_user_management(instance)
         instance.is_active = False
         instance.save(update_fields=["is_active", "updated_at"])
 
-    @transaction.atomic
     def perform_create(self, serializer):
-        organisation = serializer.save(
-            created_by=self.request.user,
-        )
-
-        OrganisationMember.objects.create(
-            organisation=organisation,
-            user=self.request.user,
-            role=OrganisationMember.Role.OWNER,
-        )
+        from rest_framework.exceptions import ValidationError
+        raise ValidationError("Use the confirmed onboarding operation to create a fully configured organisation.")
 
     @action(detail=True, methods=["get"], url_path="my-permissions")
     def my_permissions(self, request, pk=None):
@@ -98,7 +95,8 @@ class OrganisationMemberViewSet(OrganisationScopedViewSetMixin, ModelViewSet):
         ).select_related("user", "organisation")
 
     def perform_create(self, serializer):
-        serializer.save(organisation=self.get_organisation())
+        from rest_framework.exceptions import ValidationError
+        raise ValidationError("Invite the member so they can authenticate and accept membership.")
 
     def _protect_last_owner(self, instance, *, new_role=None, new_active=None):
         removing_owner = (
@@ -113,16 +111,35 @@ class OrganisationMemberViewSet(OrganisationScopedViewSetMixin, ModelViewSet):
         ).exclude(pk=instance.pk).exists():
             raise PermissionDenied("The organisation must retain at least one active owner.")
 
+    @transaction.atomic
     def perform_update(self, serializer):
+        Organisation.objects.select_for_update().get(pk=self.get_organisation().pk)
         instance = self.get_object()
+        serializer.instance = instance
+        from .invitation_services import allowed_roles
+        roles = allowed_roles(instance.organisation, self.request.user)
+        if instance.role not in roles or serializer.validated_data.get('role', instance.role) not in roles:
+            raise PermissionDenied("You cannot assign or change this role.")
+        if 'user' in serializer.validated_data and serializer.validated_data['user'] != instance.user:
+            raise PermissionDenied("Membership ownership cannot change.")
         self._protect_last_owner(
             instance,
             new_role=serializer.validated_data.get("role"),
             new_active=serializer.validated_data.get("is_active"),
         )
         serializer.save()
+        from apps.accounts.identity import audit
+        audit('MEMBERSHIP_UPDATED', self.request.user, instance.organisation, instance, role=instance.role, active=instance.is_active)
 
+    @transaction.atomic
     def perform_destroy(self, instance):
+        Organisation.objects.select_for_update().get(pk=self.get_organisation().pk)
+        instance.refresh_from_db()
+        from .invitation_services import allowed_roles
+        if instance.role not in allowed_roles(instance.organisation, self.request.user):
+            raise PermissionDenied("You cannot remove this role.")
         self._protect_last_owner(instance, new_active=False)
         instance.is_active = False
         instance.save(update_fields=["is_active"])
+        from apps.accounts.identity import audit
+        audit('MEMBERSHIP_DEACTIVATED', self.request.user, instance.organisation, instance)

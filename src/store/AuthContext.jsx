@@ -58,7 +58,11 @@ export function AuthProvider({ children }) {
       ? organisations.find((item) => item.id === stored.selectedOrganisation.id)
       : null;
     if (!selected && organisations.length === 1) selected = organisations[0];
-    commit({ ...stored, user, organisations, selectedOrganisation: selected });
+    const resolved = { ...stored, user, organisations, selectedOrganisation: selected };
+    // Permission requests must start with the same scope they will finish with;
+    // React may defer commit's state updater until after this request starts.
+    saveAuthStorage(resolved);
+    commit(resolved);
     const permissions = selected ? await loadPermissions(selected) : [];
     assertCurrentSession(generation);
     commit((current) => ({ ...current, permissions }));

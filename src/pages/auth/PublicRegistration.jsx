@@ -1,0 +1,33 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '../../services/api';
+import { normaliseApiError } from '../../services/apiError';
+import { readIdentityLink, clearIdentityLink } from '../../utils/identityLinks';
+import '../../styles/auth.css';
+import '../../styles/publicAccess.css';
+
+function AccessCard({title,children}) { return <main className="auth-screen public-access"><section className="auth-card"><Link className="auth-brand" to="/login">Ledgify</Link><h1>{title}</h1>{children}</section></main>; }
+
+export function RegisterPage() {
+ const navigate=useNavigate(), guard=useRef(false);
+ const [options,setOptions]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ const [form,setForm]=useState({first_name:'',last_name:'',email:'',password:'',confirm_password:'',terms_accepted:false,marketing_consent:false,website:''});
+ const load=()=>api.get('auth/registration/options/',{skipAuth:true}).then(setOptions).catch(e=>setError(normaliseApiError(e)));
+ useEffect(()=>{let live=true;api.get('auth/registration/options/',{skipAuth:true}).then(v=>{if(live)setOptions(v);}).catch(e=>{if(live)setError(normaliseApiError(e));});return()=>{live=false;};},[]);
+ const change=e=>setForm({...form,[e.target.name]:e.target.type==='checkbox'?e.target.checked:e.target.value});
+ async function submit(e){e.preventDefault();if(guard.current)return;guard.current=true;setBusy(true);setError('');try{await api.post('auth/register/',{...form,challenge:options.challenge,terms_version:options.terms_version,privacy_version:options.privacy_version},{skipAuth:true});navigate('/check-email',{replace:true});}catch(e){setError(normaliseApiError(e));await load();}finally{guard.current=false;setBusy(false);}}
+ return <AccessCard title="Create your Ledgify account"><p>Verify your email first, then set up your business or accept an invitation.</p>{error&&<p role="alert" className="auth-error">{error}</p>}{!options?<><p>Loading registration requirements…</p><button onClick={load}>Try again</button></>:<form onSubmit={submit}>
+ <div className="access-grid">{[['first_name','First name','given-name'],['last_name','Last name','family-name']].map(([name,label,auto])=><label key={name}>{label}<input name={name} autoComplete={auto} required maxLength={150} value={form[name]} onChange={change}/></label>)}</div>
+ <label>Email address<input name="email" type="email" autoComplete="email" required maxLength={254} value={form.email} onChange={change}/></label>
+ <label>Password<input name="password" type="password" autoComplete="new-password" required maxLength={128} value={form.password} onChange={change} aria-describedby="password-guidance"/></label>
+ <ul id="password-guidance" className="access-help">{options.password_requirements.map(text=><li key={text}>{text}</li>)}</ul>
+ <label>Confirm password<input name="confirm_password" type="password" autoComplete="new-password" required maxLength={128} value={form.confirm_password} onChange={change}/></label>
+ <div className="access-trap" aria-hidden="true"><label>Leave this field empty<input name="website" tabIndex={-1} autoComplete="off" value={form.website} onChange={change}/></label></div>
+ <label className="access-check"><input name="terms_accepted" type="checkbox" required checked={form.terms_accepted} onChange={change}/><span>I agree to the <a href={options.terms_url} target="_blank" rel="noreferrer">Terms</a> and <a href={options.privacy_url} target="_blank" rel="noreferrer">Privacy Policy</a>.</span></label>
+ <label className="access-check"><input name="marketing_consent" type="checkbox" checked={form.marketing_consent} onChange={change}/><span>Send me optional product news.</span></label>
+ <button type="submit" disabled={busy}>{busy?'Creating your account…':'Create account'}</button></form>}<p>Already registered? <Link to="/login">Sign in</Link></p></AccessCard>;
+}
+export function CheckEmailPage(){return <AccessCard title="Check your email"><p>If your address is eligible, verification instructions will be sent. A request being accepted does not guarantee email delivery. Check your spam folder too.</p><p><Link to="/resend-verification">Request another verification email</Link></p><Link to="/login">Return to sign in</Link></AccessCard>;}
+export function ResendVerificationPage(){const [email,setEmail]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState('');return <AccessCard title="Request verification email"><p>Use the email address you registered with.</p>{message&&<p role="status">{message}</p>}{error&&<p role="alert" className="auth-error">{error}</p>}<form onSubmit={async e=>{e.preventDefault();if(busy)return;setBusy(true);setError('');try{const result=await api.post('auth/verification/resend/',{email},{skipAuth:true});setMessage(result.detail);}catch(e){setError(normaliseApiError(e));}finally{setBusy(false);}}}><label>Email address<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><button disabled={busy}>{busy?'Requesting…':'Request verification email'}</button></form><Link to="/login">Return to sign in</Link></AccessCard>;}
+export function VerifyEmailPage(){const [token]=useState(readIdentityLink),[busy,setBusy]=useState(false),[state,setState]=useState('ready');const guard=useRef(false);const invalid=!token||state==='invalid';return <AccessCard title={state==='success'?'Email verified':invalid?'Verification link expired or invalid':'Verify your email'}>{state==='success'?<><p>Your email has been verified. Sign in to continue.</p><Link to="/login">Sign in to Ledgify</Link></>:invalid?<><p>This link cannot be used. Request a new verification email.</p><Link to="/resend-verification">Request a new link</Link></>:<><p>Confirm that you want to use this email address for Ledgify.</p><button disabled={busy} onClick={async()=>{if(guard.current)return;guard.current=true;setBusy(true);try{await api.post('auth/verification/confirm/',{token},{skipAuth:true});setState('success');clearIdentityLink();}catch{setState('invalid');clearIdentityLink();}finally{setBusy(false);}}}>{busy?'Verifying…':'Verify email'}</button></>}</AccessCard>;}
+export function DevelopmentPolicyPage({kind}){return <AccessCard title={kind==='terms'?'Terms — development placeholder':'Privacy Policy — development placeholder'}><p>This development placeholder is not an approved commercial policy. Production registration requires configured, approved policy URLs and version identifiers.</p><Link to="/register">Return to registration</Link></AccessCard>;}

@@ -9,6 +9,8 @@ export default function OrganisationSelectionPage() {
   const navigate = useNavigate();
   if (auth.isLoading) return <div className="auth-loader">Loading organisations…</div>;
   if (!auth.isAuthenticated) return <Navigate to="/login" replace />;
+  if (!auth.user?.is_email_verified) return <Navigate to="/resend-verification" replace />;
+  if (!auth.organisations.length) return <Navigate to="/onboarding" replace />;
   if (auth.selectedOrganisation) return <Navigate to="/" replace />;
   return <main className="auth-screen"><section className="auth-card organisation-card">
     <div className="auth-brand">Ledgify</div><h1>Select an organisation</h1>
