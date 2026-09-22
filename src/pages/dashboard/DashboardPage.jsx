@@ -4,7 +4,7 @@ import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js
 // Summarise the selected organisation's live financial and operational activity.
 
 import { useEffect, useMemo, useState } from "react";
-import { Wallet, Landmark, ReceiptText, TrendingUp } from "lucide-react";
+import { Wallet, Landmark, ReceiptText, TrendingUp, CalendarDays, Activity, AlertCircle, BarChart3 } from "lucide-react";
 
 import SummaryCard from "../../components/dashboard/SummaryCard";
 import PageHeader from "../../components/layout/PageHeader";
@@ -27,6 +27,24 @@ const currency = (value, code) => centralFormatCurrency(value, code || getOrgani
 const displayDate = (value) => value ? new Intl.DateTimeFormat("en-GB", {
   day: "2-digit", month: "short", year: "numeric",
 }).format(new Date(`${String(value).slice(0, 10)}T00:00:00`)) : "—";
+
+const agingLabels = { current: "Not yet due", "1_30": "1–30 days overdue", "31_60": "31–60 days overdue", "61_90": "61–90 days overdue", "90_plus": "Over 90 days overdue" };
+
+// Bars are presentation only: all displayed values come from the existing reports.
+// Signed amounts remain visible; bar lengths compare magnitudes, not a time series.
+function AmountBars({ rows, currencyCode, label }) {
+  const maximum = Math.max(...rows.map((row) => Math.abs(Number(row.value) || 0)), 0);
+  return <div className="dashboard-bars" role="group" aria-label={label}>
+    {rows.map((row) => <div className={`dashboard-bar-row dashboard-bar-${row.tone || 'primary'}`} key={row.label}>
+      <div className="dashboard-bar-label"><span>{row.label}</span><strong>{currency(row.value, currencyCode)}</strong></div>
+      <svg className="dashboard-bar-track" viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <rect width="100" height="6" rx="1" className="dashboard-bar-background" />
+        <rect width={maximum ? Math.abs(Number(row.value) || 0) / maximum * 100 : 0} height="6" rx="1" className="dashboard-bar-fill" />
+      </svg>
+    </div>)}
+    {!rows.length && <p className="dashboard-empty-text">No balances to display.</p>}
+  </div>;
+}
 
 function DashboardPage() {
   const auth = useAuth();
@@ -74,18 +92,62 @@ function DashboardPage() {
   const activityPagination = useTablePagination(activity);
   const cards = data ? [
     { title: "Cash balance", value: currency(cashBalance, auth.selectedOrganisation?.base_currency), change: `As at ${displayDate(dates.end)}`, icon: Landmark },
-    { title: "Outstanding receivables", value: currency(data.receivables.total_outstanding, auth.selectedOrganisation?.base_currency), change: `${overdueInvoices} overdue invoice${overdueInvoices === 1 ? "" : "s"}`, changeType: overdueInvoices ? "negative" : "positive", icon: Wallet },
-    { title: "Outstanding payables", value: currency(data.payables.total_outstanding, auth.selectedOrganisation?.base_currency), change: `${overdueBills} overdue bill${overdueBills === 1 ? "" : "s"}`, changeType: overdueBills ? "negative" : "positive", icon: ReceiptText },
-    { title: "Net profit", value: currency(data.profitLoss.net_profit, auth.selectedOrganisation?.base_currency), change: `${displayDate(dates.start)} to ${displayDate(dates.end)} · Revenue ${currency(data.profitLoss.total_income, auth.selectedOrganisation?.base_currency)} · Expenses ${currency(data.profitLoss.total_expenses, auth.selectedOrganisation?.base_currency)}`, changeType: Number(data.profitLoss.net_profit) < 0 ? "negative" : "positive", icon: TrendingUp },
+    { title: "Outstanding receivables", value: currency(data.receivables.total_outstanding, auth.selectedOrganisation?.base_currency), change: `${overdueInvoices} overdue invoice${overdueInvoices === 1 ? "" : "s"}`, changeType: overdueInvoices ? "negative" : "neutral", icon: Wallet },
+    { title: "Outstanding payables", value: currency(data.payables.total_outstanding, auth.selectedOrganisation?.base_currency), change: `${overdueBills} overdue bill${overdueBills === 1 ? "" : "s"}`, changeType: overdueBills ? "negative" : "neutral", icon: ReceiptText },
+    { title: "Net profit", value: currency(data.profitLoss.net_profit, auth.selectedOrganisation?.base_currency), change: `Financial year to date · ${Number(data.profitLoss.net_profit) < 0 ? "Net loss" : "Net profit"}`, changeType: Number(data.profitLoss.net_profit) < 0 ? "negative" : "positive", icon: TrendingUp },
   ] : [];
 
-  return <div className="dashboard-page"><PageHeader eyebrow="Overview" title="Dashboard" description={`Financial overview for ${auth.selectedOrganisation?.name || "your organisation"}.`} action={AI_ENABLED && auth.hasPermission("use_ai_assistant") ? <AskAIButton prompt="Explain the key trends and risks on my dashboard." /> : null} />
-    <SetupChecklist/>
-    {state.loading && <div className="dashboard-panel dashboard-state">Loading your financial overview…</div>}
-    {state.error && <div className="invoice-form-alert dashboard-state">{state.error}</div>}
-    {data && <><div className="summary-card-grid">{cards.map((card) => <SummaryCard key={card.title} {...card} />)}</div>
-      <section className="dashboard-panel dashboard-aging-panel"><div className="dashboard-panel-header"><div><h2>Receivables and payables aging</h2><p>Outstanding balances grouped by age as at {displayDate(dates.end)}.</p></div></div><div className="dashboard-aging-columns"><div><h3>Receivables</h3><div className="dashboard-aging-grid">{Object.entries(data.receivables.buckets || {}).map(([name, value]) => <article key={`ar-${name}`}><span>{name.replaceAll("_", " ")}</span><strong>{currency(value, auth.selectedOrganisation?.base_currency)}</strong></article>)}</div></div><div><h3>Payables</h3><div className="dashboard-aging-grid">{Object.entries(data.payables.buckets || {}).map(([name, value]) => <article key={`ap-${name}`}><span>{name.replaceAll("_", " ")}</span><strong>{currency(value, auth.selectedOrganisation?.base_currency)}</strong></article>)}</div></div></div></section>
-      <section className="dashboard-panel dashboard-activity-panel"><div className="dashboard-panel-header"><div><h2>Recent activity</h2><p>Latest invoices, bills, bank transactions, and stock movements.</p></div></div>{activity.length ? <><div className="dashboard-table-wrapper"><table className="dashboard-table"><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th>Description</th><th className="dashboard-amount-column">Amount</th></tr></thead><tbody>{activityPagination.pageRows.map((item, index) => <tr key={`${item.type}-${item.reference}-${index}`}><td>{displayDate(item.date)}</td><td><span className={`dashboard-activity-badge dashboard-activity-${item.type.toLowerCase()}`}>{item.type}</span></td><td>{item.reference || "—"}</td><td>{item.description || "—"}</td><td className="dashboard-amount-column">{currency(item.amount, item.currency)}</td></tr>)}</tbody></table></div><TablePagination {...activityPagination}/></> : <p className="dashboard-empty-text">No recent financial activity yet.</p>}</section></>}
+  const currencyCode = auth.selectedOrganisation?.base_currency || getOrganisationCurrency();
+  return <div className="dashboard-page">
+    <PageHeader eyebrow="Financial overview" title="Dashboard" description={auth.selectedOrganisation?.name || "Your organisation"}
+      action={AI_ENABLED && auth.hasPermission("use_ai_assistant") ? <AskAIButton prompt="Explain the key trends and risks on my dashboard." /> : null} />
+    <div className="dashboard-period">
+      <div><CalendarDays size={17} aria-hidden="true" /><span><strong>Financial year to date</strong><span>{displayDate(dates.start)} — {displayDate(dates.end)}</span></span></div>
+      <span className="dashboard-currency-label">Reporting currency <strong>{currencyCode}</strong></span>
+    </div>
+    {state.loading && <section className="dashboard-loading" role="status" aria-live="polite" aria-busy="true">
+      <p>Loading your financial overview…</p>
+      <div className="summary-card-grid" aria-hidden="true">{[0, 1, 2, 3].map(index => <div className="dashboard-skeleton-card" key={index}><span/><strong/><span/></div>)}</div>
+      <div className="dashboard-skeleton-panel" aria-hidden="true" />
+    </section>}
+    {state.error && <div className="dashboard-error" role="alert"><AlertCircle size={22} aria-hidden="true" /><div><h2>Financial overview unavailable</h2><p>{state.error}</p><p>Refresh this page to try again. Your records have not been changed.</p></div></div>}
+    {data && <>
+      <section className="summary-card-grid" aria-label="Key financial figures">{cards.map(card => <SummaryCard key={card.title} {...card} />)}</section>
+      <div className="dashboard-insights-grid">
+        <section className="dashboard-panel dashboard-performance-panel" aria-labelledby="dashboard-performance-title">
+          <div className="dashboard-panel-header"><div><span className="dashboard-section-label">This financial year</span><h2 id="dashboard-performance-title">Income & expenses</h2><p>{displayDate(dates.start)} — {displayDate(dates.end)}</p></div><BarChart3 size={20} aria-hidden="true" /></div>
+          <AmountBars currencyCode={currencyCode} label="Income and expenses for the selected reporting period" rows={[
+            { label: 'Revenue', value: data.profitLoss.total_income },
+            { label: 'Expenses', value: data.profitLoss.total_expenses, tone: 'expense' },
+          ]} />
+          <div className="dashboard-profit-line"><span>{Number(data.profitLoss.net_profit) < 0 ? 'Net loss' : 'Net profit'}</span><strong>{currency(data.profitLoss.net_profit, currencyCode)}</strong></div>
+          <p className="dashboard-chart-note">Period totals, not a historical trend. Bars compare absolute amounts; negative values retain their sign.</p>
+        </section>
+        <section className="dashboard-panel dashboard-aging-panel" aria-labelledby="dashboard-aging-title">
+          <div className="dashboard-panel-header"><div><span className="dashboard-section-label">Outstanding balances</span><h2 id="dashboard-aging-title">Receivables & payables</h2><p>Aging as at {displayDate(dates.end)} · {currencyCode}</p></div></div>
+          <div className="dashboard-aging-columns">{[['Receivables', data.receivables, 'primary'], ['Payables', data.payables, 'expense']].map(([title, report, tone]) => <div key={title}>
+            <h3>{title}</h3>
+            <AmountBars currencyCode={currencyCode} label={`${title} by days overdue`} rows={Object.entries(report.buckets || {}).map(([name, value]) => ({ label: agingLabels[name] || name.replaceAll('_', ' '), value, tone }))} />
+          </div>)}</div>
+          <p className="dashboard-chart-note">Each column uses its own scale. Exact balances are shown beside every bar.</p>
+        </section>
+      </div>
+      <section className="dashboard-panel dashboard-activity-panel" aria-labelledby="dashboard-activity-title">
+        <div className="dashboard-panel-header"><div><span className="dashboard-section-label">Your records</span><h2 id="dashboard-activity-title">Recent activity</h2><p>Invoices, bills, bank transactions and stock movements, newest first.</p></div><span className="dashboard-record-count">{activity.length} record{activity.length === 1 ? '' : 's'}</span></div>
+        {activity.length ? <><div className="dashboard-table-wrapper"><table className="dashboard-table">
+          <caption>Recent activity · Amounts in each record’s currency</caption>
+          <thead><tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Reference</th><th scope="col">Description</th><th scope="col" className="dashboard-amount-column">Amount</th></tr></thead>
+          <tbody>{activityPagination.pageRows.map((item, index) => <tr key={`${item.type}-${item.reference}-${index}`}>
+            <td data-label="Date">{displayDate(item.date)}</td>
+            <td data-label="Type"><span className={`dashboard-activity-badge dashboard-activity-${item.type.toLowerCase()}`}>{item.type}</span></td>
+            <td data-label="Reference" className="dashboard-reference">{item.reference || '—'}</td>
+            <td data-label="Description">{item.description || '—'}</td>
+            <td data-label="Amount" className="dashboard-amount-column"><strong>{currency(item.amount, item.currency)}</strong><span className="dashboard-row-currency">{item.currency || currencyCode}</span></td>
+          </tr>)}</tbody>
+        </table></div><TablePagination {...activityPagination}/></> : <div className="dashboard-empty"><span className="dashboard-empty-icon"><Activity size={25} aria-hidden="true" /></span><h3>No activity yet</h3><p>Your invoices, bills, bank transactions and stock movements will appear here as you add them.</p></div>}
+      </section>
+    </>}
+    <div className="dashboard-setup"><SetupChecklist/></div>
   </div>;
 }
 
