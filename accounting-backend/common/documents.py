@@ -146,32 +146,37 @@ def render_pdf(document):
     output=io.BytesIO();styles=getSampleStyleSheet()
     small=ParagraphStyle("DocumentCell",parent=styles["Normal"],fontName="Helvetica",fontSize=8,leading=11,wordWrap="CJK")
     def p(text,style=small): return Paragraph(escape(str(text)).replace("\n","<br/>"),style)
-    org=document["organisation"];story=[]
-    if org.get("logo_data"):
-        image=Image(io.BytesIO(base64.b64decode(org["logo_data"].split(",",1)[1])))
-        image._restrictSize(140,65);story.append(image)
-    story.extend([p(org["name"],styles["Heading1"]),p(" · ".join(org["address"]))])
-    for key in ("trading_name","phone","email","website","registration_number","tax_number","vat_registration_number"):
-        if org.get(key):story.append(p(key.replace("_"," ").title()+": "+org[key]))
-    story.extend([Spacer(1,12),p(document["title"]+" "+document["number"],styles["Heading2"]),p(f"Date: {document['date']}   Due: {document['due_date']}   Status: {document['status']}"),p(f"Currency: {document['currency']} ({document['currency_basis']})")])
-    if document.get("party"):
-        story.extend([p(document["party"]["name"],styles["Heading3"]),p(" · ".join(document["party"]["address"]))])
-    if document.get('party'):
-        for key in ('tax_number','registration_number'):
-            if document['party'].get(key):story.append(p(key.replace('_',' ').title()+': '+document['party'][key]))
-    if document.get("reference"):story.append(p("Reference: "+document["reference"]))
-    story.append(Spacer(1,10))
-    n=len(document["columns"]);width=A4[0]-72
-    widths=[width*(.38 if i==0 else .62/(n-1)) for i in range(n)]
-    if n==5:widths=[45,100,width-275,65,65]
-    if document["kind"].endswith("-statement"):widths=[58,width-253,65,65,65]
-    table=LongTable([[p(x) for x in document["columns"]]]+[[p(x) for x in row] for row in document["rows"]],colWidths=widths,repeatRows=1,splitInRow=1)
-    table.setStyle(TableStyle([("VALIGN",(0,0),(-1,-1),"TOP"),("BACKGROUND",(0,0),(-1,0),colors.HexColor("#eeeeee")),("LINEBELOW",(0,0),(-1,-1),.3,colors.HexColor("#bbbbbb")),("TOPPADDING",(0,0),(-1,-1),6),("BOTTOMPADDING",(0,0),(-1,-1),6)]))
-    story.append(table);story.append(Spacer(1,12))
-    story.append(KeepTogether([p(f"{label}: {document['currency']} {value}",styles["Heading3"]) for label,value in document["totals"]]))
-    if document.get("notes"):story.extend([p("Notes",styles["Heading3"]),p(document["notes"])])
-    if org.get("payment_instructions") and document["kind"] in ("invoice","quote","customer-payment"):
-        story.extend([p("Payment instructions",styles["Heading3"]),p(org["payment_instructions"])])
+    org=document["organisation"]
+    if document["kind"] == "invoice":
+        from common.invoice_presentation import invoice_story
+        story = invoice_story(document, A4[0]-72)
+    else:
+        org=document["organisation"];story=[]
+        if org.get("logo_data"):
+            image=Image(io.BytesIO(base64.b64decode(org["logo_data"].split(",",1)[1])))
+            image._restrictSize(140,65);story.append(image)
+        story.extend([p(org["name"],styles["Heading1"]),p(" · ".join(org["address"]))])
+        for key in ("trading_name","phone","email","website","registration_number","tax_number","vat_registration_number"):
+            if org.get(key):story.append(p(key.replace("_"," ").title()+": "+org[key]))
+        story.extend([Spacer(1,12),p(document["title"]+" "+document["number"],styles["Heading2"]),p(f"Date: {document['date']}   Due: {document['due_date']}   Status: {document['status']}"),p(f"Currency: {document['currency']} ({document['currency_basis']})")])
+        if document.get("party"):
+            story.extend([p(document["party"]["name"],styles["Heading3"]),p(" · ".join(document["party"]["address"]))])
+        if document.get('party'):
+            for key in ('tax_number','registration_number'):
+                if document['party'].get(key):story.append(p(key.replace('_',' ').title()+': '+document['party'][key]))
+        if document.get("reference"):story.append(p("Reference: "+document["reference"]))
+        story.append(Spacer(1,10))
+        n=len(document["columns"]);width=A4[0]-72
+        widths=[width*(.38 if i==0 else .62/(n-1)) for i in range(n)]
+        if n==5:widths=[45,100,width-275,65,65]
+        if document["kind"].endswith("-statement"):widths=[58,width-253,65,65,65]
+        table=LongTable([[p(x) for x in document["columns"]]]+[[p(x) for x in row] for row in document["rows"]],colWidths=widths,repeatRows=1,splitInRow=1)
+        table.setStyle(TableStyle([("VALIGN",(0,0),(-1,-1),"TOP"),("BACKGROUND",(0,0),(-1,0),colors.HexColor("#eeeeee")),("LINEBELOW",(0,0),(-1,-1),.3,colors.HexColor("#bbbbbb")),("TOPPADDING",(0,0),(-1,-1),6),("BOTTOMPADDING",(0,0),(-1,-1),6)]))
+        story.append(table);story.append(Spacer(1,12))
+        story.append(KeepTogether([p(f"{label}: {document['currency']} {value}",styles["Heading3"]) for label,value in document["totals"]]))
+        if document.get("notes"):story.extend([p("Notes",styles["Heading3"]),p(document["notes"])])
+        if org.get("payment_instructions") and document["kind"] in ("invoice","quote","customer-payment"):
+            story.extend([p("Payment instructions",styles["Heading3"]),p(org["payment_instructions"])])
     def footer(canvas,doc):
         canvas.saveState();canvas.setFont("Helvetica",8);canvas.drawRightString(A4[0]-36,22,f"Page {doc.page}");canvas.restoreState()
     def invariant_canvas(*args,**kwargs): return Canvas(*args,**{**kwargs,"invariant":1})

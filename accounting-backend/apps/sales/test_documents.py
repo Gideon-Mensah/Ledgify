@@ -4,7 +4,7 @@ import uuid
 from unittest.mock import patch
 from django.core import mail
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from rest_framework.test import APIClient
 from apps.accounting import test_phase2_history as fixtures
 from apps.organisations.models import Organisation, OrganisationMember
@@ -179,3 +179,19 @@ class EmailConcurrencyTests(TransactionTestCase):
             with ThreadPoolExecutor(max_workers=2) as pool:results=list(pool.map(lambda _:send(),range(2)))
         self.assertEqual(provider.call_count,1);self.assertEqual(len({r[1] for r in results}),1)
         self.assertTrue(all(r[0] in (200,202) for r in results));self.assertEqual(InvoiceEmailAttempt.objects.count(),1)
+
+class InvoicePresentationTests(SimpleTestCase):
+    def test_display_only_formatters_preserve_amounts_and_tax_classification(self):
+        from common.invoice_presentation import display_row, display_date, display_money
+        self.assertEqual(display_date('2026-09-22'), '22 Sep 2026')
+        for currency in ('GHS', 'GBP'):
+            for code, label in [('ZERO', 'Zero-rated'), ('EXEMPT', 'Exempt'), ('OUT_SCOPE', 'Out of scope')]:
+                row = ['Office supplies\n' + code, '1.5000', '500.0000', '25.00', '0.00', '725.00']
+                original = row.copy()
+                formatted = display_row(row, currency)
+                self.assertEqual(formatted[0], 'Office supplies')
+                self.assertEqual(formatted[1], '1.5')
+                self.assertEqual(formatted[4], currency + ' 0.00\n' + label)
+                self.assertEqual(formatted[5], currency + ' 725.00')
+                self.assertEqual(row, original)
+        self.assertEqual(display_money('1000.00', 'GHS'), 'GHS 1,000.00')

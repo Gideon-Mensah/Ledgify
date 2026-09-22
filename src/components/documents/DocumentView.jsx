@@ -1,5 +1,6 @@
 import { formatCurrency } from "../../utils/currency.js";
 import "../../styles/documents.css";
+import InvoiceDocument from "./InvoiceDocument";
 
 export function OrganisationIdentity({ identity }) {
   if (!identity?.name) return <p role="alert">Complete the organisation profile in Settings before preparing documents.</p>;
@@ -12,6 +13,7 @@ export function OrganisationIdentity({ identity }) {
 }
 export default function DocumentView({ document: doc }) {
   if (!doc?.rows?.length || !doc.organisation?.name) return <p role="alert">Document data is unavailable. Reload before printing.</p>;
+  if (doc.kind === "invoice") return <InvoiceDocument document={doc}/>;
   return <article className="trusted-document" data-document-version={doc.version}>
     <OrganisationIdentity identity={doc.organisation}/>
     <h1>{doc.title} {doc.number}</h1><p>Status: {doc.status.replaceAll("_"," ")}</p>
