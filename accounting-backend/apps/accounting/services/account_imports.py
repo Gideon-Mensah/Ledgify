@@ -17,6 +17,10 @@ from apps.accounting.serializers import AccountSerializer
 MAX_FILE_SIZE = 5 * 1024 * 1024
 MAX_ROWS = 1000
 TEMPLATE_VERSION = "1"
+TEMPLATE_VERSION_NAME = "_LedgifyTemplateVersion"
+VERSION_SHEET = "Instructions"
+VERSION_LABEL = "Template Version"
+VERSION_REFERENCE = "'Instructions'!$C$1"
 SHEET = "Chart of Accounts"
 HEADERS = ["Account Code", "Account Name", "Account Type", "Account Class", "Description", "Currency", "Cash Flow Category", "Allow Manual Journals", "Status"]
 REQUIRED = HEADERS[:4]
@@ -38,7 +42,7 @@ def template_workbook():
         ["EXAMPLE-4000", "Sales Revenue (example — delete this row)", "Revenue", "Sales", "Example row; it will be ignored", "GBP", "Operating activities", "Yes", "Active"],
     ]
     instructions = [
-        ["Ledgify Chart of Accounts Import", "Template Version", TEMPLATE_VERSION],
+        ["Ledgify Chart of Accounts Import", VERSION_LABEL, TEMPLATE_VERSION],
         ["Required columns", ", ".join(REQUIRED)], ["Optional columns", ", ".join(HEADERS[4:])],
         ["Limits", "5 MB and 1,000 data rows"], ["Duplicates", "Default: stop if a code exists or is repeated. Existing accounts are never updated."],
         ["Boolean values", "Yes, No, True or False"], ["Errors", "Upload first; Ledgify previews every row and provides an error report before creating accounts."],
@@ -47,7 +51,7 @@ def template_workbook():
     allowed = [["Account Types", "Account Classes", "Cash Flow Categories", "Statuses", "Boolean Values"]]
     for i in range(max(len(Account.AccountType.choices), len(Account.AccountClass.choices), len(Account.CashFlowCategory.choices), len(Account.Status.choices), 4)):
         allowed.append([choices[i][1] if i < len(choices) else "" for choices in [Account.AccountType.choices, Account.AccountClass.choices, Account.CashFlowCategory.choices, Account.Status.choices]] + [(["Yes", "No", "True", "False"][i] if i < 4 else "")])
-    sheets = [(SHEET, [HEADERS] + examples), ("Instructions", instructions), ("Allowed Values", allowed)]
+    sheets = [(SHEET, [HEADERS] + examples), (VERSION_SHEET, instructions), ("Allowed Values", allowed)]
     def sheet_xml(rows, freeze=False, filter_row=False):
         body=[]
         for r_index,row in enumerate(rows,1):
@@ -63,7 +67,7 @@ def template_workbook():
     with zipfile.ZipFile(output,"w",zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("[Content_Types].xml", '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + ''.join(f'<Override PartName="/xl/worksheets/sheet{i}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' for i in range(1,4)) + '</Types>')
         archive.writestr("_rels/.rels", '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>')
-        archive.writestr("xl/workbook.xml", '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + ''.join(f'<sheet name="{name}" sheetId="{i}" r:id="rId{i}"/>' for i,(name,_) in enumerate(sheets,1)) + f'</sheets><definedNames><definedName name="_LedgifyTemplateVersion">"{TEMPLATE_VERSION}"</definedName></definedNames></workbook>')
+        archive.writestr("xl/workbook.xml", '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + ''.join(f'<sheet name="{name}" sheetId="{i}" r:id="rId{i}"/>' for i,(name,_) in enumerate(sheets,1)) + f'</sheets><definedNames><definedName name="{TEMPLATE_VERSION_NAME}">{VERSION_REFERENCE}</definedName></definedNames></workbook>')
         archive.writestr("xl/_rels/workbook.xml.rels", '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + ''.join(f'<Relationship Id="rId{i}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet{i}.xml"/>' for i in range(1,4)) + '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>')
         archive.writestr("xl/styles.xml", '<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font/><font><b/><color rgb="FFFFFFFF"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF6941C6"/></patternFill></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="2"><xf/><xf fontId="1" fillId="2" applyFont="1" applyFill="1"/></cellXfs></styleSheet>')
         for i,(_,rows) in enumerate(sheets,1): archive.writestr(f"xl/worksheets/sheet{i}.xml",sheet_xml(rows,freeze=i==1,filter_row=i==1))
@@ -75,35 +79,77 @@ def _canonical(value, choices):
         if text in {key.casefold().replace("_"," "), label.casefold().replace("-"," ")} : return key
     return None
 
+def _validate_template_version(workbook, ns, instruction_rows, sheet_name):
+    """Accept preserved version metadata, never infer a version from a filename/schema.
+
+    Excel editors may drop constant-valued defined names while retaining the
+    Instructions cells. New templates name the version cell instead. Legacy
+    literal names remain supported; every available version must agree.
+    """
+    message = "This import template is no longer supported. Download the latest template and try again."
+    titles = {SHEET: "Ledgify Chart of Accounts Import", "Customers": "Ledgify Customer Import", "Suppliers": "Ledgify Supplier Import"}
+    first_row = next((values for number, values in instruction_rows if number == 1), {})
+    metadata_version = None
+    if first_row.get("A", "").strip() == titles.get(sheet_name) and first_row.get("B", "").strip() == VERSION_LABEL:
+        metadata_version = first_row.get("C", "").strip()
+    names = [node for node in workbook.findall(".//m:definedName", ns)
+             if node.attrib.get("name", "").casefold() == TEMPLATE_VERSION_NAME.casefold()]
+    if len(names) > 1:
+        raise ValidationError(message)
+    versions = [] if metadata_version is None else [metadata_version]
+    if names:
+        expression = (names[0].text or "").strip().removeprefix("=").strip()
+        if re.fullmatch(r"(?:'Instructions'|Instructions)!\$?C\$?1", expression, flags=re.IGNORECASE):
+            # Resolve only our fixed local cell, never formulas or external links.
+            if metadata_version is None:
+                raise ValidationError(message)
+        else:
+            # Legacy versions were written as a quoted string constant.
+            literal = expression[1:-1] if expression.startswith('"') and expression.endswith('"') else expression
+            versions.append(literal)
+    if not versions or any(version != TEMPLATE_VERSION for version in versions):
+        raise ValidationError(message)
+
+
 def _parse_xlsx(content, sheet_name=SHEET):
     if len(content)>MAX_FILE_SIZE: raise ValidationError("The workbook exceeds the 5 MB file limit.")
     if not content.startswith(b"PK\x03\x04"): raise ValidationError("The uploaded file is not a valid .xlsx workbook.")
     try:
-        archive=zipfile.ZipFile(io.BytesIO(content)); names=set(archive.namelist())
-        if any(name.lower().endswith(("vbaproject.bin",".exe",".js")) for name in names): raise ValidationError("Macro-enabled or executable workbook content is not supported.")
-        required={"xl/workbook.xml","xl/_rels/workbook.xml.rels"}
-        if not required.issubset(names): raise ValidationError("The uploaded file is not a valid .xlsx workbook.")
-        ns={"m":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","r":"http://schemas.openxmlformats.org/officeDocument/2006/relationships","p":"http://schemas.openxmlformats.org/package/2006/relationships"}
-        workbook=ET.fromstring(archive.read("xl/workbook.xml")); rels=ET.fromstring(archive.read("xl/_rels/workbook.xml.rels")); targets={node.attrib["Id"]:node.attrib["Target"] for node in rels}
-        version=workbook.find('.//m:definedName[@name="_LedgifyTemplateVersion"]',ns)
-        if version is None or (version.text or "").strip('"') != TEMPLATE_VERSION: raise ValidationError("This import template is no longer supported. Download the latest template and try again.")
-        sheet=next((node for node in workbook.findall(".//m:sheet",ns) if node.attrib.get("name")==sheet_name),None)
-        if sheet is None: raise ValidationError(f'The workbook must contain a worksheet named "{sheet_name}".')
-        target=targets[sheet.attrib["{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"]].lstrip("/");path=target if target.startswith("xl/") else "xl/"+target
-        shared=[]
-        if "xl/sharedStrings.xml" in names:
-            shared=["".join(node.itertext()) for node in ET.fromstring(archive.read("xl/sharedStrings.xml")).findall("m:si",ns)]
-        root=ET.fromstring(archive.read(path)); data=[]
-        for row in root.findall(".//m:sheetData/m:row",ns):
-            values={}
-            for cell in row.findall("m:c",ns):
-                if cell.find("m:f",ns) is not None: value=""
-                elif cell.attrib.get("t")=="inlineStr": value="".join(cell.itertext())
-                else:
-                    node=cell.find("m:v",ns);raw=node.text if node is not None else "";value=shared[int(raw)] if cell.attrib.get("t")=="s" and raw else raw
-                values[re.match(r"[A-Z]+",cell.attrib.get("r","A")).group()]=value
-            data.append((int(row.attrib.get("r",len(data)+1)),values))
-        return data
+        with zipfile.ZipFile(io.BytesIO(content)) as archive:
+            names=set(archive.namelist())
+            if any(name.lower().endswith(("vbaproject.bin",".exe",".js")) for name in names): raise ValidationError("Macro-enabled or executable workbook content is not supported.")
+            required={"xl/workbook.xml","xl/_rels/workbook.xml.rels"}
+            if not required.issubset(names): raise ValidationError("The uploaded file is not a valid .xlsx workbook.")
+            ns={"m":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","r":"http://schemas.openxmlformats.org/officeDocument/2006/relationships","p":"http://schemas.openxmlformats.org/package/2006/relationships"}
+            workbook=ET.fromstring(archive.read("xl/workbook.xml")); rels=ET.fromstring(archive.read("xl/_rels/workbook.xml.rels")); targets={node.attrib["Id"]:node.attrib["Target"] for node in rels}
+            shared=[]
+            if "xl/sharedStrings.xml" in names:
+                shared=["".join(node.itertext()) for node in ET.fromstring(archive.read("xl/sharedStrings.xml")).findall("m:si",ns)]
+
+            def read_sheet(name):
+                sheet=next((node for node in workbook.findall(".//m:sheet",ns) if node.attrib.get("name")==name),None)
+                if sheet is None:
+                    return None
+                target=targets[sheet.attrib["{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"]].lstrip("/");path=target if target.startswith("xl/") else "xl/"+target
+                root=ET.fromstring(archive.read(path)); data=[]
+                for row in root.findall(".//m:sheetData/m:row",ns):
+                    values={}
+                    for cell in row.findall("m:c",ns):
+                        if cell.find("m:f",ns) is not None: value=""
+                        elif cell.attrib.get("t")=="inlineStr": value="".join(cell.itertext())
+                        else:
+                            node=cell.find("m:v",ns);raw=(node.text or "") if node is not None else "";value=shared[int(raw)] if cell.attrib.get("t")=="s" and raw else raw
+                        reference=re.fullmatch(r"([A-Z]+)[1-9][0-9]*",cell.attrib.get("r",""))
+                        if reference is None:
+                            raise ValueError("Invalid worksheet cell reference")
+                        values[reference.group(1)]=value
+                    data.append((int(row.attrib.get("r",len(data)+1)),values))
+                return data
+
+            _validate_template_version(workbook, ns, read_sheet(VERSION_SHEET) or [], sheet_name)
+            data=read_sheet(sheet_name)
+            if data is None: raise ValidationError(f'The workbook must contain a worksheet named "{sheet_name}".')
+            return data
     except (zipfile.BadZipFile, KeyError, ET.ParseError, ValueError, IndexError) as error: raise ValidationError("The uploaded file is malformed or is not a supported .xlsx workbook.") from error
 
 def preview(*, organisation, user, uploaded_file, import_mode="stop_on_existing"):
@@ -154,7 +200,7 @@ def preview(*, organisation, user, uploaded_file, import_mode="stop_on_existing"
             for field,messages in validator.errors.items(): errors.extend({"field":field,"message":str(message)} for message in messages)
         rows.append({"row_number":number,"data":data,"status":"existing" if is_existing else ("error" if errors else ("warning" if warnings else "ready")),"errors":errors,"warnings":warnings})
     invalid=sum(bool(row["errors"]) for row in rows);existing_count=sum(row["status"]=="existing" for row in rows)
-    return AccountImportBatch.objects.create(organisation=organisation,uploaded_by=user,original_filename=filename,checksum=hashlib.sha256(content).hexdigest(),import_mode=import_mode,rows=rows,total_rows=len(rows),valid_rows=len(rows)-invalid,invalid_rows=invalid,existing_rows=existing_count,expires_at=timezone.now()+timedelta(hours=24))
+    return AccountImportBatch.objects.create(organisation=organisation,uploaded_by=user,original_filename=filename,checksum=hashlib.sha256(content).hexdigest(),template_version=TEMPLATE_VERSION,import_mode=import_mode,rows=rows,total_rows=len(rows),valid_rows=len(rows)-invalid,invalid_rows=invalid,existing_rows=existing_count,expires_at=timezone.now()+timedelta(hours=24))
 
 def batch_data(batch):
     return {"id":str(batch.id),"status":batch.status,"filename":batch.original_filename,"total_rows":batch.total_rows,"valid_rows":batch.valid_rows,"invalid_rows":batch.invalid_rows,"existing_rows":batch.existing_rows,"rows":batch.rows,"created_account_ids":batch.created_account_ids,"uploaded_at":batch.uploaded_at,"expires_at":batch.expires_at}

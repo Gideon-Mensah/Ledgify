@@ -1,6 +1,6 @@
 // Call the real accounting endpoints; posting and reversal rules remain on the backend.
 
-import { api } from "./api";
+import { api } from "./api.js";
 
 const query = (params = {}) => {
   const value = new URLSearchParams();
