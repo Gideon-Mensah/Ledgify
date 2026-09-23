@@ -688,3 +688,30 @@
       1fr;
   }
 }
+/* Dedicated eight-column layout; do not inherit five-column journal widths. */
+.main-content .general-ledger-page { width:100%; max-width:none; min-width:0; }
+.general-ledger-page .general-ledger-panel { min-width:0; }
+.ledger-report-account-header { padding:20px 22px; border-bottom:1px solid #e4eaed; }
+.ledger-report-account-header h2 { margin:0; font-size:18px; overflow-wrap:anywhere; }
+.ledger-report-account-header p { margin:7px 0 0; font-size:12px; color:#526671; }
+.ledger-report-scroll { width:100%; overflow-x:auto; }
+.ledger-report-scroll:focus-visible { outline:2px solid var(--primary-color); outline-offset:-2px; }
+.general-ledger-page .ledger-report-table { width:100%; min-width:1080px; table-layout:auto; border-collapse:collapse; }
+.ledger-column-date { width:95px; }.ledger-column-journal { width:100px; }.ledger-column-reference { width:100px; }.ledger-column-description { width:auto; }.ledger-column-source { width:95px; }.ledger-column-money { width:150px; }.ledger-column-balance { width:180px; }
+.main-content .ledger-report-table :is(th,td) { padding:14px 16px; font-size:12px; line-height:1.5; text-align:left; vertical-align:top; border-bottom:1px solid #e6edef; height:auto; }
+.main-content .ledger-report-table thead th { background:#f4f7f8; color:#526671; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+.main-content .ledger-report-table td:nth-child(4) { min-width:200px; max-width:460px; white-space:normal; overflow-wrap:anywhere; }
+.main-content .ledger-report-table td:nth-child(3) { max-width:180px; overflow-wrap:anywhere; white-space:normal; }
+.main-content .ledger-report-table td:first-child { white-space:nowrap; }
+.main-content .ledger-report-table .ledger-report-money { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; min-width:150px; }
+.main-content .ledger-report-table .ledger-report-money:last-child { min-width:180px; padding-left:24px; border-left:1px solid #e6edef; font-weight:600; }
+.ledger-report-table tbody tr:hover { background:#f8fbfc; }
+.ledger-report-table .ledger-opening-row,.ledger-report-table tfoot { background:#f7f9fa; font-weight:600; }
+.general-ledger-page .financial-report-filters { display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px; }
+@media print {
+ .general-ledger-page .ledger-report-scroll { overflow:visible; }
+ .general-ledger-page .ledger-report-table { min-width:0; width:100%; table-layout:fixed; }
+ .ledger-report-table .ledger-column-date { width:10%; }.ledger-report-table .ledger-column-journal { width:11%; }.ledger-report-table .ledger-column-reference { width:10%; }.ledger-report-table .ledger-column-description { width:20%; }.ledger-report-table .ledger-column-source { width:10%; }.ledger-report-table .ledger-column-money { width:12%; }.ledger-report-table .ledger-column-balance { width:15%; }
+ .main-content .ledger-report-table :is(th,td),.main-content .ledger-report-table .ledger-report-money,.main-content .ledger-report-table .ledger-report-money:last-child,.main-content .ledger-report-table td:nth-child(4) { min-width:0; max-width:none; padding:5px 3px; font-size:7pt; white-space:normal; overflow-wrap:anywhere; }
+ .ledger-report-table thead { display:table-header-group; }.ledger-report-table tr { break-inside:avoid; }.ledger-report-table tfoot { display:table-row-group; break-inside:avoid; }
+}

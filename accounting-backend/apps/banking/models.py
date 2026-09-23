@@ -353,7 +353,7 @@ class BankStatementImport(models.Model):
 class BankStatementImportRow(models.Model):
     class Status(models.TextChoices):
         PENDING="pending", "Pending"; READY="ready", "Ready"; DUPLICATE="duplicate", "Duplicate"
-        IMPORTED="imported", "Imported"; REJECTED="rejected", "Rejected"
+        IMPORTED="imported", "Imported"; REJECTED="rejected", "Rejected"; INFORMATION="information", "Statement balance"
     id=models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     import_batch=models.ForeignKey(BankStatementImport, on_delete=models.PROTECT, related_name="rows")
     row_number=models.PositiveIntegerField(); transaction_date=models.DateField(null=True, blank=True)
@@ -361,6 +361,9 @@ class BankStatementImportRow(models.Model):
     amount=models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
     transaction_type=models.CharField(max_length=20, choices=BankTransaction.TransactionType.choices, blank=True)
     currency=models.CharField(max_length=3, blank=True); external_id=models.CharField(max_length=255, blank=True)
+    source_data=models.JSONField(default=dict, blank=True)
+    statement_balance=models.DecimalField(max_digits=18, decimal_places=2, null=True, blank=True)
+    duplicate_kind=models.CharField(max_length=20, blank=True)
     fingerprint=models.CharField(max_length=64, blank=True, db_index=True)
     status=models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     bank_transaction=models.OneToOneField(BankTransaction, on_delete=models.PROTECT, null=True, blank=True, related_name="import_row")

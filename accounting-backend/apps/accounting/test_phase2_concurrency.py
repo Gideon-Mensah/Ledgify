@@ -115,14 +115,14 @@ class PostgreSQLConcurrencyTests(TransactionTestCase):
         first,second=preview(content),preview(content)
         def commit(batch):return commit_bank_statement_import(organisation=self.org,import_batch=batch,user=self.user)
         results=self.parallel(lambda:commit(first),lambda:commit(second))
-        self.assertEqual(BankTransaction.objects.count(),3)
-        self.assertCountEqual([row.imported_rows for row in results],[0,3])
-        self.assertCountEqual([row.duplicate_rows for row in results],[0,3])
+        self.assertEqual(BankTransaction.objects.count(),2)
+        self.assertCountEqual([row.imported_rows for row in results],[0,2])
+        self.assertCountEqual([row.duplicate_rows for row in results],[1,3])
         self.assertEqual(commit(first).pk,first.pk)
         overlap=preview(b"Date,Description,Amount,Reference\n2026-01-15,Other fee,-10,B\n2026-01-16,New fee,-10,C\n")
         result=commit(overlap)
         self.assertEqual(result.imported_rows,1);self.assertEqual(result.duplicate_rows,1)
-        self.assertEqual(BankTransaction.objects.count(),4)
+        self.assertEqual(BankTransaction.objects.count(),3)
 
     def test_two_opening_balances_cannot_both_post_and_retry_is_safe(self):
         from .services.opening_balances import save_draft, submit, post

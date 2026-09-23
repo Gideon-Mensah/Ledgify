@@ -367,10 +367,11 @@ class BankingIntegrationTests(TestCase):
         mapping={"transaction_date":"Date", "description":"Description", "reference":"Reference", "amount":"Amount"}
         first=preview_bank_statement_import(organisation=self.organisation, bank_account=self.bank,
             file_name="statement.csv", content=content, mapping=mapping, user=self.user)
-        self.assertEqual(first.rows.filter(status=BankStatementImportRow.Status.READY).count(), 2)
-        self.assertEqual(first.duplicate_rows, 0)
+        # Indistinguishable repeated lines require review; never silently import both.
+        self.assertEqual(first.rows.filter(status=BankStatementImportRow.Status.READY).count(), 1)
+        self.assertEqual(first.duplicate_rows, 1)
         commit_bank_statement_import(organisation=self.organisation, import_batch=first, user=self.user)
-        self.assertEqual(BankTransaction.objects.count(), 2)
+        self.assertEqual(BankTransaction.objects.count(), 1)
         second=preview_bank_statement_import(organisation=self.organisation, bank_account=self.bank,
             file_name="again.csv", content=content, mapping=mapping, user=self.user)
         self.assertEqual(second.duplicate_rows, 2)

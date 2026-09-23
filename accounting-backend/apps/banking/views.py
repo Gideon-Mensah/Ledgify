@@ -6,7 +6,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, MultiPartParser, JSONParser
+from django.http import HttpResponse
 from django.db import transaction
 from django.db.models import Q
 
@@ -26,7 +27,7 @@ from .serializers import (
     BankReconciliationSuggestionQuerySerializer,
     AcceptReconciliationSuggestionSerializer,
     UnreconcileBankTransactionSerializer,
-    BankImportPreviewSerializer, BankImportSerializer, BankRuleSerializer, BulkReconcileSerializer,
+    BankImportPreviewSerializer, BankImportSerializer, BankImportRowSerializer, BankRuleSerializer, BulkReconcileSerializer,
     BankReconciliationHistorySerializer, ReconciliationSummaryQuerySerializer,
 )
 from .services.reconciliation import BankReconciliationMatcher
@@ -43,27 +44,83 @@ from apps.accounting.models import Account
 
 
 class BankImportViewSet(OrganisationScopedViewSetMixin, ModelViewSet):
-    serializer_class=BankImportSerializer; permission_classes=[IsAuthenticated, OrganisationActionPermission]
-    action_permissions={"list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING,
-                        "preview": IMPORT_BANK_STATEMENTS, "commit": IMPORT_BANK_STATEMENTS}
-    http_method_names=["get", "post", "head", "options"]
-    parser_classes=[MultiPartParser, FormParser]
-    def get_queryset(self): return BankStatementImport.objects.filter(organisation=self.get_organisation()).select_related("bank_account").prefetch_related("rows")
+    serializer_class = BankImportSerializer
+    permission_classes = [IsAuthenticated, OrganisationActionPermission]
+    action_permissions = {
+        "list": VIEW_ACCOUNTING, "retrieve": VIEW_ACCOUNTING, "rows": VIEW_ACCOUNTING,
+        "import_schema": IMPORT_BANK_STATEMENTS, "template": IMPORT_BANK_STATEMENTS,
+        "detect": IMPORT_BANK_STATEMENTS, "preview": IMPORT_BANK_STATEMENTS,
+        "commit": IMPORT_BANK_STATEMENTS,
+    }
+    http_method_names = ["get", "post", "head", "options"]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get_queryset(self):
+        return BankStatementImport.objects.filter(organisation=self.get_organisation()).select_related("bank_account").order_by("-created_at")
+
+    def list(self, request, *args, **kwargs):
+        # History is bounded; row detail has a separate paginated endpoint.
+        return Response(self.get_serializer(self.get_queryset()[:50], many=True).data)
+
+    @action(detail=False, methods=["get"], url_path="schema")
+    def import_schema(self, request):
+        from .services.imports.statement_schema import schema
+        return Response(schema())
+
+    @action(detail=False, methods=["get"])
+    def template(self, request):
+        from .services.imports.statement_schema import template_csv
+        response = HttpResponse(template_csv(), content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="ledgify-bank-statement.csv"'
+        return response
+
+    def upload(self, request):
+        query = BankImportPreviewSerializer(data=request.data)
+        query.is_valid(raise_exception=True)
+        data = query.validated_data
+        account = BankAccount.objects.filter(organisation=self.get_organisation(), id=data["bank_account_id"], status="active").first()
+        if not account:
+            raise BusinessRuleError("An active bank account was not found in this organisation.")
+        return data, account
+
+    @action(detail=False, methods=["post"])
+    def detect(self, request):
+        from .services.imports.statement_schema import detect_statement
+        data, account = self.upload(request)
+        return Response(detect_statement(data["file"].name, data["file"].read(), data["file"].content_type or ""))
+
     @action(detail=False, methods=["post"])
     def preview(self, request):
-        query=BankImportPreviewSerializer(data=request.data); query.is_valid(raise_exception=True); data=query.validated_data
-        account=BankAccount.objects.filter(organisation=self.get_organisation(), id=data["bank_account_id"]).first()
-        if not account: raise BusinessRuleError("Bank account was not found.")
-        mapping=data["mapping"]
-        if isinstance(mapping, str):
-            import json; mapping=json.loads(mapping)
-        batch=preview_bank_statement_import(organisation=self.get_organisation(), bank_account=account,
-            file_name=data["file"].name, content=data["file"].read(), mapping=mapping,
-            date_format=data["date_format"], user=request.user)
+        data, account = self.upload(request)
+        batch = preview_bank_statement_import(
+            organisation=self.get_organisation(), bank_account=account,
+            file_name=data["file"].name, content=data["file"].read(), mapping=data["mapping"],
+            date_format=data["date_format"], amount_sign=data["amount_sign"],
+            mime=data["file"].content_type or "", user=request.user,
+        )
         return Response(self.get_serializer(batch).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["get"])
+    def rows(self, request, pk=None):
+        batch = self.get_object()
+        rows = batch.rows.order_by("row_number")
+        row_status = request.query_params.get("status", "")
+        if row_status:
+            if row_status not in {"ready", "duplicate", "rejected", "information", "imported"}:
+                raise BusinessRuleError("Choose a valid row status.")
+            rows = rows.filter(status=row_status)
+        try:
+            page = max(1, int(request.query_params.get("page", 1)))
+        except (ValueError, TypeError):
+            raise BusinessRuleError("Choose a valid preview page.") from None
+        count = rows.count()
+        page = min(page, max(1, (count + 99) // 100))
+        return Response({"count": count, "page": page, "page_size": 100,
+                         "results": BankImportRowSerializer(rows[(page-1)*100:page*100], many=True).data})
+
     @action(detail=True, methods=["post"])
     def commit(self, request, pk=None):
-        batch=commit_bank_statement_import(organisation=self.get_organisation(), import_batch=self.get_object(), user=request.user)
+        batch = commit_bank_statement_import(organisation=self.get_organisation(), import_batch=self.get_object(), user=request.user)
         return Response(self.get_serializer(batch).data)
 
 

@@ -5,6 +5,7 @@ import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -32,6 +33,7 @@ function RecordPaymentModal({
   onSave,
 }) {
   const auth = useAuth();
+  const amountRef = useRef(null);
   const [submission] = useState(createPaymentSubmission);
   const [withholdings,setWithholdings] = useState([]);
   const today = getOrganisationToday(auth.selectedOrganisation?.timezone);
@@ -353,6 +355,7 @@ function RecordPaymentModal({
     <Modal
       isOpen={isOpen}
       title="Record payment"
+      initialFocusRef={amountRef}
       description={`Record a payment against ${
         invoiceNumber ||
         "this invoice"
@@ -435,6 +438,7 @@ function RecordPaymentModal({
 
               <input
                 id="paymentAmount"
+                ref={amountRef}
                 name="amount"
                 type="number"
                 min="0.01"

@@ -292,35 +292,52 @@ class BankReconciliationHistorySerializer(CurrencySerializerMixin, serializers.M
 
 class BankImportRowSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
     class Meta:
-        model=BankStatementImportRow
-        fields=["id", "row_number", "transaction_date", "description", "reference", "amount",
-                "transaction_type", "currency", "external_id", "status", "bank_transaction", "error_message"]
-        read_only_fields=fields
+        model = BankStatementImportRow
+        fields = ["id", "row_number", "transaction_date", "description", "reference", "amount",
+                  "transaction_type", "currency", "external_id", "status", "bank_transaction",
+                  "error_message", "source_data", "statement_balance", "duplicate_kind"]
+        read_only_fields = fields
 
 
 class BankImportSerializer(CurrencySerializerMixin, serializers.ModelSerializer):
-    rows=BankImportRowSerializer(many=True, read_only=True)
+    rows = serializers.SerializerMethodField()
+    ready_rows = serializers.SerializerMethodField()
+
+    def get_rows(self, obj):
+        if getattr(self.context.get("view"), "action", None) == "list":
+            return []
+        return BankImportRowSerializer(obj.rows.order_by("row_number")[:100], many=True).data
+
+    def get_ready_rows(self, obj):
+        return obj.rows.filter(status=BankStatementImportRow.Status.READY).count()
+
     class Meta:
-        model=BankStatementImport
-        fields=["id", "bank_account", "file_name", "file_type", "imported_at", "status",
-                "total_rows", "imported_rows", "duplicate_rows", "rejected_rows", "metadata",
-                "rows", "created_at", "updated_at"]
-        read_only_fields=fields
+        model = BankStatementImport
+        fields = ["id", "bank_account", "file_name", "file_type", "imported_at", "status",
+                  "total_rows", "imported_rows", "duplicate_rows", "rejected_rows", "metadata",
+                  "rows", "ready_rows", "created_at", "updated_at"]
+        read_only_fields = fields
 
 
 class BankImportPreviewSerializer(serializers.Serializer):
-    bank_account_id=serializers.UUIDField(); file=serializers.FileField()
-    mapping=serializers.JSONField(); date_format=serializers.CharField(required=False, default="%Y-%m-%d")
-    def validate_file(self,value):
+    bank_account_id = serializers.UUIDField()
+    file = serializers.FileField()
+    mapping = serializers.JSONField(required=False, default=dict)
+    date_format = serializers.CharField(required=False, default="auto")
+    amount_sign = serializers.ChoiceField(choices=["", "positive_in", "positive_out"], required=False, default="", allow_blank=True)
+
+    def validate_file(self, value):
+        from .services.imports.statement_schema import validate_upload
+        from common.exceptions import BusinessRuleError
         from django.conf import settings
-        import os
-        maximum=getattr(settings,"BANK_IMPORT_MAX_BYTES",5*1024*1024)
-        if value.size>maximum:raise serializers.ValidationError(f"Bank statement exceeds the {maximum} byte upload limit.")
-        if os.path.splitext(value.name)[1].lower()!=".csv":raise serializers.ValidationError("Only CSV bank statements are accepted.")
-        content_type=(value.content_type or "").lower()
-        if content_type not in {"text/csv","text/plain","application/csv","application/vnd.ms-excel"}:raise serializers.ValidationError("Unsupported bank statement content type.")
-        signature=value.read(512);value.seek(0)
-        if b"\x00" in signature or signature.startswith((b"MZ",b"PK\x03\x04",b"\x7fELF")):raise serializers.ValidationError("Executable, binary, and archive uploads are not accepted.")
+        if value.size > getattr(settings, "BANK_IMPORT_MAX_BYTES", 5 * 1024 * 1024):
+            raise serializers.ValidationError("The statement exceeds the configured upload size limit.")
+        try:
+            validate_upload(value.name, value.read(), value.content_type or "")
+        except BusinessRuleError as error:
+            raise serializers.ValidationError(error.detail) from None
+        finally:
+            value.seek(0)
         return value
 
 

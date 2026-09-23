@@ -2,7 +2,7 @@ import { getOrganisationCurrency } from "../../utils/organisationCurrency.js";
 import { formatCurrency as centralFormatCurrency } from "../../utils/currency.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, CheckCircle2, CircleDollarSign, FileText, Landmark, Plus, Search, SlidersHorizontal } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import Modal from "../common/Modal";
 import TablePagination from "../common/TablePagination";
@@ -21,10 +21,11 @@ const money = (value, currency = getOrganisationCurrency()) => centralFormatCurr
 
 export default function BankingTransactionsWorkspace() {
   const auth = useAuth();
+  const [searchParams] = useSearchParams();
   const today = getOrganisationToday(auth.selectedOrganisation?.timezone);
   const [accounts, setAccounts] = useState([]);
   const [rows, setRows] = useState([]);
-  const [filters, setFilters] = useState({ status: "", type: "", bank_account: "", date_from: "", date_to: "" });
+  const [filters, setFilters] = useState({ status: "", type: "", bank_account: searchParams.get("bank_account") || "", date_from: "", date_to: "" });
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);

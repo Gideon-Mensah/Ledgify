@@ -1,7 +1,12 @@
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useEffectEvent, useId, useRef } from "react";
 import { X } from "lucide-react";
 
-// Renders the modal component.
+const openDialogs = [];
+let previousBodyOverflow = '';
+const focusableElements = dialog => [...dialog.querySelectorAll('button, a[href], input, select, textarea, [tabindex]')]
+  .filter(element => !element.matches(':disabled') && element.tabIndex >= 0 && element.getClientRects().length && !element.closest('[inert]'));
+
+// Shared focus lifetime follows opening/closing, not callback identity.
 function Modal({
   isOpen,
   title,
@@ -9,35 +14,59 @@ function Modal({
   children,
   footer,
   onClose,
+  initialFocusRef,
 }) {
   const titleId = useId();
   const descriptionId = useId();
-  const closeButtonRef = useRef(null);
+  const dialogRef = useRef(null);
+  const close = useEffectEvent(() => onClose());
+  const focusInitial = useEffectEvent(() => {
+    const dialog = dialogRef.current;
+    const fields = focusableElements(dialog);
+    const preferred = initialFocusRef?.current;
+    (fields.includes(preferred) ? preferred : fields.find(element => !element.classList.contains('modal-close-button')) || fields[0] || dialog).focus();
+  });
 
-  // Keeps this part of the page in sync when its inputs change.
   useEffect(() => {
-    if (!isOpen) {
-      return undefined;
+    if (!isOpen) return undefined;
+    const dialog = dialogRef.current;
+    const previouslyFocusedElement = document.activeElement;
+    if (!openDialogs.length) {
+      previousBodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
     }
-
-    // Handles key down.
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        onClose();
+    openDialogs.push(dialog);
+    const handleKeyDown = event => {
+      if (openDialogs.at(-1) !== dialog) return;
+      if (event.key === 'Escape' && !event.isComposing) {
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+      } else if (event.key === 'Tab') {
+        const fields = focusableElements(dialog);
+        const first = fields[0];
+        const last = fields.at(-1);
+        if (!first) { event.preventDefault(); dialog.focus(); }
+        else if (!dialog.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        }
       }
     };
-
-    const previouslyFocusedElement = document.activeElement;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-    window.requestAnimationFrame(() => closeButtonRef.current?.focus());
-
+    window.addEventListener('keydown', handleKeyDown);
+    const frame = window.requestAnimationFrame(() => {
+      if (openDialogs.at(-1) === dialog && !dialog.contains(document.activeElement)) focusInitial();
+    });
     return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", handleKeyDown);
-      previouslyFocusedElement?.focus?.();
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener('keydown', handleKeyDown);
+      const wasTop = openDialogs.at(-1) === dialog;
+      const index = openDialogs.indexOf(dialog);
+      if (index !== -1) openDialogs.splice(index, 1);
+      if (!openDialogs.length) document.body.style.overflow = previousBodyOverflow;
+      if (wasTop && previouslyFocusedElement?.isConnected) previouslyFocusedElement.focus?.();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -50,6 +79,8 @@ function Modal({
     >
       <div
         className="modal-container"
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -68,7 +99,6 @@ function Modal({
           <button
             type="button"
             className="modal-close-button"
-            ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close modal"
           >

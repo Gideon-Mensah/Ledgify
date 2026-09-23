@@ -59,6 +59,10 @@ export const bankService = {
 
   unreconcile: (id, data = {}) =>
     api.post(`bank-transactions/${id}/unreconcile/`, data),
+  importSchema: () => api.get("bank-imports/schema/"),
+  importTemplate: () => api.download("bank-imports/template/"),
+  detectImport: (formData) => apiRequest("bank-imports/detect/", { method: "POST", body: formData }),
+  importRows: (id, params = {}) => api.get(`bank-imports/${id}/rows/${query(params)}`),
   imports: () => api.get("bank-imports/"),
   previewImport: (formData) => apiRequest("bank-imports/preview/", { method: "POST", body: formData }),
   commitImport: (id) => api.post(`bank-imports/${id}/commit/`, {}),
