@@ -51,7 +51,7 @@ def create_supplier_payment(*, organisation, supplier, bank_account, payment_dat
     if bill is not None and amount > bill.amount_due:
         raise BusinessRuleError("Payment exceeds the bill outstanding balance.")
     payables = Account.objects.filter(organisation=organisation,
-        account_class=Account.AccountClass.PAYABLE, status=Account.Status.ACTIVE)
+        account_class=Account.AccountClass.PAYABLE, is_current_control=True, account_type="liability", status=Account.Status.ACTIVE)
     if payables.count() != 1:
         raise BusinessRuleError("The organisation must have exactly one active Accounts Payable account.")
     require_revaluation_reversed(organisation,currency,payable=True)

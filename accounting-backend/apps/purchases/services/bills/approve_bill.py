@@ -81,7 +81,7 @@ def approve_bill(
 
     payable_accounts = Account.objects.filter(
         organisation=bill.organisation,
-        account_class=Account.AccountClass.PAYABLE,
+        account_class=Account.AccountClass.PAYABLE, is_current_control=True, account_type="liability",
         status=Account.Status.ACTIVE,
     )
 

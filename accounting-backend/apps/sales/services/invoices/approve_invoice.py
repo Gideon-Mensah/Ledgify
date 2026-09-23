@@ -83,7 +83,7 @@ def approve_invoice(
 
     receivable_accounts = Account.objects.filter(
         organisation=invoice.organisation,
-        account_class=Account.AccountClass.RECEIVABLE,
+        account_class=Account.AccountClass.RECEIVABLE, is_current_control=True, account_type="asset",
         status=Account.Status.ACTIVE,
     )
 

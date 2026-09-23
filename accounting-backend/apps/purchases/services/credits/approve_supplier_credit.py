@@ -30,7 +30,7 @@ def approve_supplier_credit(*, credit, user):
         raise BusinessRuleError("Only draft supplier credits can be approved.")
     if credit.accounting_journal_id or credit.total <= 0: raise BusinessRuleError("Supplier credit cannot be approved.")
     payables = Account.objects.filter(organisation=credit.organisation,
-        account_class=Account.AccountClass.PAYABLE, status=Account.Status.ACTIVE)
+        account_class=Account.AccountClass.PAYABLE, is_current_control=True, account_type="liability", status=Account.Status.ACTIVE)
     if payables.count() != 1: raise BusinessRuleError("The organisation must have exactly one active Accounts Payable account.")
     totals = {}
     for line in credit.lines.all():

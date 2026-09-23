@@ -33,7 +33,7 @@ def approve_customer_credit_note(*, credit_note, user):
     if credit_note.accounting_journal_id or credit_note.total <= 0:
         raise BusinessRuleError("Credit note cannot be approved.")
     receivables = Account.objects.filter(organisation=credit_note.organisation,
-        account_class=Account.AccountClass.RECEIVABLE, status=Account.Status.ACTIVE)
+        account_class=Account.AccountClass.RECEIVABLE, is_current_control=True, account_type="asset", status=Account.Status.ACTIVE)
     if receivables.count() != 1:
         raise BusinessRuleError("The organisation must have exactly one active Accounts Receivable account.")
     totals = {}

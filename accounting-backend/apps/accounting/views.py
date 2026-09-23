@@ -78,12 +78,23 @@ class AccountViewSet(
                           "partial_update": MANAGE_ACCOUNTS, "destroy": MANAGE_ACCOUNTS,
                           "import_template": MANAGE_ACCOUNTS, "import_preview": MANAGE_ACCOUNTS,
                           "import_status": MANAGE_ACCOUNTS, "import_confirm": MANAGE_ACCOUNTS,
-                          "import_errors": MANAGE_ACCOUNTS}
+                          "import_errors": MANAGE_ACCOUNTS, "replace_control": MANAGE_ACCOUNTS}
 
     def perform_destroy(self, instance):
-        if instance.is_system_account:
-            raise serializers.ValidationError("Required system/control accounts cannot be deleted.")
-        instance.delete()
+        from .services.account_classification import delete_account
+        delete_account(instance)
+
+    @action(detail=True, methods=['post'], url_path='replace-control')
+    def replace_control(self, request, pk=None):
+        from .services.account_classification import replace_control
+        class ReplacementInput(serializers.Serializer):
+            replacement_id = serializers.UUIDField()
+            confirmed = serializers.BooleanField()
+            reason = serializers.CharField(max_length=2000, allow_blank=False)
+        payload = ReplacementInput(data=request.data)
+        payload.is_valid(raise_exception=True)
+        target = replace_control(self.get_object(), user=request.user, **payload.validated_data)
+        return Response(self.get_serializer(target).data)
 
     def get_queryset(self):
         organisation = self.get_organisation()
@@ -128,7 +139,8 @@ class AccountViewSet(
                 cash_flow_category=cash_flow_category,
             )
 
-        return queryset
+        from .services.account_classification import with_classification_policy
+        return with_classification_policy(queryset)
 
     @action(detail=False, methods=["get"], url_path="import/template")
     def import_template(self, request):

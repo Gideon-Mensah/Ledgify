@@ -55,7 +55,7 @@ def create_customer_payment(*, organisation, customer, bank_account, payment_dat
     if invoice is not None and amount > invoice.amount_due:
         raise BusinessRuleError("Payment exceeds the invoice outstanding balance.")
     receivables = Account.objects.filter(organisation=organisation,
-        account_class=Account.AccountClass.RECEIVABLE, status=Account.Status.ACTIVE)
+        account_class=Account.AccountClass.RECEIVABLE, is_current_control=True, account_type="asset", status=Account.Status.ACTIVE)
     if receivables.count() != 1:
         raise BusinessRuleError("The organisation must have exactly one active Accounts Receivable account.")
     require_revaluation_reversed(organisation,currency,payable=False)

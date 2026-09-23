@@ -9,6 +9,9 @@ from .models import Account, AccountingPeriod, FinancialYear, JournalEntry, Jour
 
 class AccountSerializer(serializers.ModelSerializer):
     bank_account = serializers.SerializerMethodField(read_only=True)
+    classification_policy = serializers.SerializerMethodField()
+    classification_confirmed = serializers.BooleanField(write_only=True, required=False, default=False)
+    classification_reason = serializers.CharField(write_only=True, required=False, allow_blank=True, max_length=2000)
     class Meta:
         model = Account
         fields = [
@@ -23,19 +26,35 @@ class AccountSerializer(serializers.ModelSerializer):
             "is_system_account",
             "allow_manual_journals",
             "bank_account",
+            "classification_policy", "classification_confirmed", "classification_reason", "is_current_control",
             "status",
             "created_at",
             "updated_at",
         ]
 
-        read_only_fields = ["id", "is_system_account", "created_at", "updated_at"]
+        read_only_fields = ["id", "is_system_account", "is_current_control", "created_at", "updated_at"]
 
     def validate(self, attrs):
-        if self.instance and self.instance.is_system_account:
-            for key in ('account_type', 'account_class', 'status'):
-                if key in attrs and attrs[key] != getattr(self.instance, key):
-                    raise serializers.ValidationError({key: "Required system/control account classification and active status cannot change."})
+        from .services.account_classification import compatible
+        if not self.instance or any(key in attrs and attrs[key] != getattr(self.instance,key) for key in ('account_type','account_class')):
+            compatible(attrs.get('account_type', getattr(self.instance,'account_type',None)), attrs.get('account_class', getattr(self.instance,'account_class',None)))
         return attrs
+
+    def get_classification_policy(self, obj):
+        from .services.account_classification import policy
+        return policy(obj)
+
+    def create(self, validated_data):
+        from .services.account_classification import create_account
+        validated_data.pop('classification_confirmed', None)
+        validated_data.pop('classification_reason', None)
+        return create_account(validated_data)
+
+    def update(self, instance, validated_data):
+        from .services.account_classification import update_account
+        confirmed = validated_data.pop('classification_confirmed', False)
+        reason = validated_data.pop('classification_reason', '')
+        return update_account(instance, validated_data, self.context['request'].user, confirmed=confirmed, reason=reason)
 
     def get_bank_account(self, obj):
         try:

@@ -13,6 +13,7 @@ export const accountingApiService = {
   accounts: (params) => api.get(`accounts/${query(params)}`),
   account: (id) => api.get(`accounts/${id}/`),
   createAccount: (data) => api.post("accounts/", data),
+  replaceAccountControl: (id, data) => api.post(`accounts/${id}/replace-control/`, data),
   updateAccount: (id, data) => api.patch(`accounts/${id}/`, data),
   downloadAccountImportTemplate: () => api.download("accounts/import/template/"),
   previewAccountImport: (file) => { const body = new FormData(); body.append("file", file); body.append("import_mode", "stop_on_existing"); return api.postForm("accounts/import/preview/", body); },

@@ -60,7 +60,7 @@ def create_customer_refund(*, organisation, customer, bank_account, refund_date,
             raise BusinessRuleError("Refund exceeds the available credit.")
     receivables = Account.objects.filter(
         organisation=organisation,
-        account_class=Account.AccountClass.RECEIVABLE,
+        account_class=Account.AccountClass.RECEIVABLE, is_current_control=True, account_type="asset",
         status=Account.Status.ACTIVE,
     )
     if receivables.count() != 1:

@@ -24,12 +24,8 @@ VERSION_REFERENCE = "'Instructions'!$C$1"
 SHEET = "Chart of Accounts"
 HEADERS = ["Account Code", "Account Name", "Account Type", "Account Class", "Description", "Currency", "Cash Flow Category", "Allow Manual Journals", "Status"]
 REQUIRED = HEADERS[:4]
-CLASS_TYPES = {
-    "bank": "asset", "current_asset": "asset", "fixed_asset": "asset", "receivable": "asset",
-    "current_liability": "liability", "long_term_liability": "liability", "payable": "liability",
-    "equity": "equity", "retained_earnings": "equity", "sales": "revenue", "other_income": "revenue",
-    "cost_of_sales": "expense", "operating_expense": "expense", "other_expense": "expense",
-}
+from .account_classification import CLASS_TYPES
+
 
 def _xml(value):
     return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

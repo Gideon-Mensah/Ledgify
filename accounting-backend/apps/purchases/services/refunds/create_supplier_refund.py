@@ -74,7 +74,7 @@ def create_supplier_refund(*, organisation, supplier, supplier_credit,
 
     payables = Account.objects.filter(
         organisation=organisation,
-        account_class=Account.AccountClass.PAYABLE,
+        account_class=Account.AccountClass.PAYABLE, is_current_control=True, account_type="liability",
         status=Account.Status.ACTIVE,
     )
     if payables.count() != 1:

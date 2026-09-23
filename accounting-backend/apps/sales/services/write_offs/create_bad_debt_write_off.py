@@ -42,7 +42,7 @@ def create_bad_debt_write_off(*, organisation, invoice, write_off_date, amount,
             or bad_debt_account.account_type != Account.AccountType.EXPENSE):
         raise BusinessRuleError("A valid active expense account is required.")
     receivables = Account.objects.filter(
-        organisation=organisation, account_class=Account.AccountClass.RECEIVABLE,
+        organisation=organisation, account_class=Account.AccountClass.RECEIVABLE, is_current_control=True, account_type="asset",
         status=Account.Status.ACTIVE,
     )
     if receivables.count() != 1:

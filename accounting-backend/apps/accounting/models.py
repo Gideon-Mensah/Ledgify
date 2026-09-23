@@ -97,6 +97,9 @@ class Account(models.Model):
         default=False,
     )
 
+    # Former AR/AP controls stay active for reversals and historical balances.
+    is_current_control = models.BooleanField(default=True)
+
     allow_manual_journals = models.BooleanField(
         default=True,
     )
@@ -744,3 +747,26 @@ class AccountingCorrection(models.Model):
     reason = models.TextField()
     performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     performed_at = models.DateTimeField(auto_now_add=True)
+
+
+class AccountClassificationEvent(models.Model):
+    """Append-only evidence of a classification correction or control replacement."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organisation = models.ForeignKey(Organisation, on_delete=models.PROTECT)
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='classification_events')
+    replacement = models.ForeignKey(Account, on_delete=models.PROTECT, null=True, related_name='control_replacement_events')
+    performed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    reason = models.TextField()
+    before = models.JSONField()
+    after = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            from common.exceptions import BusinessRuleError
+            raise BusinessRuleError('Account classification history is immutable.')
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        from common.exceptions import BusinessRuleError
+        raise BusinessRuleError('Account classification history is immutable.')
